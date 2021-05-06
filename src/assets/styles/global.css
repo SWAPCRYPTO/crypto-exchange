@@ -1,0 +1,48 @@
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+a,
+p,
+li,
+svg {
+    transition: color 0.3s cubic-bezier(0.76, 0, 0.24, 1),
+        background 0.3s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+a {
+    outline: none;
+}
+
+ul,
+p {
+    margin: 0;
+    padding: 0;
+}
+
+input,
+textarea,
+button,
+select,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+.unselectable {
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+*,
+*::before,
+*::after {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
