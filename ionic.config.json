@@ -1,0 +1,8 @@
+{
+  "name": "CryptoExchange",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue",
+  "id": "0b8c71ca"
+}
