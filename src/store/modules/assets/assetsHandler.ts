@@ -17,6 +17,8 @@ const mutations = {
 
 const getters = {
     assets: (state: InitialState) => state.assets,
+    asset: (state: InitialState) => (symbol: string) =>
+        state.assets.find((asset) => asset.symbol === symbol),
 }
 
 const actions = {
@@ -28,7 +30,7 @@ const actions = {
         state: InitialState
     }) => {
         if (state.assets.length <= 0) {
-            const preferredCurrency = 'usd'
+            const preferredCurrency = 'pln'
             const { data } = await axios.get(
                 `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${preferredCurrency}&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h%2C24h%2C7d%2C30d%2C1y`
             )

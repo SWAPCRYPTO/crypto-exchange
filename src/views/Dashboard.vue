@@ -9,16 +9,20 @@
       <section class="home container">
         <div class="home__container">
             <header class="balance__container">
-                <p class="font-medium mb-2">Portfolio balance</p>
-                <h1 class="h1 balance">{{ preferedCurrency }} {{ user.account.balance }}</h1>
+              <ion-header collapse="condense">
+                <ion-toolbar>
+                  <p class="font-medium mb-2">Portfolio balance</p>
+                  <h1 class="h1 balance" @click="router.push('/tabs/portfolio')">{{ preferedCurrency }} {{ user.account.balance }}</h1>
+                </ion-toolbar>
+              </ion-header>
             </header>
             <section class="watchlist__container">
                 <h2 class="h2">Watchlist</h2>
-                <AssetsList :assets="watchedAssets" />
+                <AssetsList :assets="watchedAssets" :walletMode="false" />
             </section>
             <section class="topMovers__container">
                 <h2 class="h2">Top movers</h2>
-                <AssetsList :assets="topMovers" />
+                <AssetsList :assets="topMovers" :walletMode="false" />
             </section>
         </div>
       </section>
@@ -32,6 +36,7 @@ import User from '@/store/modules/auth/models/User';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
 
 import { computed, defineComponent, Ref } from "vue"
+import { useRouter } from 'vue-router';
 import { useStore } from "vuex"
 import AssetsList from "../components/AssetsList.vue"
 
@@ -48,6 +53,7 @@ export default defineComponent({
     components: { AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage },
     setup() {
         const store = useStore()
+        const router = useRouter()
         const user: Ref<User> = computed(() => store.getters.user)
         const preferedCurrency = computed(() => user.value.account.preferredCurrency)
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
@@ -55,12 +61,13 @@ export default defineComponent({
 
         fetchData()
         const watchedAssets: Ref<Asset[]> = computed(() => assets.value.slice(0, 10))
-        const sortedAssets: Asset[] = sortAssets(assets.value.slice(), "price_change_percentage_1h_in_currency", false)
-        const topMovingAssets = findTopMovers(sortedAssets, 10)
+        const sortedAssets: Ref<Asset[]> = computed(() => sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", false))
+        const NUMBER_OF_TOP_MOVING_ASSETS = 5
+        const topMovingAssets = computed(() => findTopMovers(sortedAssets.value, NUMBER_OF_TOP_MOVING_ASSETS))
         
-        const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets, "price_change_percentage_1h_in_currency", true).reverse())
+        const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets.value, "price_change_percentage_24h_in_currency", true).reverse())
 
-        return { user, assets, preferedCurrency, watchedAssets, topMovers }
+        return { router, user, assets, preferedCurrency, watchedAssets, topMovers }
     },
 })
 </script>
@@ -73,5 +80,9 @@ export default defineComponent({
 }
 .assetsList {
   @apply shadow-md;
+}
+
+.header-ios ion-toolbar {
+  --border-width: 0 !important
 }
 </style>

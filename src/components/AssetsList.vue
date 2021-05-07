@@ -1,7 +1,7 @@
 <template>
-    <div class="assetsList">
+    <div class="assetsList" :class="{ 'round': walletMode }">
         <ul class="assetsList__items">
-            <li class="assetsList__item" v-for="asset in assets" :key="asset.id" @click="router.push('/tabs/prices/test')">
+            <li class="assetsList__item" v-for="asset in assets" :key="asset.id" @click="router.push(`/tabs/asset/${asset.symbol}`)">
                 <div class="currency__title">
                     <div class="currency__icon">
                         <img :src="asset.image" class="currency__icon" alt="currency icon">
@@ -15,7 +15,8 @@
                 </div>
                 <div class="currency__details">
                     <p class="currency__value">{{ preferredCurrency }} {{ asset.current_price }}</p>
-                    <p class="currency__gain" :class="asset.price_change_percentage_1h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_1h_in_currency) }}%</p>
+                    <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume }} {{ asset.symbol }}</p>
+                    <p v-else class="currency__gain" :class="asset.price_change_percentage_24h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_24h_in_currency) }}%</p>
                 </div>
             </li>
         </ul>
@@ -23,20 +24,22 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from "vue"
+import { computed, defineComponent, ref } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
 
 export default defineComponent({
     name: "AssetsList",
-    props: ['assets'],
+    props: ['assets', 'walletMode'],
     setup() {
         const store = useStore()
         const router = useRouter()
         const preferredCurrency = computed(() => store.getters.user.account.preferredCurrency)
 
         const formatChange = (value: number) => (value > 0 ? '+' : '') + value.toFixed(2)
-        return { preferredCurrency, formatChange, router }
+
+        const ownedVolume = ref(0)
+        return { preferredCurrency, formatChange, router, ownedVolume }
     },
 })
 </script>
@@ -46,16 +49,23 @@ export default defineComponent({
     @apply p-4 my-4;
 }
 
+.assetsList.round {
+    border-radius: 10px;
+}
+
 .assetsList__items {
     @apply flex flex-col;
 }
 
 .assetsList__item {
-    @apply flex items-center justify-between my-3;
+    @apply flex items-center justify-between my-3 cursor-pointer;
 }
+
+
 .assetsList__item:first-of-type {
     @apply mt-0;
 }
+
 .assetsList__item:last-of-type {
     @apply mb-0;
 }
