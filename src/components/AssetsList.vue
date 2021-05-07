@@ -1,19 +1,21 @@
 <template>
     <div class="assetsList">
         <ul class="assetsList__items">
-            <li class="assetsList__item" v-for="asset in assets" :key="asset.symbol">
+            <li class="assetsList__item" v-for="asset in assets" :key="asset.id" @click="router.push('/tabs/prices/test')">
                 <div class="currency__title">
                     <div class="currency__icon">
-                        <img src="../assets/images/currency.png" class="currency__icon" alt="currency icon">
+                        <img :src="asset.image" class="currency__icon" alt="currency icon">
                     </div>
                     <div class="currency__name">
-                        <p>{{ asset.title }}</p>
+                        <p>{{ asset.name }}</p>
                         <span class="symbol">{{ asset.symbol }}</span>
                     </div>
                 </div>
+                <div class="sparkline">
+                </div>
                 <div class="currency__details">
-                    <p class="currency__value">{{ currentCurrency }} {{ 123 }}</p>
-                    <p class="currency__gain" :class="movePercentage > 0 ? 'positive' : 'negative'">{{ movePercentage }}%</p>
+                    <p class="currency__value">{{ preferredCurrency }} {{ asset.current_price }}</p>
+                    <p class="currency__gain" :class="asset.price_change_percentage_1h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_1h_in_currency) }}%</p>
                 </div>
             </li>
         </ul>
@@ -22,6 +24,7 @@
 
 <script lang="ts">
 import { computed, defineComponent } from "vue"
+import { useRouter } from "vue-router"
 import { useStore } from "vuex"
 
 export default defineComponent({
@@ -29,10 +32,11 @@ export default defineComponent({
     props: ['assets'],
     setup() {
         const store = useStore()
-        const currentCurrency = computed(() => store.getters.currentCurrency)
-        const currencyMovePercentage = 2.123
-        const movePercentage = (currencyMovePercentage > 0 ? '+' : '') + currencyMovePercentage.toFixed(2)
-        return { currentCurrency, movePercentage }
+        const router = useRouter()
+        const preferredCurrency = computed(() => store.getters.user.account.preferredCurrency)
+
+        const formatChange = (value: number) => (value > 0 ? '+' : '') + value.toFixed(2)
+        return { preferredCurrency, formatChange, router }
     },
 })
 </script>
@@ -83,13 +87,5 @@ export default defineComponent({
 
 .currency__details {
     @apply flex flex-col items-end;
-}
-
-.currency__gain.positive {
-    @apply text-green-500;
-}
-
-.currency__gain.negative {
-    @apply text-red-600;
 }
 </style>

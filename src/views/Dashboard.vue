@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Dashboard</ion-title>
+        <ion-title>{{ preferedCurrency }} {{ user.account.balance }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
@@ -10,7 +10,7 @@
         <div class="home__container">
             <header class="balance__container">
                 <p class="font-medium mb-2">Portfolio balance</p>
-                <h1 class="h1 balance">{{ currentCurrency }} {{ user.balance }}</h1>
+                <h1 class="h1 balance">{{ preferedCurrency }} {{ user.account.balance }}</h1>
             </header>
             <section class="watchlist__container">
                 <h2 class="h2">Watchlist</h2>
@@ -18,7 +18,7 @@
             </section>
             <section class="topMovers__container">
                 <h2 class="h2">Top movers</h2>
-                <AssetsList :assets="watchedAssets" />
+                <AssetsList :assets="topMovers" />
             </section>
         </div>
       </section>
@@ -27,43 +27,40 @@
 </template>
 
 <script lang="ts">
+import Asset from '@/store/modules/assets/models/Asset';
+import User from '@/store/modules/auth/models/User';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
 
-import { computed, defineComponent } from "vue"
+import { computed, defineComponent, Ref } from "vue"
 import { useStore } from "vuex"
 import AssetsList from "../components/AssetsList.vue"
-import Asset from "../typings/Asset"
+
+// const sortAssets = (items: any[], key: string) => items.slice().sort((a, b) => a[key] - b[key])
+const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
+  items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
+
+const findTopMovers = (items: any[], numberOfItems: number) => {
+  return items.slice(0, numberOfItems).concat(items.slice(items.length - numberOfItems, items.length))
+}
 
 export default defineComponent({
     name: "Dashboard",
     components: { AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage },
     setup() {
-        const user = {
-            defaultCurrency: 'PLN',
-            balance: 152.32
-        }
-
         const store = useStore()
-        const currentCurrency = "USD"
-        const assets = computed(() => store.getters.assets)
+        const user: Ref<User> = computed(() => store.getters.user)
+        const preferedCurrency = computed(() => user.value.account.preferredCurrency)
+        const assets: Ref<Asset[]> = computed(() => store.getters.assets)
         const fetchData = () => store.dispatch('fetchAssets')
 
-        // fetchData()
+        fetchData()
+        const watchedAssets: Ref<Asset[]> = computed(() => assets.value.slice(0, 10))
+        const sortedAssets: Asset[] = sortAssets(assets.value.slice(), "price_change_percentage_1h_in_currency", false)
+        const topMovingAssets = findTopMovers(sortedAssets, 10)
+        
+        const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets, "price_change_percentage_1h_in_currency", true).reverse())
 
-        const watchedAssets: Asset[] = [
-            {
-                title: "Bitcoin",
-                symbol: "BTC",
-                iconUrl: ""
-            },
-            {
-                title: "Etherum",
-                symbol: "ETH",
-                iconUrl: ""
-            }
-        ]
-
-        return { user, currentCurrency, watchedAssets }
+        return { user, assets, preferedCurrency, watchedAssets, topMovers }
     },
 })
 </script>
@@ -75,6 +72,6 @@ export default defineComponent({
   @apply my-8;
 }
 .assetsList {
-  @apply shadow-sm;
+  @apply shadow-md;
 }
 </style>

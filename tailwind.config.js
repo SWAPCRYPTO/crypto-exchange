@@ -14,6 +14,7 @@ module.exports = {
       indigo: colors.indigo,
       red: colors.red,
       green: colors.green,
+      success: colors.green["500"],
       error: colors.red["500"]
     },
     listStyleType: {

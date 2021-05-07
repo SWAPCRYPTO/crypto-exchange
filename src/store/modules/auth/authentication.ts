@@ -109,6 +109,7 @@ const actions = {
                         account: {
                             balance: 0,
                             preferredCurrency: 'USD',
+                            watchedAssets: [],
                         },
                         settings: {
                             notifications: true,

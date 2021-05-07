@@ -1,10 +1,10 @@
 <template>
     <ion-page>
         <ion-content :fullscreen="true">
-            <ion-list lines="full" class="ion-no-margin">
+            <ion-list lines="full" class="p-4">
                 <ion-list-header lines="full">
                     <ion-label>
-                        Input Types
+                        Authentication
                     </ion-label>
                 </ion-list-header>
 
@@ -19,13 +19,17 @@
                 </ion-item>
 
                 <ion-item>
-                    <ion-label>Password Input</ion-label>
+                    <ion-label>Password</ion-label>
                     <ion-input placeholder="Provide password" type="password" v-model="authData.password"></ion-input>
                 </ion-item>
     
-                <ion-button size="large" expand="block" @click="onSignUp">Sign up</ion-button>
-                <ion-button size="large" expand="block" @click="onSignIn">Sign in</ion-button>
+                <ion-item>
+                    <ion-button @click="onSignUp">Sign up</ion-button>
+                </ion-item>
                 
+                <ion-item>
+                    <ion-button @click="onSignIn">Sign in</ion-button>
+                </ion-item>
             </ion-list>
         </ion-content>
     </ion-page>
