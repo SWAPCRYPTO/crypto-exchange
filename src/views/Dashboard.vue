@@ -5,11 +5,11 @@
         <ion-title>Dashboard</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true" class="ion-padding">
+    <ion-content :fullscreen="true">
       <section class="home container">
         <div class="home__container">
             <header class="balance__container">
-                <p class="">Portfolio balance</p>
+                <p class="font-medium mb-2">Portfolio balance</p>
                 <h1 class="h1 balance">{{ currentCurrency }} {{ user.balance }}</h1>
             </header>
             <section class="watchlist__container">
@@ -44,7 +44,11 @@ export default defineComponent({
         }
 
         const store = useStore()
-        const currentCurrency = computed(() => store.getters.currentCurrency)
+        const currentCurrency = "USD"
+        const assets = computed(() => store.getters.assets)
+        const fetchData = () => store.dispatch('fetchAssets')
+
+        // fetchData()
 
         const watchedAssets: Asset[] = [
             {
@@ -65,10 +69,12 @@ export default defineComponent({
 </script>
 <style>
 .balance {
-  font-size: 36px;
-  line-height: 40px;
+  @apply text-4xl;
 }
 .watchlist__container {
-  margin: 32px 0;
+  @apply my-8;
+}
+.assetsList {
+  @apply shadow-sm;
 }
 </style>

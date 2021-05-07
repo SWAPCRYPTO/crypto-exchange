@@ -39,58 +39,57 @@ export default defineComponent({
 
 <style>
 .assetsList {
-    padding: 16px;
-    margin: 16px 0;
+    @apply p-4 my-4;
 }
 
 .assetsList__items {
-    display: flex;
-    flex-direction: column;
+    @apply flex flex-col;
 }
 
 .assetsList__item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 12px 0;
+    @apply flex items-center justify-between my-3;
 }
 .assetsList__item:first-of-type {
-    margin-top: 0;
+    @apply mt-0;
 }
 .assetsList__item:last-of-type {
-    margin-bottom: 0;
+    @apply mb-0;
 }
 
 .currency__title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    @apply flex items-center justify-between;
 }
 
 .currency__icon {
     max-width: 32px;
-    width: 32px;
-    height: 100%;
-    margin-right: 8px;
+    @apply w-8 h-full mr-4;
 }
 
 .currency__icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    @apply w-full h-full object-contain;
 }
 
 .currency__name {
-    display: flex;
-    flex-direction: column;
+    @apply flex flex-col;
 }
 
 .currency__name p {
-    font-size: 18px;
-    line-height: 28px;
+    @apply text-lg;
 }
 
 .currency__name .symbol {
-    text-transform: uppercase;
+    @apply uppercase;
+}
+
+.currency__details {
+    @apply flex flex-col items-end;
+}
+
+.currency__gain.positive {
+    @apply text-green-500;
+}
+
+.currency__gain.negative {
+    @apply text-red-600;
 }
 </style>

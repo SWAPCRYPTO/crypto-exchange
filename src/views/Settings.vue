@@ -1,25 +1,118 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Tab 2</ion-title>
-      </ion-toolbar>
-    </ion-header>
     <ion-content :fullscreen="true">
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">Tab 2</ion-title>
-        </ion-toolbar>
-      </ion-header>
+      <section class="settings container">
+        <div class="settings__container">
+            <header class="userDetails__container">
+                <p class="user__email">{{ user.email }}</p>
+                <h1 class="h1 user__title">{{ user.name }}</h1>
+            </header>
+            <div class="options__container">
+                <section class="options" v-for="item in optionsList" :key="item.title">
+                    <h2 class="h2">{{ item.title }}</h2>
+                    <ul>
+                        <li class="category" v-for="(category, index) in item.subCategories" :key="index">
+                            <p @click="category.action" :class="{'text-error': category.isDangerous }">{{ category.name }}</p>
+                            <ion-icon v-if="!category.action" name="chevron-forward-outline"></ion-icon>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+          </div>
+      </section>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
+import { computed, defineComponent } from 'vue';
+import { IonPage, IonContent, IonIcon } from '@ionic/vue';
+import { useStore } from 'vuex';
 
-export default  {
-  name: 'Tab2',
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage }
+interface Option {
+  title: string
+  subCategories: Array<{
+    name: string
+    isDangerous: boolean 
+    action?: () => void
+  }>
 }
+
+export default defineComponent({
+    name: "Settings",
+    components: { IonPage, IonContent, IonIcon },
+    setup() {
+        const store = useStore()
+        const user = computed(() => store.getters.user)
+        const optionsList: Option[] = [
+            {
+                title: "Account",
+                subCategories: [
+                    {
+                        name: "Limits and features",
+                        isDangerous: false
+                    },
+                    {
+                        name: "Native currency",
+                        isDangerous: false
+                    },
+                    {
+                        name: "Privacy",
+                        isDangerous: false
+                    },
+                    {
+                        name: "Notification settings",
+                        isDangerous: false
+                    },
+                    {
+                        name: "Sign out",
+                        isDangerous: true,
+                        action: () => store.dispatch('signUserOut'),
+                    }
+                ]
+            }
+        ]
+
+        return { user, optionsList }
+    }
+})
 </script>
+
+<style>
+
+.user__email {
+  @apply font-medium mb-2;
+}
+
+.user__title {
+  @apply capitalize;
+}
+
+.options__container {
+  @apply my-8 flex flex-col;
+}
+
+.options {
+  @apply flex flex-col;
+}
+
+.options  ul {
+  @apply my-12;
+}
+
+.category {
+  @apply flex justify-between items-center my-12;
+}
+
+.category:first-of-type {
+  @apply mt-0;
+}
+
+.category:last-of-type {
+  @apply mb-0;
+}
+
+.category .icon {
+  @apply w-5 h-5 text-white;
+}
+</style>

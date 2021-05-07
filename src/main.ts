@@ -24,6 +24,8 @@ import '@ionic/vue/css/display.css'
 /* Theme variables */
 import './theme/variables.css'
 import './assets/styles/global.css'
+import './assets/styles/tailwind.css'
+import './assets/styles/utility-patterns.css'
 
 const app = createApp(App).use(IonicVue).use(router).use(store)
 
