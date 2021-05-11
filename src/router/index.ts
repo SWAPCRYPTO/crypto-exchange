@@ -1,12 +1,14 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router'
 import { RouteRecordRaw } from 'vue-router'
+import WelcomeScreen from '@/views/authentication/WelcomeScreen.vue'
 import Tabs from '../views/Tabs.vue'
 import AuthGuard from './authGuard'
 
 const routes: Array<RouteRecordRaw> = [
     {
         path: '/',
-        redirect: '/authentication',
+        component: WelcomeScreen,
+        // redirect: '/authentication',
     },
     {
         path: '/authentication',

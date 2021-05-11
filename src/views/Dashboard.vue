@@ -1,15 +1,15 @@
 <template>
   <ion-page>
-    <ion-header :translucent="true">
+    <ion-header translucent>
       <ion-toolbar mode="ios">
         <ion-title>{{ preferedCurrency }} {{ user.account.balance }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true">
+    <ion-content fullscreen>
       <section class="home container">
         <div class="home__container">
             <header class="balance__container">
-              <ion-header>
+              <ion-header collapse="condense">
                 <ion-toolbar>
                   <p class="font-medium mb-2">Portfolio balance</p>
                   <h1 class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferedCurrency }} {{ user.account.balance }}</h1>

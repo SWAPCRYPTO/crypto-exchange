@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <ion-content :fullscreen="true">
+    <ion-content fullscreen>
       <section class="settings container">
         <div class="settings__container">
             <header class="userDetails__container">
@@ -26,7 +26,7 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
-import { IonPage, IonContent, IonIcon } from '@ionic/vue';
+import { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel } from '@ionic/vue';
 import { useStore } from 'vuex';
 
 interface Option {
@@ -40,7 +40,7 @@ interface Option {
 
 export default defineComponent({
     name: "Settings",
-    components: { IonPage, IonContent, IonIcon },
+    components: { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel },
     setup() {
         const store = useStore()
         const user = computed(() => store.getters.user)

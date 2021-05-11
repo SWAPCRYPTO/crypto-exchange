@@ -1,59 +1,83 @@
 <template>
     <ion-page>
-        <ion-content :fullscreen="true">
-            <ion-list lines="full" class="p-4">
-                <ion-list-header lines="full">
-                    <ion-label>
-                        Authentication
-                    </ion-label>
-                </ion-list-header>
+        <ion-content scroll-y="false" fullscreen>
+            <section class="authentication max-w-md md:max-w-xl mx-auto flex flex-col justify-between w-full h-full p-8">
+                <section class="signUp" v-if="showSignUp">
+                    <div class="signUp__container flex flex-col w-full">
+                        <header class="flex flex-col items-center justify-start mb-4">
+                                <h1 class="h1 text-center">Create your account</h1>
+                                <p class="mt-2 text-center">Create an account so you can manage your assets in the most comfortable way.</p>
+                        </header>
+                        <ion-list lines="full" class="my-4">
+                            <ion-item>
+                                <ion-input autofocus autocomplete="on" placeholder="Your name" type="text" v-model="authData.name"></ion-input>
+                            </ion-item>
 
-                <ion-item>
-                    <ion-label>Name</ion-label>
-                    <ion-input placeholder="Provide name" type="text" v-model="authData.name"></ion-input>
-                </ion-item>
+                            <ion-item>
+                                <ion-input autocomplete="on" placeholder="Email address" type="email" v-model="authData.email"></ion-input>
+                            </ion-item>
 
-                <ion-item>
-                    <ion-label>Email</ion-label>
-                    <ion-input placeholder="Provide email" type="email" v-model="authData.email"></ion-input>
-                </ion-item>
+                            <ion-item>
+                                <ion-input clearInput autocomplete="on" placeholder="Password" type="password" v-model="authData.password"></ion-input>
+                            </ion-item>
 
-                <ion-item>
-                    <ion-label>Password</ion-label>
-                    <ion-input placeholder="Provide password" type="password" v-model="authData.password"></ion-input>
-                </ion-item>
-    
-                <ion-item>
-                    <ion-button @click="onSignUp">Sign up</ion-button>
-                </ion-item>
-                
-                <ion-item>
-                    <ion-button @click="onSignIn">Sign in</ion-button>
-                </ion-item>
-            </ion-list>
+                            <ion-item>
+                                    <ion-checkbox v-model="termsAccepted"></ion-checkbox>
+                                    <ion-label>Accept our Terms and Conditions</ion-label>
+                            </ion-item>
+                        </ion-list>
+                        <ion-button class="mt-4" expand="block" @click="onSignUp">Sign up</ion-button>
+                    </div>
+                </section>
+                <section class="signIn" v-else>
+                    <div class="signIn__container flex flex-col w-full">
+                        <header class="flex flex-col items-center justify-start mb-4">
+                                <h1 class="h1 text-center">Welcome back</h1>
+                                <p class="mt-2 text-center">Log in with your data and start managing your assets.</p>
+                        </header>
+                        <ion-list lines="full" class="my-4">
+                            <ion-item>
+                                <ion-input autocomplete="on" placeholder="Email address" type="email" v-model="authData.email"></ion-input>
+                            </ion-item>
+
+                            <ion-item>
+                                <ion-input clearInput autocomplete="on" placeholder="Password" type="password" v-model="authData.password"></ion-input>
+                            </ion-item>
+                        </ion-list>
+                        <ion-button class="mt-4" expand="block" @click="onSignIn">Sign in</ion-button>
+                    </div>
+                </section>
+                <footer class="mb-4 flex items-center justify-center">
+                    <p class="flex items-center justify-center">{{ showSignUp ? 'Already have an account?' : 'Don\'t have an account?' }}</p>
+                    <ion-text mode="ios" color="primary" @click="showSignUp = !showSignUp"><p class="ml-1">{{ showSignUp ? 'Log in' : 'Sign up' }}</p></ion-text>
+                </footer>
+            </section>
         </ion-content>
     </ion-page>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, watch } from 'vue'
-import { IonPage, IonContent, IonList, IonListHeader, IonButton, IonLabel, IonInput, IonItem } from '@ionic/vue';
+import { defineComponent, reactive, ref } from 'vue'
+import { IonPage, IonContent, IonList, IonButton, IonInput, IonItem, IonCheckbox, IonLabel, IonText } from '@ionic/vue';
 import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
 
 export default defineComponent({
     name: 'Authentication',
-    components: { IonPage, IonContent, IonListHeader, IonButton, IonList, IonLabel, IonInput, IonItem },
+    components: { IonPage, IonContent, IonButton, IonList, IonInput, IonItem, IonCheckbox, IonLabel, IonText },
     setup() {
         const store = useStore()
+
+        const showSignUp = ref(true)
+
         const authData = reactive({
             name: "",
             email: "",
             password: ""
         })
+        const termsAccepted = ref(false)
 
         const onSignUp = () => {
-            if (authData.name && authData.email && authData.password) {
+            if (authData.name && authData.email && authData.password && termsAccepted.value) {
                 store.dispatch('signUserUp', authData).then(() => {
                     authData.name = ""
                     authData.email = ""
@@ -71,17 +95,16 @@ export default defineComponent({
             }
         }
 
-        const router = useRouter()
-        const currentUser = computed(() => store.getters.user)
-        watch(currentUser, (user, prevUser) => {
-            if(user && !prevUser)
-                router.push('/tabs/dashboard')
-            else if (!user) {
-                router.push('/')
-            }
-        })
-
-        return { authData, onSignUp, onSignIn }
+        return { showSignUp, authData, termsAccepted, onSignUp, onSignIn }
     },
 })
 </script>
+
+<style>
+.signUp ion-item, .signIn ion-item {
+    --padding-start: 0;
+    --padding-end: 0;
+    --inner-padding-start: 0;
+    --inner-padding-end: 0;
+}
+</style>

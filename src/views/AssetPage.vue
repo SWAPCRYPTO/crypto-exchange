@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <ion-header>
+    <ion-header translucent>
         <ion-toolbar mode="ios">
             <ion-buttons slot="start">
                 <ion-back-button default-href="/tabs" text=""></ion-back-button>
@@ -8,7 +8,7 @@
             <ion-title class="uppercase">{{ route.params.symbol }}</ion-title>
         </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true">
+    <ion-content fullscreen>
       <section class="prices container">
         <ion-header collapse="condense">
           <ion-toolbar>
