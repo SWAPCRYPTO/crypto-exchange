@@ -1,7 +1,7 @@
 <template>
   <ion-page>
     <ion-header>
-        <ion-toolbar>
+        <ion-toolbar mode="ios">
             <ion-buttons slot="start">
                 <ion-back-button default-href="/tabs" text=""></ion-back-button>
             </ion-buttons>

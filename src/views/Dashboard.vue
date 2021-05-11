@@ -1,7 +1,7 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
+    <ion-header :translucent="true">
+      <ion-toolbar mode="ios">
         <ion-title>{{ preferedCurrency }} {{ user.account.balance }}</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -9,10 +9,10 @@
       <section class="home container">
         <div class="home__container">
             <header class="balance__container">
-              <ion-header collapse="condense">
+              <ion-header>
                 <ion-toolbar>
                   <p class="font-medium mb-2">Portfolio balance</p>
-                  <h1 class="h1 balance" @click="router.push('/tabs/portfolio')">{{ preferedCurrency }} {{ user.account.balance }}</h1>
+                  <h1 class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferedCurrency }} {{ user.account.balance }}</h1>
                 </ion-toolbar>
               </ion-header>
             </header>
