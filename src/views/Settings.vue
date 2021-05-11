@@ -17,6 +17,19 @@
                         </li>
                     </ul>
                 </section>
+                <!-- <ion-list v-for="item in optionsList" :key="item.title">
+                  <h2 class="h2">{{ item.title }}</h2>
+                  <ion-item>
+                    <ion-list>
+                      <ion-item class="category" v-for="(category, index) in item.subCategories" :key="index">
+                        <ion-label @click="category.action" :class="{'text-error': category.isDangerous }">
+                          {{ category.name }}
+                        </ion-label>
+                        <ion-icon v-if="!category.action" name="chevron-forward-outline"></ion-icon>
+                      </ion-item>
+                    </ion-list>
+                  </ion-item>
+                </ion-list> -->
             </div>
           </div>
       </section>
@@ -40,6 +53,7 @@ interface Option {
 
 export default defineComponent({
     name: "Settings",
+    // eslint-disable-next-line vue/no-unused-components
     components: { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel },
     setup() {
         const store = useStore()
