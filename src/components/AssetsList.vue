@@ -15,7 +15,7 @@
                 </div>
                 <div class="currency__details">
                     <p class="currency__value">{{ preferredCurrency }} {{ asset.current_price }}</p>
-                    <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume }} {{ asset.symbol }}</p>
+                    <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume(asset.symbol, portfolio) }} {{ asset.symbol }}</p>
                     <p v-else class="currency__gain" :class="asset.price_change_percentage_24h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_24h_in_currency) }}%</p>
                 </div>
             </li>
@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue"
+import { computed, defineComponent } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
 
@@ -35,11 +35,11 @@ export default defineComponent({
         const store = useStore()
         const router = useRouter()
         const preferredCurrency = computed(() => store.getters.user.account.preferredCurrency)
-
+        const portfolio = computed(() => store.getters.user.account.portfolio)
         const formatChange = (value: number) => (value > 0 ? '+' : '') + value.toFixed(2)
 
-        const ownedVolume = ref(0)
-        return { preferredCurrency, formatChange, router, ownedVolume }
+        const ownedVolume = (asset: string, dictonary: { [name: string]: number}) => dictonary[asset]
+        return { preferredCurrency, formatChange, router, portfolio, ownedVolume }
     },
 })
 </script>

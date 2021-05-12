@@ -117,6 +117,7 @@ const actions = {
                         name: payload.name,
                         account: {
                             balance: 0,
+                            portfolio: {},
                             preferredCurrency: 'USD',
                             watchedAssets: [],
                         },

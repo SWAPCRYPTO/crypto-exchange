@@ -41,7 +41,7 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBa
 import AssetsList from "../components/AssetsList.vue"
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
-import { computed, Ref, watch } from 'vue';
+import { computed, Ref } from 'vue';
 import { starOutline, star, addOutline, removeOutline, repeatOutline, close } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
 
