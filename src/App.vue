@@ -10,6 +10,7 @@ import firebase from './firebase';
 import { computed, watch, defineComponent } from 'vue';
 import { useStore } from 'vuex';
 import router from './router';
+import User from './store/modules/auth/models/User';
 
 export default defineComponent({
   name: 'App',
@@ -24,8 +25,13 @@ export default defineComponent({
     });
 
     const currentUser = computed(() => store.getters.user)
-        watch(currentUser, (user, prevUser) => {
-            if(user && !prevUser)
+        watch(currentUser, (user: User | null, prevUser: User | null) => {
+            if(user && prevUser) {
+              if(user.account.preferredCurrency != prevUser.account.preferredCurrency) {
+                store.dispatch('fetchAssets', user.account.preferredCurrency)
+              }
+            }
+            else if(user && !prevUser)
                 router.push('/tabs/dashboard')
             else if (!user) {
                 router.push('/authentication')

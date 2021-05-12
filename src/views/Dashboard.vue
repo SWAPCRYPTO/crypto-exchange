@@ -57,10 +57,11 @@ export default defineComponent({
         const user: Ref<User> = computed(() => store.getters.user)
         const preferedCurrency = computed(() => user.value.account.preferredCurrency)
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
-        const fetchData = () => store.dispatch('fetchAssets')
-
+        const fetchData = () => store.dispatch('fetchAssets', preferedCurrency.value)
+        
         fetchData()
-        const watchedAssets: Ref<Asset[]> = computed(() => assets.value.slice(0, 10))
+        
+        const watchedAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.watchedAssets?.includes(asset.symbol)))
         const sortedAssets: Ref<Asset[]> = computed(() => sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", false))
         const NUMBER_OF_TOP_MOVING_ASSETS = 5
         const topMovingAssets = computed(() => findTopMovers(sortedAssets.value, NUMBER_OF_TOP_MOVING_ASSETS))

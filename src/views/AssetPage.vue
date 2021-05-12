@@ -19,7 +19,7 @@
                 <h2 class="text-base mt-1" :class="asset.price_change_24h > 0 ? 'text-success' : 'text-error'">{{ preferredCurrency }} {{asset.price_change_24h > 0 ? '+' : ''}}{{ asset.price_change_24h.toFixed(2) }} ({{ asset.price_change_percentage_24h.toFixed(2) }}%)</h2>
               </div>
               <div class="icon__wrapper">
-                <ion-icon @click="isFavourite = !isFavourite" size="large" :icon="isFavourite ? star : starOutline"></ion-icon>
+                <ion-icon @click="toggleFavourite" size="large" :icon="isFavourite ? star : starOutline"></ion-icon>
               </div>
             </div>
           </ion-toolbar>
@@ -39,10 +39,11 @@
 <script lang="ts">
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonIcon, IonButton, actionSheetController } from '@ionic/vue';
 import AssetsList from "../components/AssetsList.vue"
-import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
-import { computed, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { computed, Ref, watch } from 'vue';
 import { starOutline, star, addOutline, removeOutline, repeatOutline, close } from 'ionicons/icons'
+import User from '@/store/modules/auth/models/User';
 
 export default  {
   name: 'Asset',
@@ -50,10 +51,23 @@ export default  {
   setup() {
       const store = useStore()
       const route = useRoute()
+      const watchedAssets = computed(() => store.getters.watchedAssets)
       const preferredCurrency = computed(() => store.getters.preferredCurrency)
-      const asset = store.getters.asset(route.params.symbol)
-      const isFavourite = ref(false)
+      const asset = store.getters.asset(route.params.symbol) // fix bug with route changes
+      const isFavourite = computed(() => watchedAssets.value.includes(route.params.symbol))
+      const user: Ref<User> = computed(() => store.getters.user)
 
+      const toggleFavourite = () => {
+        const isWatched = watchedAssets.value.includes(route.params.symbol)
+        let filteredAssets = []
+        if(isWatched) { 
+          filteredAssets = watchedAssets.value.filter((asset: string) => asset != route.params.symbol)
+        } else {
+          watchedAssets.value.push(route.params.symbol)
+          filteredAssets = watchedAssets.value
+        }
+        store.dispatch('updateUserAccount', { ...user.value.account, watchedAssets: filteredAssets })
+      }
 
       const presentActionSheet = async () => {
         const actionSheet = await actionSheetController
@@ -98,7 +112,9 @@ export default  {
         console.log('onDidDismiss resolved with role', role);
       }
 
-      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet }
+      
+
+      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet, toggleFavourite }
   }
 }
 </script>

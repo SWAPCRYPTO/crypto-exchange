@@ -1,6 +1,7 @@
 import { useRouter } from 'vue-router'
 import firebase from '../../../firebase'
 import User from './models/User'
+import UserAccount from './models/UserAccount'
 import UserSettings from './models/UserSettings'
 
 export interface AuthState {
@@ -31,6 +32,11 @@ const mutations = {
             state.user.settings = payload
         }
     },
+    setWatchedAssets(state: AuthState, payload: string[]) {
+        if (state.user?.account) {
+            state.user.account.watchedAssets = payload
+        }
+    },
     setLoading(state: AuthState, payload: boolean) {
         state.loading = payload
     },
@@ -49,6 +55,7 @@ const getters = {
     isVerfied: () => firebase.auth().currentUser?.emailVerified,
     preferredCurrency: (state: AuthState) =>
         state.user?.account.preferredCurrency,
+    watchedAssets: (state: AuthState) => state.user?.account.watchedAssets,
 }
 
 const actions = {
@@ -180,6 +187,26 @@ const actions = {
                     console.error(e)
                 }
             )
+    },
+    async updateUserAccount(
+        { commit, state }: { commit: Function; state: AuthState },
+        payload: UserAccount
+    ) {
+        if (state.user) {
+            commit('setLoading', true)
+            commit('clearError')
+            await firebase
+                .firestore()
+                .collection('users')
+                .doc(state.user.id)
+                .update({ account: payload })
+                .catch((e: firebase.auth.Error) => {
+                    commit('setLoading', false)
+                    commit('setAuthError', e.message)
+                    console.error(e)
+                })
+            commit('setLoading', false)
+        }
     },
     async changeEmail(
         {

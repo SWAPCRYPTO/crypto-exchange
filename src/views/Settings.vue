@@ -8,6 +8,11 @@
                 <h1 class="h1 user__title">{{ user.name }}</h1>
             </header>
             <div class="options__container">
+                <ion-item>
+                  <ion-checkbox v-model="useDollars"></ion-checkbox>
+                  <ion-label>Change currency between pln and usd</ion-label>
+                </ion-item>
+                
                 <section class="options" v-for="item in optionsList" :key="item.title">
                     <h2 class="h2">{{ item.title }}</h2>
                     <ul>
@@ -38,9 +43,10 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from 'vue';
-import { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel } from '@ionic/vue';
+import { computed, defineComponent, ref, Ref, watch } from 'vue';
+import { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel, IonCheckbox } from '@ionic/vue';
 import { useStore } from 'vuex';
+import User from '@/store/modules/auth/models/User';
 
 interface Option {
   title: string
@@ -54,10 +60,10 @@ interface Option {
 export default defineComponent({
     name: "Settings",
     // eslint-disable-next-line vue/no-unused-components
-    components: { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel },
+    components: { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel, IonCheckbox },
     setup() {
         const store = useStore()
-        const user = computed(() => store.getters.user)
+        const user: Ref<User> = computed(() => store.getters.user)
         const optionsList: Option[] = [
             {
                 title: "Account",
@@ -87,7 +93,15 @@ export default defineComponent({
             }
         ]
 
-        return { user, optionsList }
+        const useDollars = ref(true)
+        const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency: preferredCurrency })
+
+        watch(useDollars, (value: boolean) => {
+          updateUserAccount(value ? 'USD' : 'PLN')
+        })
+        
+
+        return { user, optionsList, useDollars }
     }
 })
 </script>

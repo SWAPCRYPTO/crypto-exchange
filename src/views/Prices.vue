@@ -9,7 +9,7 @@
       <section class="prices container">
         <ion-header class="bg-transparent" collapse="condense">
           <ion-toolbar>
-            <div class="header__container flex flex-col lg:flex-row items-center justify-between">
+            <div class="header__container flex flex-col lg:flex-row items-start justify-between">
               <div class="header__details flex flex-col">
                 <p class="font-medium mb-2">In the past 24 hours</p>
               <h1 class="h1 balance">Market is {{marketChangeStatus}} <span class="text-2xl md:text-3xl" :class="isMarketUp ? 'text-success' : 'text-error'">{{marketChangePercentageText}}</span></h1>
