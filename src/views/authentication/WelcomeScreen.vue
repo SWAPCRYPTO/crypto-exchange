@@ -23,12 +23,12 @@
 </template>
 
 <script lang="ts">
-import { IonPage, IonContent, IonSlides, IonSlide } from '@ionic/vue';
+import { IonPage, IonContent, IonSlides, IonSlide, IonIcon, IonButton } from '@ionic/vue';
 import { defineComponent } from 'vue'
 
 export default defineComponent({
     name: "WelcomeScreen",
-    components: { IonPage, IonContent, IonSlides, IonSlide },
+    components: { IonPage, IonContent, IonSlides, IonSlide, IonIcon, IonButton },
     setup() {
         const slideOpts = {
             initialSlide: 1,

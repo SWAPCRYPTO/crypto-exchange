@@ -24,7 +24,9 @@
             </div>
           </ion-toolbar>
         </ion-header>
-        <div class="graph__container"></div>
+        <div class="graph__container">
+          <ChartComponent :symbol="asset.symbol" :data="asset.sparkline_in_7d.price" :currency="preferredCurrency" />
+        </div>
         <div class="wallet__container">
           <div class="wallet">
             <AssetsList :assets="[asset]" :walletMode="true" />
@@ -39,6 +41,7 @@
 <script lang="ts">
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonIcon, IonButton, actionSheetController } from '@ionic/vue';
 import AssetsList from "../components/AssetsList.vue"
+import ChartComponent from "../components/charts/ChartComponent.vue"
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 import { computed, Ref } from 'vue';
@@ -47,7 +50,7 @@ import User from '@/store/modules/auth/models/User';
 
 export default  {
   name: 'Asset',
-  components: { AssetsList, IonHeader, IonTitle, IonToolbar, IonContent, IonPage, IonButtons, IonBackButton, IonIcon, IonButton },
+  components: { AssetsList, ChartComponent, IonHeader, IonTitle, IonToolbar, IonContent, IonPage, IonButtons, IonBackButton, IonIcon, IonButton },
   setup() {
       const store = useStore()
       const route = useRoute()
