@@ -24,7 +24,7 @@
             </div>
           </ion-toolbar>
         </ion-header>
-        <div class="graph__container">
+        <div class="graph__container my-4">
           <ChartComponent :symbol="asset.symbol" :data="asset.sparkline_in_7d.price" :currency="preferredCurrency" />
         </div>
         <div class="wallet__container">

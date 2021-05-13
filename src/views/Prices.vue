@@ -15,12 +15,13 @@
               <h1 class="h1 balance">Market is {{marketChangeStatus}} <span class="text-2xl md:text-3xl" :class="isMarketUp ? 'text-success' : 'text-error'">{{marketChangePercentageText}}</span></h1>
               </div>
               <div class="search__wrapper mt-8 lg:mt-0 w-full md:max-w-xs">
-                  <ion-searchbar show-cancel-button="never" debounce="500" placeholder="Find your asset" animated></ion-searchbar>
+                  <ion-searchbar v-model="searchQuery" show-cancel-button="never" debounce="500" placeholder="Find your asset" animated></ion-searchbar>
+                  <!-- @ionInput="handleInput"  -->
               </div>
             </div>
           </ion-toolbar>
         </ion-header>
-        <AssetsList :assets="assets" />
+        <AssetsList :assets="assets" :searchQuery="searchQuery" />
       </section>
     </ion-content>
   </ion-page>
@@ -47,8 +48,9 @@ export default defineComponent({
         const isMarketUp = ref(marketChangePercentage.value > 0)
         const marketChangeStatus = ref(isMarketUp.value ? "up" : "down")
         const marketChangePercentageText = ref(`${isMarketUp.value ? '+' : ''}${marketChangePercentage.value.toFixed(2)}%`)
+        const searchQuery = ref("")
 
-        return { assets, marketChangePercentageText, marketChangeStatus, isMarketUp, starOutline }
+        return { assets, marketChangePercentageText, marketChangeStatus, isMarketUp, starOutline, searchQuery }
     }
 })
 </script>

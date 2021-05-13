@@ -1,7 +1,7 @@
 <template>
     <div class="assetsList" :class="{ 'round': walletMode }">
         <ul class="assetsList__items">
-            <li class="assetsList__item" v-for="asset in assets" :key="asset.id" @click="router.push(`/tabs/asset/${asset.symbol}`)">
+            <li class="assetsList__item" v-for="asset in filteredAssets" :key="asset.id" @click="router.push(`/tabs/asset/${asset.symbol}`)">
                 <div class="currency__title">
                     <div class="currency__icon">
                         <img :src="asset.image" class="currency__icon" alt="currency icon">
@@ -24,14 +24,15 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from "vue"
+import Asset from "@/store/modules/assets/models/Asset"
+import { computed, defineComponent, Ref } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
 
 export default defineComponent({
     name: "AssetsList",
-    props: ['assets', 'walletMode'],
-    setup() {
+    props: ['assets', 'walletMode', 'searchQuery'],
+    setup(props) {
         const store = useStore()
         const router = useRouter()
         const preferredCurrency = computed(() => store.getters.user.account.preferredCurrency)
@@ -39,7 +40,11 @@ export default defineComponent({
         const formatChange = (value: number) => (value > 0 ? '+' : '') + value.toFixed(2)
 
         const ownedVolume = (asset: string, dictonary: { [name: string]: number}) => dictonary[asset]
-        return { preferredCurrency, formatChange, router, portfolio, ownedVolume }
+        const searchQuery = computed(() => props.searchQuery ? props.searchQuery.toLowerCase() : "")
+        
+        const filteredAssets: Ref<Asset[]> = computed(() => props.assets.filter((asset: Asset) => asset.symbol.toLowerCase().indexOf(searchQuery.value) > -1 || asset.name.toLowerCase().indexOf(searchQuery.value) > -1))
+
+        return { preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets }
     },
 })
 </script>
