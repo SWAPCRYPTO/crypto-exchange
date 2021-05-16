@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title>{{ preferedCurrency }} {{ user.account.balance }}</ion-title>
+        <ion-title>{{ preferredCurrency }} {{ balance }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -12,7 +12,7 @@
               <ion-header collapse="condense">
                 <ion-toolbar>
                   <p class="font-medium mb-2">Portfolio balance</p>
-                  <h1 class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferedCurrency }} {{ user.account.balance }}</h1>
+                  <h1 class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ balance }}</h1>
                 </ion-toolbar>
               </ion-header>
             </header>
@@ -32,6 +32,7 @@
 
 <script lang="ts">
 import Asset from '@/store/modules/assets/models/Asset';
+import { convertCurrency } from "@/services/ConvertCurrency"
 import User from '@/store/modules/auth/models/User';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
 
@@ -39,8 +40,8 @@ import { computed, defineComponent, Ref } from "vue"
 import { useRouter } from 'vue-router';
 import { useStore } from "vuex"
 import AssetsList from "../components/AssetsList.vue"
+import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 
-// const sortAssets = (items: any[], key: string) => items.slice().sort((a, b) => a[key] - b[key])
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
 
@@ -55,11 +56,17 @@ export default defineComponent({
         const store = useStore()
         const router = useRouter()
         const user: Ref<User> = computed(() => store.getters.user)
-        const preferedCurrency = computed(() => user.value.account.preferredCurrency)
+        const preferredCurrency = computed(() => user.value.account.preferredCurrency)
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
-        const fetchData = () => store.dispatch('fetchAssets', preferedCurrency.value)
+        const fetchData = () => store.dispatch('fetchAssets')
+        const fetchCurrencies = () => store.dispatch('fetchCurrencies')
         
         fetchData()
+        fetchCurrencies()
+
+        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
+        const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
+        const balance = computed(() => convertCurrency(user.value.account.balance, currencyRate))
         
         const watchedAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.watchedAssets?.includes(asset.symbol)))
         const sortedAssets: Ref<Asset[]> = computed(() => sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", false))
@@ -68,10 +75,11 @@ export default defineComponent({
         
         const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets.value, "price_change_percentage_24h_in_currency", true).reverse())
 
-        return { router, user, assets, preferedCurrency, watchedAssets, topMovers }
-    },
+        return { currencies, router, user, assets, preferredCurrency, watchedAssets, topMovers, balance }
+    }
 })
 </script>
+
 <style>
 .balance {
   @apply text-4xl;

@@ -53,6 +53,7 @@ const getters = {
     loading: (state: AuthState) => state.loading,
     authError: (state: AuthState) => state.authError,
     isVerfied: () => firebase.auth().currentUser?.emailVerified,
+    userBalance: (state: AuthState) => state.user?.account.balance,
     preferredCurrency: (state: AuthState) =>
         state.user?.account.preferredCurrency,
     watchedAssets: (state: AuthState) => state.user?.account.watchedAssets,

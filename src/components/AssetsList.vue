@@ -14,7 +14,7 @@
                 <div class="sparkline">
                 </div>
                 <div class="currency__details">
-                    <p class="currency__value">{{ preferredCurrency }} {{ asset.current_price }}</p>
+                    <p class="currency__value">{{ preferredCurrency }} {{ convertCurrency(asset.current_price, currencyRate) }}</p>
                     <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume(asset.symbol, portfolio) }} {{ asset.symbol }}</p>
                     <p v-else class="currency__gain" :class="asset.price_change_percentage_24h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_24h_in_currency) }}%</p>
                 </div>
@@ -24,7 +24,9 @@
 </template>
 
 <script lang="ts">
+import { convertCurrency } from "@/services/ConvertCurrency"
 import Asset from "@/store/modules/assets/models/Asset"
+import { Currencies } from "@/store/modules/assets/models/NBPCurrency"
 import { computed, defineComponent, Ref } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
@@ -43,8 +45,11 @@ export default defineComponent({
         const searchQuery = computed(() => props.searchQuery ? props.searchQuery.toLowerCase() : "")
         
         const filteredAssets: Ref<Asset[]> = computed(() => props.assets.filter((asset: Asset) => asset.symbol.toLowerCase().indexOf(searchQuery.value) > -1 || asset.name.toLowerCase().indexOf(searchQuery.value) > -1))
+        
+        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
+        const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
 
-        return { preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets }
+        return { preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency }
     },
 })
 </script>

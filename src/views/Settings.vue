@@ -93,7 +93,7 @@ export default defineComponent({
             }
         ]
 
-        const useDollars = ref(true)
+        const useDollars = ref(false)
         const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency: preferredCurrency })
 
         watch(useDollars, (value: boolean) => {

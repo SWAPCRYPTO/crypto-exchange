@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title>Tab 2</ion-title>
+        <ion-title>{{ preferredCurrency }} {{ balance }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -11,7 +11,7 @@
           <ion-header n-header collapse="condense">
             <ion-toolbar>
               <p class="font-medium mb-2">Portfolio balance</p>
-              <h1 class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferedCurrency }} {{ user.account.balance }}</h1>
+              <h1 class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ balance }}</h1>
             </ion-toolbar>
           </ion-header>
         </header>
@@ -30,6 +30,8 @@ import { useStore } from 'vuex';
 import AssetsList from "../components/AssetsList.vue"
 import User from '@/store/modules/auth/models/User';
 import Asset from '@/store/modules/assets/models/Asset';
+import { convertCurrency } from '@/services/ConvertCurrency';
+import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 // import axios from 'axios';
 
 export default  {
@@ -46,11 +48,15 @@ export default  {
       // })
       const store = useStore()
       const user: Ref<User> = computed(() => store.getters.user)
-      const preferedCurrency = computed(() => user.value.account.preferredCurrency)
+      const preferredCurrency = computed(() => user.value.account.preferredCurrency)
       const assets: Ref<Asset[]> = computed(() => store.getters.assets)
       const portfolioAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => asset.symbol in user.value.account.portfolio))
+      const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
+      const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
+      const balance = computed(() => convertCurrency(user.value.account.balance, currencyRate))
 
-      return { user, preferedCurrency, portfolioAssets }
+
+      return { user, preferredCurrency, portfolioAssets, balance }
   }
 }
 </script>
