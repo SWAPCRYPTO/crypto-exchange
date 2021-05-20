@@ -5,15 +5,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
-import Vue3ChartJs from "@j-t-mcc/vue3-chartjs";
-import dataLabels from "chartjs-plugin-datalabels";
+import { computed, defineComponent, reactive, ref, watch } from 'vue'
+import Vue3ChartJs from "@j-t-mcc/vue3-chartjs"
+import dataLabels from "chartjs-plugin-datalabels"
+import { useStore } from 'vuex'
 
 
 export default defineComponent({
     name: "ChartComponent",
     components: {
-        Vue3ChartJs
+        Vue3ChartJs, 
     },
     props: {
       symbol: {
@@ -30,15 +31,16 @@ export default defineComponent({
       }
     },
     setup(props) {
-      const primaryColor = window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-primary')
-      const textColor = ref(window.matchMedia("(prefers-color-scheme: dark)").matches ? 'white' : 'black')
+      const store = useStore()
+      const preferredCurrency = computed(() => store.getters.preferredCurrency)
+      const primaryColor = ref(window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-primary'))
+      const textColor = ref(window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-light'))
       const chartRef = ref(null)
 
-      const dataSet = ref(Object.values(props.data))
-      const max = ref(Math.max(...dataSet.value))
-      const min = ref(Math.min(...dataSet.value))
-
-      const lineChart = {
+      const dataSet = ref(Object.values(props.data))    
+      const max = Math.max(...dataSet.value)
+      const min = Math.min(...dataSet.value)
+      const lineChart = ref({
         id: "line",
         type: "line",
         plugins: [dataLabels],
@@ -49,7 +51,7 @@ export default defineComponent({
               label: props.symbol?.toUpperCase(),
               lineTension: 0,
               fill: false,
-              borderColor: primaryColor,
+              borderColor: primaryColor.value,
               data: props.data,
               pointRadius: 0
             }
@@ -66,9 +68,12 @@ export default defineComponent({
               },
               color: textColor.value,
               padding: 4,
-              formatter: (value: number) =>
-                  (value == min.value || value == max.value) ? `${value.toFixed(4)}` : ""
+              formatter: (value: number) => 
+                  (value == min || value == max) ? `${preferredCurrency.value} ${value.toFixed(4)}` : ""
             },
+          },
+          layout: {
+            padding: 10
           },
           scales: {
             x: {
@@ -80,11 +85,27 @@ export default defineComponent({
           },
           responsive: true
         },
-      };
+      });
+
+      watch(() => props.data, newData => {
+        dataSet.value = Object.values(newData)
+        const max = Math.max(...dataSet.value)
+        const min = Math.min(...dataSet.value)
+
+        lineChart.value.data.datasets[0].data = newData
+        lineChart.value.data.labels = newData.map(() => "")
+        lineChart.value.options.plugins.datalabels.formatter = (value: number) => 
+                  (value == min || value == max) ? `${preferredCurrency.value} ${value.toFixed(4)}` : ""
+
+        if(chartRef.value)
+            (chartRef.value as any).update()
+      })
 
       return {
         chartRef,
         lineChart,
+        min,
+        max
       };
     },
 })

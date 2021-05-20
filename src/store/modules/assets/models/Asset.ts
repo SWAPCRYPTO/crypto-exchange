@@ -1,3 +1,5 @@
+import Sparkline from './Sparkline'
+
 export default interface Asset {
     ath: number
     ath_change_percentage: number
@@ -27,10 +29,11 @@ export default interface Asset {
     price_change_percentage_24h_in_currency: number
     price_change_percentage_30d_in_currency: number
     roi: any
-    sparkline_in_7d: {
-        price: number[]
-    }
+    sparkline_in_7d: Sparkline
     symbol: string
     total_supply: number
     total_volume: number
+    sparkline_in_1d?: Sparkline
+    sparkline_in_30d?: Sparkline
+    sparkline_in_365d?: Sparkline
 }
