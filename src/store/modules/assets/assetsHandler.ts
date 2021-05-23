@@ -83,8 +83,11 @@ const actions = {
             const { data }: { data: ExtendedSparkline } = await axios.get(
                 `https://api.coingecko.com/api/v3/coins/${payload.assetId}/market_chart?vs_currency=${payload.currency}&days=${payload.timeOption}`
             )
-
-            const prices = data?.prices.map((price) => price[1])
+            const splitEveryNth = 4
+            let prices = data?.prices.map((price) => price[1])
+            prices = prices.filter(
+                (_, index) => (index + 1) % splitEveryNth !== 0
+            )
             commit('setAssetChart', {
                 assetId: payload.assetId,
                 sparkline: {

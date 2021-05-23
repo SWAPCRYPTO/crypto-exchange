@@ -62,8 +62,6 @@ interface TimeOptions {
     '1y': 365;
 }
 
-
-
 export default  {
   name: 'Asset',
   components: { AssetsList, ChartComponent, IonHeader, IonTitle, IonToolbar, IonContent, IonPage, IonButtons, IonBackButton, IonIcon, IonButton, IonChip, IonLabel },
@@ -73,8 +71,7 @@ export default  {
 
       const watchedAssets = computed(() => store.getters.watchedAssets)
       const preferredCurrency = computed(() => store.getters.preferredCurrency)
-      // const asset = store.getters.asset(route.params.symbol) // works like this without problems
-      const asset = ref(store.getters.asset(route.params.symbol)) // fix bug with route changes
+      const asset = ref(store.getters.asset(route.params.symbol))
       const isFavourite = computed(() => watchedAssets.value.includes(route.params.symbol))
       const user: Ref<User> = computed(() => store.getters.user)
 
@@ -142,7 +139,6 @@ export default  {
         console.log('onDidDismiss resolved with role', role);
       }
 
-      // const chartData = ref(asset.sparkline_in_7d.price)
       const chartData = ref(asset.value.sparkline_in_7d.price)
       const timeOptions: TimeOptions = { '1d': 1, '1w': 7, '1m': 30, '1y': 365 }
       const activeTimeOption: Ref<TimeOption> = ref(Object.keys(timeOptions)[1] as TimeOption)
