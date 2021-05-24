@@ -632,33 +632,15 @@ const data = {
     ltcusd,
 }
 
-const findMatchingOffers = (
-    assetValue: number,
-    data: { bid: any; ask: any }
-) => {
-    let currentAssetValue = assetValue
-    const matchingOffers = []
-    while (currentAssetValue > 0) {
-        const maxMatchingOffer = { quantity: 0, rate: 0 }
-        for (const bid of data.bid) {
-            console.log(currentAssetValue)
-            if (bid.quantity <= currentAssetValue) {
-                console.log(
-                    `Odejmuje od ${currentAssetValue} - ${bid.quantity}`
-                )
-                currentAssetValue -= bid.quantity
-            }
-        }
-        if (currentAssetValue != 0) break
-    }
-}
-
 const sumValues = (values: number[]) => values.reduce((a, b) => a + b, 0)
+const sumOffersQuantities = (values: AssetModel[]) =>
+    values.reduce((a, b) => a + b.quantity, 0)
 
 const closestValue = (values: number[], goal: number) =>
     values.reduce((prev, curr) =>
         Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev
     )
+
 /*
 
 Przekazujemy wszystkie dostępne kursy w ramach danego rynku np. BTC-USD
@@ -673,13 +655,21 @@ A resztkę wrzucamy na rynek (ask) i chcemy sprzedac, wiec bedziemy czekac az kt
 Do tego dochodzi fee makerFee.
 
 */
-// [sum items, sum]
-// this is definitely good
-const checkSum = (numbers: number[], n: number, numberOfAttempts: number) => {
+
+interface AssetModel {
+    quantity: number
+    rate: number
+}
+
+const checkSum1 = (
+    numbers: number[],
+    n: number,
+    numberOfAttempts: number
+): [number[], number] => {
     const sums: Array<[number[], number]> = []
     for (let i = 0; i < numbers.length; i++) {
         const value = numbers[i]
-        console.log(value)
+        // console.log(value)
         if (value === n) return [[value], n]
 
         const sumsCopy = sums.slice()
@@ -687,6 +677,7 @@ const checkSum = (numbers: number[], n: number, numberOfAttempts: number) => {
             if (j > numberOfAttempts) break
             const item = sumsCopy[j]
             const sumItems = [...item[0], value]
+            // console.log(sumItems, item, value)
             const sum = sumValues(sumItems)
 
             if (sum == n) {
@@ -696,11 +687,6 @@ const checkSum = (numbers: number[], n: number, numberOfAttempts: number) => {
         sums.push([[value], value])
     }
 
-    // didn't find the ideal offer matches
-    // pick the closest offer to the volume
-
-    // no need to further look for the closest value
-    // if the precision is satisfied (for instance 1.1291 is close enough to 1.13)
     const maxPrecision = 4
     let closest = numbers[0]
     let chosenIndex = 0
@@ -716,27 +702,97 @@ const checkSum = (numbers: number[], n: number, numberOfAttempts: number) => {
             }
         }
     }
-    console.log(n, closest, chosenIndex, sums[chosenIndex])
+    // console.log(n, closest, chosenIndex, sums[chosenIndex])
 
     const leftOver = n - closest
     // now we need to find the best offer for the leftover that didnt fit the initial matches
     const leftOverClosest = closestValue(numbers, leftOver)
     // find this offer and its rate
-    console.log(leftOver, leftOverClosest)
+    // console.log(leftOver, leftOverClosest)
 
     const fittingQuantities = sums[chosenIndex]
 
     // return sums
 
-    return [sums[chosenIndex], n]
+    return sums[chosenIndex]
+}
+
+// [sum items, sum]
+// this is definitely good
+const checkSum = (
+    offers: AssetModel[],
+    n: number,
+    numberOfAttempts: number
+): [AssetModel[], AssetModel] => {
+    const combinedOffers: Array<[AssetModel[], AssetModel]> = [] // sums
+    for (let i = 0; i < offers.length; i++) {
+        const offer = offers[i]
+        if (offer.quantity === n)
+            return [[offer], { quantity: n, rate: 0 } as AssetModel]
+
+        const offersCopy = combinedOffers.slice()
+        for (let j = 0; j < offersCopy.length; j++) {
+            if (j > numberOfAttempts) break
+            const item = offersCopy[j]
+            const sumItems = [...item[0], offer]
+            // console.log(sumItems, item, offer)
+            const sum = sumOffersQuantities(sumItems)
+
+            if (sum == n) {
+                return [sumItems, { quantity: sum, rate: 0 } as AssetModel]
+            } else if (sum < n)
+                combinedOffers.push([
+                    sumItems,
+                    { quantity: sum, rate: 0 } as AssetModel,
+                ])
+        }
+        combinedOffers.push([[offer], offer])
+    }
+
+    // didn't find the ideal offer matches
+    // pick the closest offer to the volume
+
+    // no need to further look for the closest value
+    // if the precision is satisfied (for instance 1.1291 is close enough to 1.13)
+    const maxPrecision = 4
+    let closest = offers[0].quantity
+    let chosenIndex = 0
+    for (let i = 0; i < combinedOffers.length; i++) {
+        const sumValue = combinedOffers[i][1].quantity
+        if (Math.abs(sumValue - n) < Math.abs(closest - n)) {
+            closest = sumValue
+            chosenIndex = i
+
+            if (n - closest <= Math.pow(10, -maxPrecision)) {
+                console.log('TEST', n - closest)
+                break
+            }
+        }
+    }
+    // console.log(n, closest, chosenIndex, combinedOffers[chosenIndex])
+
+    const leftOver = n - closest
+    // now we need to find the best offer for the leftover that didnt fit the initial matches
+    const leftOverClosest = closestValue(
+        offers.map((o) => o.quantity),
+        leftOver
+    )
+    // find this offer and its rate
+    // console.log(leftOver, leftOverClosest)
+
+    const fittingQuantities = combinedOffers[chosenIndex]
+
+    return combinedOffers[chosenIndex]
 }
 const numbers = data.ethusd.bid.map((item) => item.quantity)
 
 // const goal = 0.07471529;
 const goal = portfolio.eth
 const numberOfAttempts = 1000
-console.log(checkSum(numbers, goal, numberOfAttempts))
-// console.log(checkSum([21, 34, 51, 2, 41, 3, 9], 50, numberOfAttempts))
-// [([41, 9], 50)]
+const fittingOffers = checkSum(data.ethusd.bid, goal, numberOfAttempts)
+const fittingOffers2 = checkSum1(numbers, goal, numberOfAttempts)
 
-// findMatchingOffers(portfolio.btc, data.btcusd)
+console.log(sumOffersQuantities(fittingOffers[0])) // dziala
+console.log(sumValues(fittingOffers2[0])) // ten sam wynik
+
+// console.log(checkSum1([21, 34, 51, 2, 41, 3, 9], 50, numberOfAttempts))
