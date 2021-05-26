@@ -213,206 +213,206 @@ const ethusd: any = {
 const btcusd: any = {
     bid: [
         {
-            quantity: '0.08043206',
-            rate: '37293.72800000',
+            quantity: 0.08043206,
+            rate: 37293.728,
         },
         {
-            quantity: '0.08044304',
-            rate: '37288.83500000',
+            quantity: 0.08044304,
+            rate: 37288.835,
         },
         {
-            quantity: '0.08044811',
-            rate: '37286.82100000',
+            quantity: 0.08044811,
+            rate: 37286.821,
         },
         {
-            quantity: '0.00007678',
-            rate: '37282.20500000',
+            quantity: 0.00007678,
+            rate: 37282.205,
         },
         {
-            quantity: '1.58191000',
-            rate: '37281.91200000',
+            quantity: 1.58191,
+            rate: 37281.912,
         },
         {
-            quantity: '0.13405794',
-            rate: '37277.68300000',
+            quantity: 0.13405794,
+            rate: 37277.683,
         },
         {
-            quantity: '0.00250000',
-            rate: '37277.63000000',
+            quantity: 0.0025,
+            rate: 37277.63,
         },
         {
-            quantity: '0.63162000',
-            rate: '37277.11300000',
+            quantity: 0.63162,
+            rate: 37277.113,
         },
         {
-            quantity: '0.04021123',
-            rate: '37270.00200000',
+            quantity: 0.04021123,
+            rate: 37270.002,
         },
         {
-            quantity: '0.28409701',
-            rate: '37270.00100000',
+            quantity: 0.28409701,
+            rate: 37270.001,
         },
         {
-            quantity: '0.00014220',
-            rate: '37270.00000000',
+            quantity: 0.0001422,
+            rate: 37270.0,
         },
         {
-            quantity: '0.13408834',
-            rate: '37269.44300000',
+            quantity: 0.13408834,
+            rate: 37269.443,
         },
         {
-            quantity: '0.39968655',
-            rate: '37257.55600000',
+            quantity: 0.39968655,
+            rate: 37257.556,
         },
         {
-            quantity: '0.03383578',
-            rate: '37240.00100000',
+            quantity: 0.03383578,
+            rate: 37240.001,
         },
         {
-            quantity: '0.07400000',
-            rate: '37227.41500000',
+            quantity: 0.074,
+            rate: 37227.415,
         },
         {
-            quantity: '0.00007689',
-            rate: '37227.41400000',
+            quantity: 0.00007689,
+            rate: 37227.414,
         },
         {
-            quantity: '0.00013000',
-            rate: '37210.00000000',
+            quantity: 0.00013,
+            rate: 37210.0,
         },
         {
-            quantity: '0.20253783',
-            rate: '37200.00000000',
+            quantity: 0.20253783,
+            rate: 37200.0,
         },
         {
-            quantity: '0.22200000',
-            rate: '37188.59400000',
+            quantity: 0.222,
+            rate: 37188.594,
         },
         {
-            quantity: '0.00007700',
-            rate: '37172.70300000',
+            quantity: 0.000077,
+            rate: 37172.703,
         },
         {
-            quantity: '0.75100000',
-            rate: '37164.29400000',
+            quantity: 0.751,
+            rate: 37164.294,
         },
         {
-            quantity: '0.20253783',
-            rate: '37160.00000000',
+            quantity: 0.20253783,
+            rate: 37160.0,
         },
         {
-            quantity: '0.00009147',
-            rate: '37142.36300000',
+            quantity: 0.00009147,
+            rate: 37142.363,
         },
         {
-            quantity: '0.00014269',
-            rate: '37140.00000000',
+            quantity: 0.00014269,
+            rate: 37140.0,
         },
         {
-            quantity: '0.20253783',
-            rate: '37120.00000000',
+            quantity: 0.20253783,
+            rate: 37120.0,
         },
     ],
     ask: [
         {
-            quantity: '0.08043977',
-            rate: '37310.19800000',
+            quantity: 0.08043977,
+            rate: 37310.198,
         },
         {
-            quantity: '0.08044811',
-            rate: '37310.23800000',
+            quantity: 0.08044811,
+            rate: 37310.238,
         },
         {
-            quantity: '0.08043476',
-            rate: '37312.85200000',
+            quantity: 0.08043476,
+            rate: 37312.852,
         },
         {
-            quantity: '0.53608000',
-            rate: '37318.34600000',
+            quantity: 0.53608,
+            rate: 37318.346,
         },
         {
-            quantity: '1.33925000',
-            rate: '37320.56500000',
+            quantity: 1.33925,
+            rate: 37320.565,
         },
         {
-            quantity: '0.01544706',
-            rate: '37320.66000000',
+            quantity: 0.01544706,
+            rate: 37320.66,
         },
         {
-            quantity: '0.13406628',
-            rate: '37325.49000000',
+            quantity: 0.13406628,
+            rate: 37325.49,
         },
         {
-            quantity: '0.16680000',
-            rate: '37327.47800000',
+            quantity: 0.1668,
+            rate: 37327.478,
         },
         {
-            quantity: '0.00800000',
-            rate: '37333.68900000',
+            quantity: 0.008,
+            rate: 37333.689,
         },
         {
-            quantity: '0.02500000',
-            rate: '37333.69300000',
+            quantity: 0.025,
+            rate: 37333.693,
         },
         {
-            quantity: '0.13403535',
-            rate: '37335.13800000',
+            quantity: 0.13403535,
+            rate: 37335.138,
         },
         {
-            quantity: '0.16680000',
-            rate: '37339.51500000',
+            quantity: 0.1668,
+            rate: 37339.515,
         },
         {
-            quantity: '0.09207445',
-            rate: '37339.83500000',
+            quantity: 0.09207445,
+            rate: 37339.835,
         },
         {
-            quantity: '0.16409940',
-            rate: '37344.11300000',
+            quantity: 0.1640994,
+            rate: 37344.113,
         },
         {
-            quantity: '0.21272362',
-            rate: '37355.05900000',
+            quantity: 0.21272362,
+            rate: 37355.059,
         },
         {
-            quantity: '0.16409486',
-            rate: '37358.24500000',
+            quantity: 0.16409486,
+            rate: 37358.245,
         },
         {
-            quantity: '0.07400000',
-            rate: '37358.24600000',
+            quantity: 0.074,
+            rate: 37358.246,
         },
         {
-            quantity: '0.40988896',
-            rate: '37388.41400000',
+            quantity: 0.40988896,
+            rate: 37388.414,
         },
         {
-            quantity: '0.22200000',
-            rate: '37388.41600000',
+            quantity: 0.222,
+            rate: 37388.416,
         },
         {
-            quantity: '0.75100000',
-            rate: '37402.98600000',
+            quantity: 0.751,
+            rate: 37402.986,
         },
         {
-            quantity: '0.00539780',
-            rate: '37558.33700000',
+            quantity: 0.0053978,
+            rate: 37558.337,
         },
         {
-            quantity: '0.04020167',
-            rate: '37559.99900000',
+            quantity: 0.04020167,
+            rate: 37559.999,
         },
         {
-            quantity: '0.20253783',
-            rate: '37560.00000000',
+            quantity: 0.20253783,
+            rate: 37560.0,
         },
         {
-            quantity: '7.19100000',
-            rate: '37586.24700000',
+            quantity: 7.191,
+            rate: 37586.247,
         },
         {
-            quantity: '0.25013783',
-            rate: '37600.00000000',
+            quantity: 0.25013783,
+            rate: 37600.0,
         },
     ],
 }
@@ -625,6 +625,7 @@ const ltcusd: any = {
 }
 
 const NUMBER_OF_ATTEMPTS = 1000
+const MAX_PRECISION = 4
 
 const sumOffersQuantities = (values: AssetModel[]) =>
     values.reduce((a, b) => a + b.quantity, 0)
@@ -636,6 +637,41 @@ const closestOfferValue = (values: AssetModel[], goal: number) =>
             : prev
     )
 
+const test: [AssetModel[], AssetModel][] = [
+    [
+        [
+            { quantity: 1, rate: 1 },
+            { quantity: 13, rate: 1 },
+            { quantity: 6, rate: 1 },
+            { quantity: 1, rate: 1 },
+        ],
+        { quantity: 21, rate: 1 },
+    ],
+    [
+        [
+            { quantity: 14, rate: 1 },
+            { quantity: 6, rate: 1 },
+        ],
+        { quantity: 20, rate: 1 },
+    ],
+]
+
+const findClosestSmallerValue = (
+    offers: [AssetModel[], AssetModel][],
+    goal: number
+) =>
+    offers.reduce((prev, curr) => {
+        // no need to further look for the closest value
+        // if the precision is satisfied (for instance 1.1291 is close enough to 1.13)
+        // The approx quantity is good enough
+        if (goal - prev[1].quantity <= Math.pow(10, -MAX_PRECISION)) {
+            return prev
+        }
+
+        return goal >= curr[1].quantity ? curr : prev
+    })
+
+// console.log(findClosestSmallerValue(test, 20))
 /*
 
 Przekazujemy wszystkie dostępne kursy w ramach danego rynku np. BTC-USD
@@ -650,13 +686,12 @@ A resztkę wrzucamy na rynek (ask) po najnizszym kursie i chcemy sprzedac, wiec 
 Do tego dochodzi fee makerFee.
 
 */
-
-const pairOffers = (
+export const pairOffers = (
     offers: { bid: AssetModel[]; ask: AssetModel[] },
     n: number,
     numberOfAttempts: number
 ): PairedOffers => {
-    const combinedOffers: Array<[AssetModel[], AssetModel]> = [] // sums
+    const combinedOffers: [AssetModel[], AssetModel][] = [] // sums
     const { bid, ask } = offers
     for (let i = 0; i < bid.length; i++) {
         const offer = bid[i]
@@ -695,25 +730,15 @@ const pairOffers = (
 
     // didn't find the ideal offer matches
     // pick the closest offer to the volume
+    console.log('Didnt find a perfect match')
+    console.log('AssetValue: ' + n)
 
-    // no need to further look for the closest value
-    // if the precision is satisfied (for instance 1.1291 is close enough to 1.13)
-    const maxPrecision = 4
-    let closest = bid[0].quantity
-    let chosenIndex = 0
-    for (let i = 0; i < combinedOffers.length; i++) {
-        const sumValue = combinedOffers[i][1].quantity
-        if (Math.abs(sumValue - n) < Math.abs(closest - n)) {
-            closest = sumValue
-            chosenIndex = i
-            if (n - closest <= Math.pow(10, -maxPrecision)) {
-                // console.log('The approx quantity is good enough', n - closest)
-                break
-            }
-        }
-    }
+    combinedOffers.sort((a, b) => a[1].quantity - b[1].quantity)
+    const closestOffer = findClosestSmallerValue(combinedOffers, n)
+    console.log(closestOffer)
+    console.log('Closest new: ' + closestOffer[1].quantity)
 
-    const leftOver = n - closest
+    const leftOver = n - closestOffer[1].quantity
     if (leftOver < 0) throw new Error("Couldn't match offers")
     // now we need to put the leftover value on the market as ask so we pick the ask offer with the lowest rate
     // const lowestRateOffer = ask.reduce((prevOffer, currOffer) =>
@@ -728,15 +753,15 @@ const pairOffers = (
         { quantity: leftOver, rate: leftOverClosestOffer.rate } as AssetModel,
     ]
 
-    const fittingOffers = combinedOffers[chosenIndex]
-
-    return { fittingOffers, leftOverOffers: leftOverOffer }
+    return { fittingOffers: closestOffer, leftOverOffers: leftOverOffer }
 }
 
-const goal = 1.23
-pairOffers(btcusd, goal, NUMBER_OF_ATTEMPTS)
+const goal = 8
+const result = pairOffers(btcusd, goal, NUMBER_OF_ATTEMPTS)
+console.log(result.fittingOffers)
+console.log(result.leftOverOffers)
 
-const calculateValue = (pairedOffers: PairedOffers): number => {
+export const calculateValue = (pairedOffers: PairedOffers): number => {
     const offers = pairedOffers.fittingOffers[0].concat(
         pairedOffers.leftOverOffers[1]
     )

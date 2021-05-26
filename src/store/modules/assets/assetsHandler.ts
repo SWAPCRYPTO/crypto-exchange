@@ -4,6 +4,7 @@ import calculateNettoValue from './calculateNettoValue'
 import { calculateValue, pairOffers } from './estimatePortfolioValue'
 import { data } from './mockData'
 import Asset from './models/Asset'
+import AssetModel from './models/estimation/AssetModel'
 import AssetSummary from './models/estimation/AssetSummary'
 import ExtendedSparkline from './models/ExtendedSparkline'
 import { ExchangeRate, Currencies } from './models/NBPCurrency'
@@ -131,6 +132,15 @@ const actions = {
         const url = `${corsPrefix}https://api.bittrex.com/v3/markets/${symbol.toUpperCase()}-${currency}/orderbook`
         const { data } = await axios.get(url)
         const ordersData = JSON.parse(data.contents)
+
+        // convert string to number
+        for (const order in ordersData) {
+            ordersData[order] = ordersData[order].map((offer: AssetModel) => ({
+                quantity: +offer.quantity,
+                rate: +offer.rate,
+            }))
+        }
+
         const assetsOrders = {
             ...state.assetsOrders,
             [symbol]: ordersData,
