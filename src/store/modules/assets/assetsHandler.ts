@@ -1,29 +1,43 @@
 import axios from 'axios'
+import { PortfolioItem } from '../auth/models/UserAccount'
+import calculateNettoValue from './calculateNettoValue'
+import { calculateValue, pairOffers } from './estimatePortfolioValue'
+import { data } from './mockData'
 import Asset from './models/Asset'
+import AssetSummary from './models/estimation/AssetSummary'
 import ExtendedSparkline from './models/ExtendedSparkline'
 import { ExchangeRate, Currencies } from './models/NBPCurrency'
 import Sparkline from './models/Sparkline'
 
-const BASE_CURRENCY = 'PLN'
+const BASE_CURRENCY = 'USD'
 const AVAILABLE_CURRENCIES = ['EUR', 'USD', 'PLN']
 const SPARKLINE_KEY_PREFIX = 'sparkline_in_'
 const SPARKLINE_KEY_SUFFIX = 'd'
-interface InitialState {
+const NUMBER_OF_ATTEMPTS = 1000
+const TAX_PERCENTAGE = 0.19
+export interface AssetsState {
     assets: Asset[]
+    assetsOrders: any
     currencies: Currencies
+    assetsSummary: Asset[]
 }
 
-const state: InitialState = {
+const state: AssetsState = {
     assets: [],
+    assetsOrders: {},
     currencies: {},
+    assetsSummary: [],
 }
 
 const mutations = {
-    setAssets: (state: InitialState, payload: Asset[]) => {
+    setAssets: (state: AssetsState, payload: Asset[]) => {
         state.assets = payload
     },
+    setAssetsOrders: (state: AssetsState, payload: Asset[]) => {
+        state.assetsOrders = payload
+    },
     setAssetChart: (
-        state: InitialState,
+        state: AssetsState,
         payload: {
             assetId: string
             sparkline: { key: string; value: Sparkline }
@@ -34,16 +48,21 @@ const mutations = {
             SPARKLINE_KEY_PREFIX + payload.sparkline.key + SPARKLINE_KEY_SUFFIX
         if (asset) (asset as any)[key] = payload.sparkline.value
     },
-    setCurrencies: (state: InitialState, payload: Currencies) => {
+    setCurrencies: (state: AssetsState, payload: Currencies) => {
         state.currencies = payload
+    },
+    setAssetsSummary: (state: AssetsState, payload: Asset[]) => {
+        state.assetsSummary = payload
     },
 }
 
 const getters = {
-    assets: (state: InitialState) => state.assets,
-    asset: (state: InitialState) => (symbol: string) =>
+    assets: (state: AssetsState) => state.assets,
+    assetsOrders: (state: AssetsState) => state.assetsOrders,
+    asset: (state: AssetsState) => (symbol: string) =>
         state.assets.find((asset) => asset.symbol === symbol),
-    currencies: (state: InitialState) => state.currencies,
+    currencies: (state: AssetsState) => state.currencies,
+    assetsSummary: (state: AssetsState) => state.assetsSummary,
 }
 
 const actions = {
@@ -52,7 +71,7 @@ const actions = {
         state,
     }: {
         commit: Function
-        state: InitialState
+        state: AssetsState
     }) => {
         if (state.assets.length <= 0) {
             const { data } = await axios.get(
@@ -67,7 +86,7 @@ const actions = {
             state,
         }: {
             commit: Function
-            state: InitialState
+            state: AssetsState
         },
         payload: {
             assetId: string
@@ -97,12 +116,33 @@ const actions = {
             })
         }
     },
+    fetchAssetsOrders: async (
+        {
+            commit,
+            state,
+        }: {
+            commit: Function
+            state: AssetsState
+        },
+        payload: { symbol: string; currency: string }
+    ) => {
+        const { symbol, currency } = payload
+        const corsPrefix = 'https://api.allorigins.win/get?url='
+        const url = `${corsPrefix}https://api.bittrex.com/v3/markets/${symbol.toUpperCase()}-${currency}/orderbook`
+        const { data } = await axios.get(url)
+        const ordersData = JSON.parse(data.contents)
+        const assetsOrders = {
+            ...state.assetsOrders,
+            [symbol]: ordersData,
+        }
+        commit('setAssetsOrders', assetsOrders)
+    },
     fetchCurrencies: async ({
         commit,
         state,
     }: {
         commit: Function
-        state: InitialState
+        state: AssetsState
     }) => {
         if (state.currencies.length <= 0) {
             const rateTable = 'A'
@@ -121,6 +161,67 @@ const actions = {
             })
 
             commit('setCurrencies', currencies)
+        }
+    },
+    estimatePortfolioValue: async (
+        {
+            commit,
+            dispatch,
+            getters,
+            rootGetters,
+        }: {
+            commit: Function
+            dispatch: any
+            getters: any
+            rootGetters: any
+        },
+        payload: {
+            portfolio: PortfolioItem[]
+            percentageOfPortfolio: number
+        }
+    ) => {
+        const { portfolio, percentageOfPortfolio } = payload
+
+        try {
+            const assetsSummary: AssetSummary[] = []
+            Object.values(portfolio).forEach(async (asset) => {
+                const assetSymbol = asset.symbol
+                const preferredCurrency = rootGetters.preferredCurrency
+
+                await dispatch('fetchAssetsOrders', {
+                    symbol: assetSymbol,
+                    currency: preferredCurrency,
+                })
+
+                const assetsOrders = getters.assetsOrders
+                const assetData = assetsOrders[assetSymbol]
+                const assetQuantity = asset.quantity * percentageOfPortfolio
+
+                const pairedOffers = pairOffers(
+                    assetData,
+                    assetQuantity,
+                    NUMBER_OF_ATTEMPTS
+                )
+                const offersValue = calculateValue(pairedOffers)
+                const nettoValue = calculateNettoValue(
+                    offersValue,
+                    asset.purchasePrice,
+                    TAX_PERCENTAGE
+                )
+
+                const assetSummary: AssetSummary = {
+                    name: asset.name,
+                    quantity: assetQuantity,
+                    price: offersValue / assetQuantity,
+                    value: offersValue,
+                    nettoValue,
+                }
+                assetsSummary.push(assetSummary)
+            })
+
+            commit('setAssetsSummary', assetsSummary)
+        } catch (e) {
+            console.log(e.message)
         }
     },
 }

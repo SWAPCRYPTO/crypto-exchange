@@ -27,6 +27,7 @@
 import { convertCurrency } from "@/services/ConvertCurrency"
 import Asset from "@/store/modules/assets/models/Asset"
 import { Currencies } from "@/store/modules/assets/models/NBPCurrency"
+import { PortfolioItem } from "@/store/modules/auth/models/UserAccount"
 import { computed, defineComponent, Ref } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
@@ -41,7 +42,7 @@ export default defineComponent({
         const portfolio = computed(() => store.getters.user.account.portfolio)
         const formatChange = (value: number) => (value > 0 ? '+' : '') + value.toFixed(2)
 
-        const ownedVolume = (asset: string, dictonary: { [name: string]: number}) => dictonary[asset]
+        const ownedVolume = (asset: string, portfolioAssets: PortfolioItem[]) => portfolioAssets.find(portfolioAsset => portfolioAsset.symbol === asset)?.quantity
         const searchQuery = computed(() => props.searchQuery ? props.searchQuery.toLowerCase() : "")
         
         const filteredAssets: Ref<Asset[]> = computed(() => props.assets.filter((asset: Asset) => asset.symbol.toLowerCase().indexOf(searchQuery.value) > -1 || asset.name.toLowerCase().indexOf(searchQuery.value) > -1))

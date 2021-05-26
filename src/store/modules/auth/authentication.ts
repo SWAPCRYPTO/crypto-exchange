@@ -54,6 +54,7 @@ const getters = {
     authError: (state: AuthState) => state.authError,
     isVerfied: () => firebase.auth().currentUser?.emailVerified,
     userBalance: (state: AuthState) => state.user?.account.balance,
+    userPortfolio: (state: AuthState) => state.user?.account.portfolio,
     preferredCurrency: (state: AuthState) =>
         state.user?.account.preferredCurrency,
     watchedAssets: (state: AuthState) => state.user?.account.watchedAssets,
@@ -118,7 +119,7 @@ const actions = {
                         name: payload.name,
                         account: {
                             balance: 0,
-                            portfolio: {},
+                            portfolio: [],
                             preferredCurrency: 'USD',
                             watchedAssets: [],
                         },

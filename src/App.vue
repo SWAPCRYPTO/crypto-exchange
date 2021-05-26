@@ -40,7 +40,7 @@ export default defineComponent({
     })
 
     watch(preferredCurrency, (newCurrency, oldCurrency) => {
-        console.log(newCurrency, oldCurrency)
+        // console.log(newCurrency, oldCurrency)
         if(newCurrency && oldCurrency && newCurrency != oldCurrency) {
           // store.dispatch('fetchAssets', newCurrency).then(() => console.log('t'))
         }

@@ -1,19 +1,19 @@
-interface InitialState {
+export interface UtilsState {
     isLoading: boolean
 }
 
-const state: InitialState = {
+const state: UtilsState = {
     isLoading: false,
 }
 
 const mutations = {
-    setLoading(state: InitialState, payload: boolean) {
+    setLoading(state: UtilsState, payload: boolean) {
         state.isLoading = payload
     },
 }
 
 const getters = {
-    isLoading: (state: InitialState) => state.isLoading,
+    isLoading: (state: UtilsState) => state.isLoading,
 }
 
 const actions = {}
