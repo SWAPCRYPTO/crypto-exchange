@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, ref, watch } from 'vue'
+import { computed, defineComponent, ref, watch } from 'vue'
 import Vue3ChartJs from "@j-t-mcc/vue3-chartjs"
 import dataLabels from "chartjs-plugin-datalabels"
 import { useStore } from 'vuex'
@@ -36,6 +36,13 @@ export default defineComponent({
       const primaryColor = ref(window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-primary'))
       const textColor = ref(window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-light'))
       const chartRef = ref(null)
+
+      // update chart in route symbol is changed
+      // onIonViewWillEnter(() => {
+      //   if(route.params.symbol !== props.symbol) {
+      //     asset.value = store.getters.asset(route.params.symbol)
+      //   }
+      // })
 
       const dataSet = ref(Object.values(props.data))    
       const max = Math.max(...dataSet.value)

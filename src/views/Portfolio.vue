@@ -18,25 +18,34 @@
         <section class="portfolio__container">
           <AssetsList :assets="portfolioAssets" :walletMode="true" />
         </section>
+        <ion-button @click="openModal" expand="block" class="text-lg text-white font-bold">Estimate portfolio</ion-button>
+        <ion-modal
+          :is-open="isActive"
+          css-class="my-custom-class"
+          @didDismiss="setOpen(false)"
+          mode="ios"
+        >
+          <EstimationPortfolioModal @onDismiss="setOpen(false)" title="Title" :assetsSummary="assetsSummary" />
+        </ion-modal>
       </section>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from "@ionic/vue";
-import { computed, Ref } from 'vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonModal } from "@ionic/vue";
+import { computed, ref, Ref } from 'vue';
 import { useStore } from 'vuex';
 import AssetsList from "../components/AssetsList.vue"
 import User from '@/store/modules/auth/models/User';
 import Asset from '@/store/modules/assets/models/Asset';
 import { convertCurrency } from '@/services/ConvertCurrency';
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
-// import axios from 'axios';
+import EstimationPortfolioModal from '@/components/EstimationPortfolioModal.vue';
 
 export default  {
   name: "Portfolio",
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, AssetsList },
+  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonButton, IonModal, AssetsList, EstimationPortfolioModal },
   setup() {
       // const url = 'https://api.lunarcrush.com/v2?data=market-pairs&key=3qv7tzf23ynn2ygzj8qvm&symbol=LTC&limit=30'
       // const url = "https://api.bitbay.net/rest/trading/orderbook/BTC-PLN"
@@ -50,13 +59,23 @@ export default  {
       const user: Ref<User> = computed(() => store.getters.user)
       const preferredCurrency = computed(() => user.value.account.preferredCurrency)
       const assets: Ref<Asset[]> = computed(() => store.getters.assets)
-      const portfolioAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => asset.symbol in user.value.account.portfolio))
+      const portfolioAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.portfolio.map(portfolioItem => portfolioItem.symbol).includes(asset.symbol)))
       const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
       const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
       const balance = computed(() => convertCurrency(user.value.account.balance, currencyRate))
 
+      const estimatePortfolio = (percentageOfPortfolio: number) => store.dispatch('estimatePortfolioValue', { portfolio: user.value.account.portfolio, percentageOfPortfolio })
+      const assetsSummary = computed(() => store.getters.assetsSummary)
+     
+      const isActive = ref(false);
+      const setOpen = (state: boolean) => isActive.value = state;
 
-      return { user, preferredCurrency, portfolioAssets, balance }
+      const openModal = () => {
+        estimatePortfolio(1)
+        setOpen(true)
+      }
+
+      return { user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary }
   }
 }
 </script>

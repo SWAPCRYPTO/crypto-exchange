@@ -1,4 +1,6 @@
-const ethusd = {
+import AssetModel from './models/estimation/AssetModel'
+
+const ethusd: { bid: AssetModel[]; ask: AssetModel[] } = {
     bid: [
         {
             quantity: 0.00431681,
@@ -205,7 +207,7 @@ const ethusd = {
     ],
 }
 
-const btcusd = {
+const btcusd: { bid: AssetModel[]; ask: AssetModel[] } = {
     bid: [
         {
             quantity: '0.08043206',
@@ -412,7 +414,7 @@ const btcusd = {
     ],
 }
 
-const ltcusd = {
+const ltcusd: { bid: AssetModel[]; ask: AssetModel[] } = {
     bid: [
         {
             quantity: 14.25,
