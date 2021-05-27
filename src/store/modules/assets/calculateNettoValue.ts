@@ -100,8 +100,7 @@ const calculateNettoValue = (
     } else return currentValue
 }
 
-function findNettoValue(
-    quantity: number,
+export default function findNettoValue(
     pairedOffers: AssetModel[],
     transactions: Transaction[],
     taxValue: number
@@ -112,9 +111,28 @@ function findNettoValue(
     )
 
     let netValue = 0
-    // these are not deeply copied, it's just a ref
-    const pairedOffersQueue = pairedOffers
-    const transactionsQueue = transactions
+
+    // deep copies
+    const pairedOffersQueue: AssetModel[] = []
+    const transactionsQueue: Transaction[] = []
+
+    pairedOffers.forEach((offer) => {
+        pairedOffersQueue.push({
+            quantity: offer.quantity,
+            rate: offer.rate,
+        })
+    })
+
+    transactions.forEach((transaction) => {
+        transactionsQueue.push({
+            purchasePrice: transaction.purchasePrice,
+            quantity: transaction.quantity,
+            transactionDate: {
+                nanoseconds: transaction.transactionDate.nanoseconds,
+                seconds: transaction.transactionDate.seconds,
+            },
+        })
+    })
 
     while (pairedOffersQueue.length > 0) {
         const currentOffer = pairedOffersQueue[0]
@@ -123,13 +141,6 @@ function findNettoValue(
             if (currentTransaction.quantity >= currentOffer.quantity) {
                 const quantity = currentOffer.quantity
                 const offersValue = quantity * currentOffer.rate
-                console.log('Netto: ' + netValue)
-                console.log('Qty: ' + quantity + ', rate: ' + currentOffer.rate)
-                console.log('Current offer value: ' + offersValue)
-                console.log(
-                    'Current transaction value: ' +
-                        currentTransaction.purchasePrice
-                )
                 netValue += calculateNettoValue(
                     offersValue,
                     quantity * currentTransaction.purchasePrice,
@@ -141,36 +152,9 @@ function findNettoValue(
                 if (currentTransaction.quantity === 0) {
                     transactionsQueue.shift()
                 }
-                console.log('Netto: ' + netValue)
-                console.log(
-                    'Offer netto value: ' +
-                        calculateNettoValue(
-                            offersValue,
-                            quantity * currentTransaction.purchasePrice,
-                            taxValue
-                        ),
-                    'Ilosc: ' + quantity
-                )
-                console.log('\n')
             } else {
                 const quantity = currentTransaction.quantity
                 const offersValue = quantity * currentOffer.rate
-                console.log('Netto: ' + netValue)
-                console.log('Qty: ' + quantity + ', rate: ' + currentOffer.rate)
-                console.log('Current offer value: ' + offersValue)
-                console.log(
-                    'Current transaction value: ' +
-                        currentTransaction.purchasePrice
-                )
-
-                console.log(
-                    'Netto offer value: ' +
-                        calculateNettoValue(
-                            offersValue,
-                            quantity * currentTransaction.purchasePrice,
-                            taxValue
-                        )
-                )
 
                 netValue += calculateNettoValue(
                     offersValue,
@@ -183,10 +167,7 @@ function findNettoValue(
                     transactionsQueue.shift()
                 }
 
-                console.log(currentOffer)
                 currentOffer.quantity -= quantity
-                console.log(currentOffer, 34)
-                console.log('\n')
 
                 if (currentOffer.quantity === 0) {
                     pairedOffersQueue.shift()
@@ -197,54 +178,3 @@ function findNettoValue(
 
     return netValue
 }
-
-console.log(pairedOffers.reduce((sum, el) => sum + el.quantity * el.rate, 0))
-console.log(findNettoValue(assetQuantity, pairedOffers, transactions, 0.19))
-
-// export default
-// function findNettoValue(
-//     quantity: number,
-//     pairedOffers: AssetModel[],
-//     transactions: Transaction[],
-//     taxValue: number
-// ) {
-//     // transactions sorted ascending by date
-//     const sortedTransactions = transactions.sort(
-//         (a, b) => a.transactionDate.seconds - b.transactionDate.seconds
-//     )
-
-//     let netValue = 0
-//     let availableQuantity = quantity
-
-//     for (let i = 0; i < sortedTransactions.length; i++) {
-//         const transaction = sortedTransactions[i]
-
-//         if (transaction.quantity >= availableQuantity) {
-//             // transakcja miala tyle jednostek albo wiecej niz to co chcemy sprzedac
-//             return (
-//                 netValue +
-//                 availableQuantity *
-//                     calculateNettoValue(
-//                         offersValue,
-//                         transaction.purchasePrice,
-//                         taxValue
-//                     )
-//             )
-//         } else {
-//             // chcemy sprzedac 10 jednostek, a w danej transakcji bylo tylko 3 jednostki
-//             netValue +=
-//                 transaction.quantity *
-//                 calculateNettoValue(
-//                     offersValue,
-//                     transaction.purchasePrice,
-//                     taxValue
-//                 )
-//             availableQuantity -= transaction.quantity
-//         }
-//     }
-
-//     return Math.min(netValue, offersValue)
-// }
-
-// console.log(findNettoValue(12, 50000, transactions, 0.19))
-// 10 * (50000 - 0.19 * (50000 - 4000)) + 2 * (50000 - 0.19 * (50000 - 6000))

@@ -11,7 +11,8 @@
           <ion-header n-header collapse="condense">
             <ion-toolbar>
               <p class="font-medium mb-2">Portfolio balance</p>
-              <h1 class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ balance }}</h1>
+              <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ balance }}</h1>
+              <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
             </ion-toolbar>
           </ion-header>
         </header>
@@ -26,7 +27,7 @@
           mode="ios"
           swipeToClose
         >
-          <EstimationPortfolioModal @onDismiss="setOpen(false)" title="Portfolio estimation" />
+          <EstimationPortfolioModal @onDismiss="setOpen(false)" title="Portfolio estimation" :assetsSummary="assetsSummary" :percentageOfPortfolio="0.1" />
         </ion-modal>
       </section>
     </ion-content>
@@ -34,7 +35,7 @@
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonModal } from "@ionic/vue";
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonModal, IonSkeletonText } from "@ionic/vue";
 import { computed, ref, Ref } from 'vue';
 import { useStore } from 'vuex';
 import AssetsList from "../components/AssetsList.vue"
@@ -46,9 +47,8 @@ import EstimationPortfolioModal from '@/components/EstimationPortfolioModal.vue'
 
 export default  {
   name: "Portfolio",
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonButton, IonModal, AssetsList, EstimationPortfolioModal },
+  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonButton, IonModal, AssetsList, EstimationPortfolioModal, IonSkeletonText },
   setup() {
-      // const url = 'https://api.lunarcrush.com/v2?data=market-pairs&key=3qv7tzf23ynn2ygzj8qvm&symbol=LTC&limit=30'
       // const url = "https://api.bitbay.net/rest/trading/orderbook/BTC-PLN"
       // const corsPrefix = "https://api.allorigins.win/get?url="
       // const url = `${corsPrefix}https://api.bittrex.com/v3/markets/ETH-USD/orderbook`
@@ -57,6 +57,7 @@ export default  {
       //   console.log(JSON.parse(result.data.contents))
       // })
       const store = useStore()
+      const isLoading = computed(() => store.getters.isLoading)
       const user: Ref<User> = computed(() => store.getters.user)
       const preferredCurrency = computed(() => user.value.account.preferredCurrency)
       const assets: Ref<Asset[]> = computed(() => store.getters.assets)
@@ -71,11 +72,14 @@ export default  {
       const setOpen = (state: boolean) => isActive.value = state;
 
       const openModal = () => {
-        estimatePortfolio(0.1)
-        setOpen(true)
+        estimatePortfolio(0.1).then(() => {
+          setOpen(true)
+        })
       }
 
-      return { user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen }
+      const assetsSummary = computed(() => store.getters.assetsSummary)
+
+      return { isLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary }
   }
 }
 </script>

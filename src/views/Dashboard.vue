@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title>{{ preferredCurrency }} {{ balance }}</ion-title>
+        <ion-title v-if="!isLoading">{{ preferredCurrency }} {{ balance }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -12,7 +12,8 @@
               <ion-header collapse="condense">
                 <ion-toolbar>
                   <p class="font-medium mb-2">Portfolio balance</p>
-                  <h1 class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ balance }}</h1>
+                  <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ balance }}</h1>
+                  <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
                 </ion-toolbar>
               </ion-header>
             </header>
@@ -34,7 +35,7 @@
 import Asset from '@/store/modules/assets/models/Asset';
 import { convertCurrency } from "@/services/ConvertCurrency"
 import User from '@/store/modules/auth/models/User';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSkeletonText } from '@ionic/vue';
 
 import { computed, defineComponent, Ref } from "vue"
 import { useRouter } from 'vue-router';
@@ -51,10 +52,11 @@ const findTopMovers = (items: any[], numberOfItems: number) => {
 
 export default defineComponent({
     name: "Dashboard",
-    components: { AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage },
+    components: { AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonSkeletonText },
     setup() {
         const store = useStore()
         const router = useRouter()
+        const isLoading: Ref<boolean> = computed(() => store.getters.isLoading)
         const user: Ref<User> = computed(() => store.getters.user)
         const preferredCurrency = computed(() => user.value.account.preferredCurrency)
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
@@ -75,7 +77,7 @@ export default defineComponent({
         
         const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets.value, "price_change_percentage_24h_in_currency", true).reverse())
 
-        return { currencies, router, user, assets, preferredCurrency, watchedAssets, topMovers, balance }
+        return { isLoading, currencies, router, user, assets, preferredCurrency, watchedAssets, topMovers, balance }
     }
 })
 </script>

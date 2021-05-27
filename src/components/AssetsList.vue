@@ -1,6 +1,6 @@
 <template>
     <div class="assetsList" :class="{ 'round': walletMode }">
-        <ul class="assetsList__items">
+        <ul class="assetsList__items" v-if="!isLoading">
             <li class="assetsList__item" v-for="asset in filteredAssets" :key="asset.id" @click="router.push(`/tabs/asset/${asset.symbol}`)">
                 <div class="currency__title">
                     <div class="currency__icon">
@@ -20,6 +20,12 @@
                 </div>
             </li>
         </ul>
+        <ul class="assetsList__items" v-else>
+            <li class="assetsList__item" v-for="item in SKELETON_ITEMS" :key="item">
+                <ion-skeleton-text animated style="height: 100%; width: 100%; line-height: 2.5rem; min-height: 2.5rem;" />
+            </li>
+        </ul>
+        
     </div>
 </template>
 
@@ -28,16 +34,20 @@ import { convertCurrency } from "@/services/ConvertCurrency"
 import Asset from "@/store/modules/assets/models/Asset"
 import { Currencies } from "@/store/modules/assets/models/NBPCurrency"
 import { PortfolioItem } from "@/store/modules/auth/models/UserAccount"
+import { IonSkeletonText } from '@ionic/vue';
 import { computed, defineComponent, Ref } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
 
 export default defineComponent({
     name: "AssetsList",
+    components: { IonSkeletonText },
     props: ['assets', 'walletMode', 'searchQuery'],
     setup(props) {
         const store = useStore()
         const router = useRouter()
+        const isLoading = computed(() => store.getters.isLoading)
+        const SKELETON_ITEMS = 5
         const preferredCurrency = computed(() => store.getters.user.account.preferredCurrency)
         const portfolio = computed(() => store.getters.user.account.portfolio)
         const formatChange = (value: number) => (value > 0 ? '+' : '') + value.toFixed(2)
@@ -50,7 +60,7 @@ export default defineComponent({
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
         const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
 
-        return { preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency }
+        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency }
     },
 })
 </script>

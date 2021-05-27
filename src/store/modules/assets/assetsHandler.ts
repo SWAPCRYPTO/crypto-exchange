@@ -14,11 +14,39 @@ const AVAILABLE_CURRENCIES = ['EUR', 'USD', 'PLN']
 const SPARKLINE_KEY_PREFIX = 'sparkline_in_'
 const SPARKLINE_KEY_SUFFIX = 'd'
 const TAX_PERCENTAGE = 0.19
+const CORS_PREFIX = 'https://api.allorigins.win/get?url='
+
+const APIS = [
+    {
+        name: 'bitbay',
+        baseUrl: 'https://bitbay.net/API/Public',
+        orderBookEndpoint: '/orderbook',
+        takerFee: 0.0042,
+        urlFormatFunction: (
+            apiUrl: string,
+            marketSymbol: [string, string],
+            endPoint: string
+        ) => `${apiUrl}/${marketSymbol[0]}${marketSymbol[1]}/${endPoint}`,
+    },
+    {
+        name: 'bittrex',
+        baseUrl: 'https://api.bittrex.com/v3/markets',
+        orderBookEndpoint: '/orderbook',
+        takerFee: 0.0075,
+        urlFormatFunction: (
+            apiUrl: string,
+            marketSymbol: [string, string],
+            endPoint: string
+        ) => `${apiUrl}/${marketSymbol[0]}-${marketSymbol[1]}/${endPoint}`,
+    },
+]
+
 export interface AssetsState {
     assets: Asset[]
     assetsOrders: any
     currencies: Currencies
     assetsSummary: Asset[]
+    isEstimationLoading: boolean
 }
 
 const state: AssetsState = {
@@ -26,6 +54,7 @@ const state: AssetsState = {
     assetsOrders: {},
     currencies: {},
     assetsSummary: [],
+    isEstimationLoading: false,
 }
 
 const mutations = {
@@ -53,6 +82,9 @@ const mutations = {
     setAssetsSummary: (state: AssetsState, payload: Asset[]) => {
         state.assetsSummary = payload
     },
+    setEstimationLoading: (state: AssetsState, payload: boolean) => {
+        state.isEstimationLoading = payload
+    },
 }
 
 const getters = {
@@ -62,6 +94,7 @@ const getters = {
         state.assets.find((asset) => asset.symbol === symbol),
     currencies: (state: AssetsState) => state.currencies,
     assetsSummary: (state: AssetsState) => state.assetsSummary,
+    isEstimationLoading: (state: AssetsState) => state.isEstimationLoading,
 }
 
 const actions = {
@@ -73,10 +106,12 @@ const actions = {
         state: AssetsState
     }) => {
         if (state.assets.length <= 0) {
+            commit('setLoading', true)
             const { data } = await axios.get(
                 `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${BASE_CURRENCY}&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h%2C24h%2C7d%2C30d%2C1y`
             )
             commit('setAssets', data)
+            commit('setLoading', false)
         }
     },
     fetchAssetChart: async (
@@ -123,11 +158,11 @@ const actions = {
             commit: Function
             state: AssetsState
         },
-        payload: { symbol: string; currency: string }
+        payload: { apiName: string; symbol: string; currency: string }
     ) => {
-        const { symbol, currency } = payload
-        const corsPrefix = 'https://api.allorigins.win/get?url='
-        const url = `${corsPrefix}https://api.bittrex.com/v3/markets/${symbol.toUpperCase()}-${currency}/orderbook`
+        const { apiName, symbol, currency } = payload
+        const apiUrl = APIS[apiName as any]
+        const url = `${CORS_PREFIX}https://api.bittrex.com/v3/markets/${symbol.toUpperCase()}-${currency}/orderbook`
         const { data } = await axios.get(url)
         const ordersData = JSON.parse(data.contents)
 
@@ -153,6 +188,7 @@ const actions = {
         state: AssetsState
     }) => {
         if (state.currencies.length <= 0) {
+            commit('setLoading', true)
             const rateTable = 'A'
             const { data } = await axios.get(
                 `https://api.nbp.pl/api/exchangerates/tables/${rateTable}`
@@ -169,6 +205,7 @@ const actions = {
             })
 
             commit('setCurrencies', currencies)
+            commit('setLoading', false)
         }
     },
     estimatePortfolioValue: async (
@@ -191,7 +228,7 @@ const actions = {
         const { portfolio, percentageOfPortfolio } = payload
 
         try {
-            commit('setLoading', true)
+            commit('setEstimationLoading', true)
             const assetsSummary: AssetSummary[] = []
             Object.values(portfolio).forEach(async (asset) => {
                 const assetSymbol = asset.symbol
@@ -213,10 +250,9 @@ const actions = {
                     assetQuantity,
                     transactionFee
                 )
-                console.log(pairedOffers)
+
                 const offersValue = calculateValue(pairedOffers)
                 const nettoValue = findNettoValue(
-                    assetQuantity,
                     pairedOffers,
                     asset.transactions,
                     TAX_PERCENTAGE
@@ -234,8 +270,7 @@ const actions = {
                 )
 
                 const percentageNettoValue = findNettoValue(
-                    assetQuantity * percentageOfPortfolio,
-                    percentageOffersValue,
+                    pairedPercentageOffers,
                     asset.transactions,
                     TAX_PERCENTAGE
                 )
@@ -253,7 +288,11 @@ const actions = {
             })
 
             commit('setAssetsSummary', assetsSummary)
-            commit('setLoading', false)
+
+            // helps to propertly render a modal component with data
+            setTimeout(() => {
+                commit('setEstimationLoading', false)
+            }, 1000)
         } catch (e) {
             console.log(e.message)
         }
