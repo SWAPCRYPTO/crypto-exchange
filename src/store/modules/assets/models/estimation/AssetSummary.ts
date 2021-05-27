@@ -4,4 +4,6 @@ export default interface AssetSummary {
     price: number
     value: number
     nettoValue: number
+    percentageValue: number
+    percentageNettoValue: number
 }

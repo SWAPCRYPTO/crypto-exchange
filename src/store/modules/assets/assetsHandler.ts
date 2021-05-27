@@ -1,8 +1,7 @@
 import axios from 'axios'
 import { PortfolioItem } from '../auth/models/UserAccount'
-import calculateNettoValue from './calculateNettoValue'
+import findNettoValue from './calculateNettoValue'
 import { calculateValue, pairOffers } from './estimatePortfolioValue'
-import { data } from './mockData'
 import Asset from './models/Asset'
 import AssetModel from './models/estimation/AssetModel'
 import AssetSummary from './models/estimation/AssetSummary'
@@ -14,7 +13,6 @@ const BASE_CURRENCY = 'USD'
 const AVAILABLE_CURRENCIES = ['EUR', 'USD', 'PLN']
 const SPARKLINE_KEY_PREFIX = 'sparkline_in_'
 const SPARKLINE_KEY_SUFFIX = 'd'
-const NUMBER_OF_ATTEMPTS = 1000
 const TAX_PERCENTAGE = 0.19
 export interface AssetsState {
     assets: Asset[]
@@ -193,6 +191,7 @@ const actions = {
         const { portfolio, percentageOfPortfolio } = payload
 
         try {
+            commit('setLoading', true)
             const assetsSummary: AssetSummary[] = []
             Object.values(portfolio).forEach(async (asset) => {
                 const assetSymbol = asset.symbol
@@ -204,18 +203,40 @@ const actions = {
                 })
 
                 const assetsOrders = getters.assetsOrders
-                const assetData = assetsOrders[assetSymbol]
-                const assetQuantity = asset.quantity * percentageOfPortfolio
+                const assetData: { bid: AssetModel[]; ask: AssetModel[] } =
+                    assetsOrders[assetSymbol]
+                const assetQuantity = asset.quantity
 
+                const transactionFee = 0
                 const pairedOffers = pairOffers(
-                    assetData,
+                    assetData.bid,
                     assetQuantity,
-                    NUMBER_OF_ATTEMPTS
+                    transactionFee
                 )
+                console.log(pairedOffers)
                 const offersValue = calculateValue(pairedOffers)
-                const nettoValue = calculateNettoValue(
-                    offersValue,
-                    asset.purchasePrice,
+                const nettoValue = findNettoValue(
+                    assetQuantity,
+                    pairedOffers,
+                    asset.transactions,
+                    TAX_PERCENTAGE
+                )
+
+                // percentageOfPortfolio
+                const pairedPercentageOffers = pairOffers(
+                    assetData.bid,
+                    assetQuantity * percentageOfPortfolio,
+                    transactionFee
+                )
+
+                const percentageOffersValue = calculateValue(
+                    pairedPercentageOffers
+                )
+
+                const percentageNettoValue = findNettoValue(
+                    assetQuantity * percentageOfPortfolio,
+                    percentageOffersValue,
+                    asset.transactions,
                     TAX_PERCENTAGE
                 )
 
@@ -225,11 +246,14 @@ const actions = {
                     price: offersValue / assetQuantity,
                     value: offersValue,
                     nettoValue,
+                    percentageValue: percentageOffersValue,
+                    percentageNettoValue,
                 }
                 assetsSummary.push(assetSummary)
             })
 
             commit('setAssetsSummary', assetsSummary)
+            commit('setLoading', false)
         } catch (e) {
             console.log(e.message)
         }

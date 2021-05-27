@@ -18,14 +18,15 @@
         <section class="portfolio__container">
           <AssetsList :assets="portfolioAssets" :walletMode="true" />
         </section>
-        <ion-button @click="openModal" expand="block" class="text-lg text-white font-bold">Estimate portfolio</ion-button>
+        <ion-button @click="openModal" expand="block" class="text-lg text-white font-bold">Estimate portfolio value</ion-button>
         <ion-modal
           :is-open="isActive"
           css-class="my-custom-class"
           @didDismiss="setOpen(false)"
           mode="ios"
+          swipeToClose
         >
-          <EstimationPortfolioModal @onDismiss="setOpen(false)" title="Title" :assetsSummary="assetsSummary" />
+          <EstimationPortfolioModal @onDismiss="setOpen(false)" title="Portfolio estimation" />
         </ion-modal>
       </section>
     </ion-content>
@@ -65,17 +66,16 @@ export default  {
       const balance = computed(() => convertCurrency(user.value.account.balance, currencyRate))
 
       const estimatePortfolio = (percentageOfPortfolio: number) => store.dispatch('estimatePortfolioValue', { portfolio: user.value.account.portfolio, percentageOfPortfolio })
-      const assetsSummary = computed(() => store.getters.assetsSummary)
      
       const isActive = ref(false);
       const setOpen = (state: boolean) => isActive.value = state;
 
       const openModal = () => {
-        estimatePortfolio(1)
+        estimatePortfolio(0.1)
         setOpen(true)
       }
 
-      return { user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary }
+      return { user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen }
   }
 }
 </script>
