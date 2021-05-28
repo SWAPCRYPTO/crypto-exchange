@@ -18,7 +18,10 @@
         </header>
         <section class="portfolio__container" v-if="portfolioAssets.length > 0">
           <AssetsList :assets="portfolioAssets" :walletMode="true" />
-          <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">Estimate portfolio value</ion-button>
+          <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">
+            <ion-spinner v-if="isEstimationLoading" />
+            <ion-label v-else>Estimate portfolio value</ion-label>
+            </ion-button>
           <ion-modal
             :is-open="isActive"
             css-class="my-custom-class"
@@ -40,7 +43,7 @@
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonModal, IonSkeletonText, alertController } from "@ionic/vue";
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonLabel, IonButton, IonSpinner, IonModal, IonSkeletonText, alertController } from "@ionic/vue";
 import { computed, ref, Ref } from 'vue';
 import { useStore } from 'vuex';
 import AssetsList from "../components/AssetsList.vue"
@@ -54,11 +57,12 @@ import { useRouter } from 'vue-router';
 
 export default  {
   name: "Portfolio",
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonButton, IonModal, AssetsList, EstimationPortfolioModal, IonSkeletonText },
+  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonLabel, IonButton, IonSpinner, IonModal, AssetsList, EstimationPortfolioModal, IonSkeletonText },
   setup() {
       const store = useStore()
       const router = useRouter()
       const isLoading = computed(() => store.getters.isLoading)
+      const isEstimationLoading = computed(() => store.getters.isEstimationLoading)
       const user: Ref<User> = computed(() => store.getters.user)
       const preferredCurrency = computed(() => user.value.account.preferredCurrency)
       const assets: Ref<Asset[]> = computed(() => store.getters.assets)
@@ -111,7 +115,7 @@ export default  {
 
       const assetsSummary = computed(() => store.getters.assetsSummary)
 
-      return { isLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router }
+      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router }
   }
 }
 </script>
