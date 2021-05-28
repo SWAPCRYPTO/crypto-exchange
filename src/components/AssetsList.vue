@@ -14,9 +14,9 @@
                 <div class="sparkline">
                 </div>
                 <div class="currency__details">
-                    <p class="currency__value">{{ preferredCurrency }} {{ convertCurrency(asset.current_price, currencyRate) }}</p>
+                    <p class="currency__value">{{ preferredCurrency }} {{ displayOnlySignificatDigits(convertCurrency(asset.current_price, currencyRate), 6) }}</p>
                     <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume(asset.symbol, portfolio) }} {{ asset.symbol }}</p>
-                    <p v-else class="currency__gain" :class="asset.price_change_percentage_24h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_24h_in_currency) }}%</p>
+                    <p v-else class="currency__gain" :class="asset.price_change_percentage_24h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_24h_in_currency) }}%</p>                    
                 </div>
             </li>
         </ul>
@@ -25,12 +25,12 @@
                 <ion-skeleton-text animated style="height: 100%; width: 100%; line-height: 2.5rem; min-height: 2.5rem;" />
             </li>
         </ul>
-        
     </div>
 </template>
 
 <script lang="ts">
 import { convertCurrency } from "@/services/ConvertCurrency"
+import { displayOnlySignificatDigits } from "@/services/FormatValue"
 import Asset from "@/store/modules/assets/models/Asset"
 import { Currencies } from "@/store/modules/assets/models/NBPCurrency"
 import { PortfolioItem } from "@/store/modules/auth/models/UserAccount"
@@ -59,8 +59,8 @@ export default defineComponent({
         
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
         const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
-
-        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency }
+        
+        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency, displayOnlySignificatDigits }
     },
 })
 </script>

@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title v-if="!isLoading">{{ preferredCurrency }} {{ balance }}</ion-title>
+        <ion-title v-if="!isLoading">{{ preferredCurrency }} {{ formatValue(balance, 2) }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -12,7 +12,7 @@
               <ion-header collapse="condense">
                 <ion-toolbar>
                   <p class="font-medium mb-2">Portfolio balance</p>
-                  <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ balance }}</h1>
+                  <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(balance, 2) }}</h1>
                   <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
                 </ion-toolbar>
               </ion-header>
@@ -34,6 +34,7 @@
 <script lang="ts">
 import Asset from '@/store/modules/assets/models/Asset';
 import { convertCurrency } from "@/services/ConvertCurrency"
+import { formatValue } from "@/services/FormatValue"
 import User from '@/store/modules/auth/models/User';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSkeletonText } from '@ionic/vue';
 
@@ -62,6 +63,8 @@ export default defineComponent({
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
         const fetchData = () => store.dispatch('fetchAssets')
         const fetchCurrencies = () => store.dispatch('fetchCurrencies')
+
+        store.dispatch('fetchAvailableMarkets', user.value.account.portfolio.map(asset => asset.symbol.toUpperCase()))
         
         fetchData()
         fetchCurrencies()
@@ -77,7 +80,7 @@ export default defineComponent({
         
         const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets.value, "price_change_percentage_24h_in_currency", true).reverse())
 
-        return { isLoading, currencies, router, user, assets, preferredCurrency, watchedAssets, topMovers, balance }
+        return { isLoading, currencies, router, user, assets, preferredCurrency, watchedAssets, topMovers, balance, formatValue }
     }
 })
 </script>

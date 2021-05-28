@@ -9,6 +9,7 @@ import { computed, defineComponent, ref, watch } from 'vue'
 import Vue3ChartJs from "@j-t-mcc/vue3-chartjs"
 import dataLabels from "chartjs-plugin-datalabels"
 import { useStore } from 'vuex'
+import { displayOnlySignificatDigits } from '@/services/FormatValue'
 
 
 export default defineComponent({
@@ -76,7 +77,7 @@ export default defineComponent({
               color: textColor.value,
               padding: 4,
               formatter: (value: number) => 
-                  (value == min || value == max) ? `${preferredCurrency.value} ${value.toFixed(4)}` : ""
+                  (value == min || value == max) ? `${preferredCurrency.value} ${(parseFloat(value.toPrecision(6)) * 1).toString()}` : ""
             },
           },
           layout: {

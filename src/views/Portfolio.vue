@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title>{{ preferredCurrency }} {{ balance }}</ion-title>
+        <ion-title>{{ preferredCurrency }} {{ formatValue(balance, 2) }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -11,7 +11,7 @@
           <ion-header n-header collapse="condense">
             <ion-toolbar>
               <p class="font-medium mb-2">Portfolio balance</p>
-              <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ balance }}</h1>
+              <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(balance, 2) }}</h1>
               <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
             </ion-toolbar>
           </ion-header>
@@ -42,6 +42,7 @@ import AssetsList from "../components/AssetsList.vue"
 import User from '@/store/modules/auth/models/User';
 import Asset from '@/store/modules/assets/models/Asset';
 import { convertCurrency } from '@/services/ConvertCurrency';
+import { formatValue } from '@/services/FormatValue';
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import EstimationPortfolioModal from '@/components/EstimationPortfolioModal.vue';
 
@@ -79,7 +80,7 @@ export default  {
 
       const assetsSummary = computed(() => store.getters.assetsSummary)
 
-      return { isLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary }
+      return { isLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue }
   }
 }
 </script>

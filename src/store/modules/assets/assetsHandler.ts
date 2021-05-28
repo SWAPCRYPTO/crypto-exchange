@@ -253,7 +253,7 @@ const actions = {
 
             const { data } = await axios.get(`${CORS_PREFIX}${url}`)
             const marketsData = JSON.parse(data.contents)
-            console.log(marketsData)
+
             let marketNames = []
             if (
                 typeof marketsData === 'object' &&
@@ -276,8 +276,8 @@ const actions = {
 
         const marketsIntersection = findIntersection(...availableMarkets)
 
-        console.log(availableMarkets)
-        console.log(marketsIntersection)
+        // console.log(availableMarkets)
+        // console.log(marketsIntersection)
     },
     estimatePortfolioValue: async (
         {
