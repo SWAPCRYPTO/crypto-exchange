@@ -55,7 +55,7 @@ export default defineComponent({
         const isEstimationLoading = computed(() => store.getters.isEstimationLoading)
         const SKELETON_ITEMS = 4
 
-        const tableHeaders = ['name', 'quantity', 'price', 'value', 'nettoValue', `value ${props.percentageOfPortfolio * 100}%`, `nettoValue ${props.percentageOfPortfolio * 100}%`]
+        const tableHeaders = ['asset', 'quantity', 'price', 'value', 'nettoValue', `value ${props.percentageOfPortfolio * 100}%`, `nettoValue ${props.percentageOfPortfolio * 100}%`, 'exchange name', 'arbitrage']
         
         return { dismiss, isEstimationLoading, tableHeaders, SKELETON_ITEMS }
     }
@@ -102,7 +102,7 @@ tbody tr:last-child td {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(7, auto);
+  grid-template-columns: repeat(9, auto);
   grid-template-rows: 1fr;
   @apply relative py-4;
 }

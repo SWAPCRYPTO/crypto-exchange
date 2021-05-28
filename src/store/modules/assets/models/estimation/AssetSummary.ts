@@ -6,4 +6,6 @@ export default interface AssetSummary {
     nettoValue: number
     percentageValue: number
     percentageNettoValue: number
+    exchangeName: string
+    arbitrage: string
 }

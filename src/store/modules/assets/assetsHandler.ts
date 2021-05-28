@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { PortfolioItem } from '../auth/models/UserAccount'
+import { findIntersection } from './arbitrage'
 import findNettoValue from './calculateNettoValue'
 import { calculateValue, pairOffers } from './estimatePortfolioValue'
 import Asset from './models/Asset'
@@ -20,24 +21,30 @@ const APIS = [
     {
         name: 'bitbay',
         baseUrl: 'https://bitbay.net/API/Public',
-        orderBookEndpoint: '/orderbook',
+        marketsUrl: 'https://api.bitbay.net/rest/trading/ticker',
+        marketsKey: 'items',
+        orderBookEndpoint: 'orderbook.json',
         takerFee: 0.0042,
         urlFormatFunction: (
             apiUrl: string,
             marketSymbol: [string, string],
             endPoint: string
-        ) => `${apiUrl}/${marketSymbol[0]}${marketSymbol[1]}/${endPoint}`,
+        ) =>
+            `${CORS_PREFIX}${apiUrl}/${marketSymbol[0]}${marketSymbol[1]}/${endPoint}`,
     },
     {
         name: 'bittrex',
         baseUrl: 'https://api.bittrex.com/v3/markets',
+        marketsUrl: 'https://api.bittrex.com/v3/markets',
+        marketsKey: 'symbol',
         orderBookEndpoint: '/orderbook',
         takerFee: 0.0075,
         urlFormatFunction: (
             apiUrl: string,
             marketSymbol: [string, string],
             endPoint: string
-        ) => `${apiUrl}/${marketSymbol[0]}-${marketSymbol[1]}/${endPoint}`,
+        ) =>
+            `${CORS_PREFIX}${apiUrl}/${marketSymbol[0]}-${marketSymbol[1]}/${endPoint}`,
     },
 ]
 
@@ -161,17 +168,39 @@ const actions = {
         payload: { apiName: string; symbol: string; currency: string }
     ) => {
         const { apiName, symbol, currency } = payload
-        const apiUrl = APIS[apiName as any]
-        const url = `${CORS_PREFIX}https://api.bittrex.com/v3/markets/${symbol.toUpperCase()}-${currency}/orderbook`
-        const { data } = await axios.get(url)
-        const ordersData = JSON.parse(data.contents)
 
-        // convert string to number
-        for (const order in ordersData) {
-            ordersData[order] = ordersData[order].map((offer: AssetModel) => ({
-                quantity: +offer.quantity,
-                rate: +offer.rate,
-            }))
+        const apiObject = APIS.find((api) => api.name === apiName)
+        const url = apiObject?.urlFormatFunction(
+            apiObject.baseUrl,
+            [symbol.toUpperCase(), currency],
+            apiObject.orderBookEndpoint
+        ) as string
+
+        const { data } = await axios.get(url)
+        let ordersData = JSON.parse(data.contents)
+
+        // format data structure and convert string to number
+        if (ordersData?.bids && ordersData?.asks) {
+            const newOrdersData = { bid: [], ask: [] }
+            for (const order in ordersData) {
+                const propKey = order.slice(0, -1) as 'bid' | 'ask'
+                newOrdersData[propKey] = ordersData[order].map(
+                    (order: [string, string]) => ({
+                        quantity: +order[1],
+                        rate: +order[0],
+                    })
+                )
+            }
+            ordersData = newOrdersData
+        } else if (ordersData?.bid && ordersData?.ask) {
+            for (const order in ordersData) {
+                ordersData[order] = ordersData[order].map(
+                    (offer: AssetModel) => ({
+                        quantity: +offer.quantity,
+                        rate: +offer.rate,
+                    })
+                )
+            }
         }
 
         const assetsOrders = {
@@ -208,6 +237,48 @@ const actions = {
             commit('setLoading', false)
         }
     },
+    fetchAvailableMarkets: async (
+        {
+            commit,
+            state,
+        }: {
+            commit: Function
+            state: AssetsState
+        },
+        payload: string[]
+    ) => {
+        const availableMarkets: string[][] = []
+        for (const apiObject of APIS) {
+            const url = apiObject.marketsUrl
+
+            const { data } = await axios.get(`${CORS_PREFIX}${url}`)
+            const marketsData = JSON.parse(data.contents)
+            console.log(marketsData)
+            let marketNames = []
+            if (
+                typeof marketsData === 'object' &&
+                !(marketsData instanceof Array)
+            ) {
+                marketNames = Object.keys(marketsData.items)
+            } else if (marketsData instanceof Array) {
+                marketNames = marketsData.map((market) => market.symbol)
+            }
+
+            const matchingMarkets = marketNames.filter((market) => {
+                const marketPair = market.split('-') as [string, string]
+                return (
+                    payload.includes(marketPair[0]) &&
+                    payload.includes(marketPair[1])
+                )
+            })
+            availableMarkets.push(matchingMarkets)
+        }
+
+        const marketsIntersection = findIntersection(...availableMarkets)
+
+        console.log(availableMarkets)
+        console.log(marketsIntersection)
+    },
     estimatePortfolioValue: async (
         {
             commit,
@@ -234,57 +305,83 @@ const actions = {
                 const assetSymbol = asset.symbol
                 const preferredCurrency = rootGetters.preferredCurrency
 
-                await dispatch('fetchAssetsOrders', {
-                    symbol: assetSymbol,
-                    currency: preferredCurrency,
-                })
+                const sameAssetSummaries = []
+                for (const { name } of APIS) {
+                    await dispatch('fetchAssetsOrders', {
+                        apiName: name,
+                        symbol: assetSymbol,
+                        currency: preferredCurrency,
+                    })
 
-                const assetsOrders = getters.assetsOrders
-                const assetData: { bid: AssetModel[]; ask: AssetModel[] } =
-                    assetsOrders[assetSymbol]
-                const assetQuantity = asset.quantity
+                    const assetsOrders = getters.assetsOrders
+                    const assetData: { bid: AssetModel[]; ask: AssetModel[] } =
+                        assetsOrders[assetSymbol]
+                    const assetQuantity = asset.quantity
 
-                const transactionFee = 0
-                const pairedOffers = pairOffers(
-                    assetData.bid,
-                    assetQuantity,
-                    transactionFee
-                )
+                    const transactionFee = 0
+                    const pairedOffers = pairOffers(
+                        assetData.bid,
+                        assetQuantity,
+                        transactionFee
+                    )
 
-                const offersValue = calculateValue(pairedOffers)
-                const nettoValue = findNettoValue(
-                    pairedOffers,
-                    asset.transactions,
-                    TAX_PERCENTAGE
-                )
+                    const offersValue = calculateValue(pairedOffers)
+                    const nettoValue = findNettoValue(
+                        pairedOffers,
+                        asset.transactions,
+                        TAX_PERCENTAGE
+                    )
 
-                // percentageOfPortfolio
-                const pairedPercentageOffers = pairOffers(
-                    assetData.bid,
-                    assetQuantity * percentageOfPortfolio,
-                    transactionFee
-                )
+                    // percentageOfPortfolio
+                    const pairedPercentageOffers = pairOffers(
+                        assetData.bid,
+                        assetQuantity * percentageOfPortfolio,
+                        transactionFee
+                    )
 
-                const percentageOffersValue = calculateValue(
-                    pairedPercentageOffers
-                )
+                    const percentageOffersValue = calculateValue(
+                        pairedPercentageOffers
+                    )
 
-                const percentageNettoValue = findNettoValue(
-                    pairedPercentageOffers,
-                    asset.transactions,
-                    TAX_PERCENTAGE
-                )
+                    const percentageNettoValue = findNettoValue(
+                        pairedPercentageOffers,
+                        asset.transactions,
+                        TAX_PERCENTAGE
+                    )
 
-                const assetSummary: AssetSummary = {
-                    name: asset.name,
-                    quantity: assetQuantity,
-                    price: offersValue / assetQuantity,
-                    value: offersValue,
-                    nettoValue,
-                    percentageValue: percentageOffersValue,
-                    percentageNettoValue,
+                    const assetSummary: AssetSummary = {
+                        name: asset.name,
+                        quantity: assetQuantity,
+                        price: offersValue / assetQuantity,
+                        value: offersValue,
+                        nettoValue,
+                        percentageValue: percentageOffersValue,
+                        percentageNettoValue,
+                        exchangeName: name,
+                        arbitrage: '',
+                    }
+
+                    // add asset summary to the list of summaries of the same asset
+                    sameAssetSummaries.push(assetSummary)
                 }
-                assetsSummary.push(assetSummary)
+
+                // Check which exchange market has the most valuable prices
+                // console.log(
+                //     sameAssetSummaries.map((asset) => [
+                //         asset.nettoValue,
+                //         asset.name,
+                //         asset.exchangeName,
+                //     ])
+                // )
+
+                // find the summary with the greatest netto value
+                const mostValuableSummary = sameAssetSummaries.reduce(
+                    (prevSummary, currSummary) =>
+                        prevSummary.nettoValue < currSummary.nettoValue
+                            ? currSummary
+                            : prevSummary
+                )
+                assetsSummary.push(mostValuableSummary)
             })
 
             commit('setAssetsSummary', assetsSummary)

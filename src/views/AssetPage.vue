@@ -15,7 +15,7 @@
             <div class="header__container flex flex-row items-center justify-between">
               <div class="asset__details">
                 <p class="font-medium mb-2">{{ asset.name }} price</p>
-                <h1 class="h1 balance">{{ preferredCurrency }} {{ asset.current_price }}</h1>
+                <h1 class="h1 balance">{{ preferredCurrency }} {{ asset.current_price.toFixed(2) }}</h1>
                 <h2 class="text-base mt-1" :class="asset.price_change_24h > 0 ? 'text-success' : 'text-error'">{{ preferredCurrency }} {{asset.price_change_24h > 0 ? '+' : ''}}{{ asset.price_change_24h.toFixed(2) }} ({{ asset.price_change_percentage_24h.toFixed(2) }}%)</h2>
               </div>
               <div class="icon__wrapper">

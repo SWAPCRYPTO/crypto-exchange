@@ -19,7 +19,7 @@
         <section class="portfolio__container">
           <AssetsList :assets="portfolioAssets" :walletMode="true" />
         </section>
-        <ion-button @click="openModal" expand="block" class="text-lg text-white font-bold">Estimate portfolio value</ion-button>
+        <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">Estimate portfolio value</ion-button>
         <ion-modal
           :is-open="isActive"
           css-class="my-custom-class"
