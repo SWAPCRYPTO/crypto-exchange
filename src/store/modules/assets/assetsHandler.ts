@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { PortfolioItem } from '../auth/models/UserAccount'
-import { findIntersection } from './arbitrage'
+import { collectOffers, findArbitrages, findIntersection } from './arbitrage'
 import findNettoValue from './calculateNettoValue'
+import { APIS, CORS_PREFIX } from './constants'
 import { calculateValue, pairOffers } from './estimatePortfolioValue'
 import Asset from './models/Asset'
 import AssetModel from './models/estimation/AssetModel'
@@ -15,43 +16,8 @@ const AVAILABLE_CURRENCIES = ['EUR', 'USD', 'PLN']
 const SPARKLINE_KEY_PREFIX = 'sparkline_in_'
 const SPARKLINE_KEY_SUFFIX = 'd'
 const TAX_PERCENTAGE = 0.19
-const CORS_PREFIX = 'https://api.allorigins.win/get?url='
 
-const APIS = [
-    {
-        name: 'bitbay',
-        baseUrl: 'https://bitbay.net/API/Public',
-        marketsUrl: 'https://api.bitbay.net/rest/trading/ticker',
-        marketsKey: 'items',
-        orderBookEndpoint: 'orderbook.json',
-        takerFee: 0.0042,
-        urlFormatFunction: (
-            apiUrl: string,
-            marketSymbol: [string, string],
-            endPoint: string
-        ) =>
-            `${CORS_PREFIX}${apiUrl}/${marketSymbol[0]}${marketSymbol[1]}/${endPoint}`,
-    },
-    {
-        name: 'bittrex',
-        baseUrl: 'https://api.bittrex.com/v3/markets',
-        marketsUrl: 'https://api.bittrex.com/v3/markets',
-        marketsKey: 'symbol',
-        orderBookEndpoint: '/orderbook',
-        takerFee: 0.0075,
-        urlFormatFunction: (
-            apiUrl: string,
-            marketSymbol: [string, string],
-            endPoint: string
-        ) =>
-            `${CORS_PREFIX}${apiUrl}/${marketSymbol[0]}-${marketSymbol[1]}/${endPoint}`,
-    },
-]
-
-export const fetchAssetsOrders = async (
-    marketSymbols: [string, string],
-    apiName: string
-) => {
+export const fetchAssetsOrders = async (marketSymbols: [string, string], apiName: string) => {
     const apiObject = APIS.find((api) => api.name === apiName)
     if (!apiObject) throw new Error('Invalid api name.')
 
@@ -69,12 +35,10 @@ export const fetchAssetsOrders = async (
         const newOrdersData = { bid: [], ask: [] }
         for (const order in ordersData) {
             const propKey = order.slice(0, -1) as 'bid' | 'ask'
-            newOrdersData[propKey] = ordersData[order].map(
-                (order: [string, string]) => ({
-                    quantity: +order[1],
-                    rate: +order[0],
-                })
-            )
+            newOrdersData[propKey] = ordersData[order].map((order: [string, string]) => ({
+                quantity: +order[1],
+                rate: +order[0],
+            }))
         }
         ordersData = newOrdersData
     } else if (ordersData?.bid && ordersData?.ask) {
@@ -120,8 +84,7 @@ const mutations = {
         }
     ) => {
         const asset = state.assets.find((asset) => asset.id == payload.assetId)
-        const key =
-            SPARKLINE_KEY_PREFIX + payload.sparkline.key + SPARKLINE_KEY_SUFFIX
+        const key = SPARKLINE_KEY_PREFIX + payload.sparkline.key + SPARKLINE_KEY_SUFFIX
         if (asset) (asset as any)[key] = payload.sparkline.value
     },
     setCurrencies: (state: AssetsState, payload: Currencies) => {
@@ -138,21 +101,14 @@ const mutations = {
 const getters = {
     assets: (state: AssetsState) => state.assets,
     assetsOrders: (state: AssetsState) => state.assetsOrders,
-    asset: (state: AssetsState) => (symbol: string) =>
-        state.assets.find((asset) => asset.symbol === symbol),
+    asset: (state: AssetsState) => (symbol: string) => state.assets.find((asset) => asset.symbol === symbol),
     currencies: (state: AssetsState) => state.currencies,
     assetsSummary: (state: AssetsState) => state.assetsSummary,
     isEstimationLoading: (state: AssetsState) => state.isEstimationLoading,
 }
 
 const actions = {
-    fetchAssets: async ({
-        commit,
-        state,
-    }: {
-        commit: Function
-        state: AssetsState
-    }) => {
+    fetchAssets: async ({ commit, state }: { commit: Function; state: AssetsState }) => {
         if (state.assets.length <= 0) {
             commit('setLoading', true)
             const { data } = await axios.get(
@@ -177,8 +133,7 @@ const actions = {
         }
     ) => {
         const asset = state.assets.find((asset) => asset.id == payload.assetId)
-        const key =
-            SPARKLINE_KEY_PREFIX + payload.timeOption + SPARKLINE_KEY_SUFFIX
+        const key = SPARKLINE_KEY_PREFIX + payload.timeOption + SPARKLINE_KEY_SUFFIX
         // check if asset exists and whether data needs to be fetched
         if (asset && !(asset as any)[key]) {
             const { data }: { data: ExtendedSparkline } = await axios.get(
@@ -186,9 +141,7 @@ const actions = {
             )
             const splitEveryNth = 4
             let prices = data?.prices.map((price) => price[1])
-            prices = prices.filter(
-                (_, index) => (index + 1) % splitEveryNth !== 0
-            )
+            prices = prices.filter((_, index) => (index + 1) % splitEveryNth !== 0)
             commit('setAssetChart', {
                 assetId: payload.assetId,
                 sparkline: {
@@ -221,19 +174,11 @@ const actions = {
 
         commit('setAssetsOrders', assetsOrders)
     },
-    fetchCurrencies: async ({
-        commit,
-        state,
-    }: {
-        commit: Function
-        state: AssetsState
-    }) => {
+    fetchCurrencies: async ({ commit, state }: { commit: Function; state: AssetsState }) => {
         if (state.currencies.length <= 0) {
             commit('setLoading', true)
             const rateTable = 'A'
-            const { data } = await axios.get(
-                `https://api.nbp.pl/api/exchangerates/tables/${rateTable}`
-            )
+            const { data } = await axios.get(`https://api.nbp.pl/api/exchangerates/tables/${rateTable}`)
             const currencies: Currencies = {
                 PLN: 1,
             }
@@ -252,10 +197,8 @@ const actions = {
     fetchMarketsIntersection: async (
         {
             commit,
-            state,
         }: {
             commit: Function
-            state: AssetsState
         },
         payload: string[]
     ) => {
@@ -267,10 +210,7 @@ const actions = {
             const marketsData = JSON.parse(data.contents)
 
             let marketNames = []
-            if (
-                typeof marketsData === 'object' &&
-                !(marketsData instanceof Array)
-            ) {
+            if (typeof marketsData === 'object' && !(marketsData instanceof Array)) {
                 marketNames = Object.keys(marketsData.items)
             } else if (marketsData instanceof Array) {
                 marketNames = marketsData.map((market) => market.symbol)
@@ -278,18 +218,12 @@ const actions = {
 
             const matchingMarkets = marketNames.filter((market) => {
                 const marketPair = market.split('-') as [string, string]
-                return (
-                    payload.includes(marketPair[0]) &&
-                    payload.includes(marketPair[1])
-                )
+                return payload.includes(marketPair[0]) && payload.includes(marketPair[1])
             })
             availableMarkets.push(matchingMarkets)
         }
 
         const marketsIntersection = findIntersection(...availableMarkets)
-        console.log(availableMarkets)
-        console.log(marketsIntersection)
-
         return marketsIntersection
     },
     estimatePortfolioValue: async (
@@ -313,6 +247,23 @@ const actions = {
 
         try {
             commit('setEstimationLoading', true)
+
+            // arbitrages
+            const userPortfolioAssets: string[] = getters.user.account.portfolio.map((asset: { symbol: string }) =>
+                asset.symbol.toUpperCase()
+            )
+            const marketsIntersection: string[] = await dispatch('fetchMarketsIntersection', userPortfolioAssets)
+            console.log('Markets: ' + marketsIntersection)
+
+            const exchanges = [APIS[0].name, APIS[1].name] as [string, string]
+            const allOffers = await collectOffers(exchanges, marketsIntersection)
+            console.log('allOffers', allOffers)
+
+            const arbitrages1 = await findArbitrages(exchanges, allOffers)
+            const arbitrages2 = await findArbitrages([exchanges[1], exchanges[0]], allOffers)
+            console.log(arbitrages1, arbitrages2)
+            // printArbitrages(arbitrages1, arbitrages2, 100)
+
             const assetsSummary: AssetSummary[] = []
             Object.values(portfolio).forEach(async (asset) => {
                 const assetSymbol = asset.symbol
@@ -326,23 +277,15 @@ const actions = {
                     })
 
                     const assetsOrders = getters.assetsOrders
-                    const assetData: { bid: AssetModel[]; ask: AssetModel[] } =
-                        assetsOrders[assetSymbol]
+                    console.log(assetsOrders)
+                    const assetData: { bid: AssetModel[]; ask: AssetModel[] } = assetsOrders[assetSymbol]
                     const assetQuantity = asset.quantity
 
                     const transactionFee = 0
-                    const pairedOffers = pairOffers(
-                        assetData.bid,
-                        assetQuantity,
-                        transactionFee
-                    )
+                    const pairedOffers = pairOffers(assetData.bid, assetQuantity, transactionFee)
 
                     const offersValue = calculateValue(pairedOffers)
-                    const nettoValue = findNettoValue(
-                        pairedOffers,
-                        asset.transactions,
-                        TAX_PERCENTAGE
-                    )
+                    const nettoValue = findNettoValue(pairedOffers, asset.transactions, TAX_PERCENTAGE)
 
                     // percentageOfPortfolio
                     const pairedPercentageOffers = pairOffers(
@@ -351,9 +294,7 @@ const actions = {
                         transactionFee
                     )
 
-                    const percentageOffersValue = calculateValue(
-                        pairedPercentageOffers
-                    )
+                    const percentageOffersValue = calculateValue(pairedPercentageOffers)
 
                     const percentageNettoValue = findNettoValue(
                         pairedPercentageOffers,
@@ -387,11 +328,8 @@ const actions = {
                 // )
 
                 // find the summary with the greatest netto value
-                const mostValuableSummary = sameAssetSummaries.reduce(
-                    (prevSummary, currSummary) =>
-                        prevSummary.nettoValue < currSummary.nettoValue
-                            ? currSummary
-                            : prevSummary
+                const mostValuableSummary = sameAssetSummaries.reduce((prevSummary, currSummary) =>
+                    prevSummary.nettoValue < currSummary.nettoValue ? currSummary : prevSummary
                 )
                 assetsSummary.push(mostValuableSummary)
             })
