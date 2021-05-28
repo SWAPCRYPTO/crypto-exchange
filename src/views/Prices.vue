@@ -50,7 +50,7 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, Ion
 import { computed, defineComponent, ref, Ref, watch } from "vue"
 import { useStore } from "vuex"
 import AssetsList from "../components/AssetsList.vue"
-import { arrowDownOutline, arrowUpOutline, statsChartOutline, rocketOutline, ribbonOutline, cashOutline, textOutline, repeatOutline, close } from 'ionicons/icons'
+import { arrowDownOutline, arrowUpOutline, statsChartOutline, rocketOutline, ribbonOutline, cashOutline, repeatOutline, close } from 'ionicons/icons'
 
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
@@ -85,7 +85,7 @@ export default defineComponent({
           }
         })
 
-        const sortingOptions = ['Rank', 'Change (24h) %', 'Market Cap (24h)', 'Total Volume']
+        // const sortingOptions = ['Rank', 'Change (24h) %', 'Market Cap (24h)', 'Total Volume']
 
         const sortBy = (sortingCategory: string, sortingKey: string, reverseSorting: boolean, absoluteValues: boolean) => {
             console.log(sortingCategory)

@@ -16,19 +16,24 @@
             </ion-toolbar>
           </ion-header>
         </header>
-        <section class="portfolio__container">
+        <section class="portfolio__container" v-if="portfolioAssets.length > 0">
           <AssetsList :assets="portfolioAssets" :walletMode="true" />
+          <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">Estimate portfolio value</ion-button>
+          <ion-modal
+            :is-open="isActive"
+            css-class="my-custom-class"
+            @didDismiss="setOpen(false)"
+            mode="ios"
+            swipeToClose
+          >
+            <EstimationPortfolioModal @onDismiss="setOpen(false)" title="Portfolio estimation" :assetsSummary="assetsSummary" :percentageOfPortfolio="0.1" />
+          </ion-modal>
         </section>
-        <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">Estimate portfolio value</ion-button>
-        <ion-modal
-          :is-open="isActive"
-          css-class="my-custom-class"
-          @didDismiss="setOpen(false)"
-          mode="ios"
-          swipeToClose
-        >
-          <EstimationPortfolioModal @onDismiss="setOpen(false)" title="Portfolio estimation" :assetsSummary="assetsSummary" :percentageOfPortfolio="0.1" />
-        </ion-modal>
+        <section class="empty__portfolio my-8 flex flex-col items-center justify-center text-center" v-else>
+          <h2 class="h2">Your portfolio is empty</h2>
+          <p class="my-4">Keep track of your profits, losses and portfolio valuation. Start building the portfolio today.</p>
+          <ion-button @click="router.push('/tabs/prices')" mode="ios" expand="block" class="text-lg text-white font-bold">Check available assets</ion-button>
+        </section>
       </section>
     </ion-content>
   </ion-page>
@@ -45,19 +50,14 @@ import { convertCurrency } from '@/services/ConvertCurrency';
 import { formatValue } from '@/services/FormatValue';
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import EstimationPortfolioModal from '@/components/EstimationPortfolioModal.vue';
+import { useRouter } from 'vue-router';
 
 export default  {
   name: "Portfolio",
   components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonButton, IonModal, AssetsList, EstimationPortfolioModal, IonSkeletonText },
   setup() {
-      // const url = "https://api.bitbay.net/rest/trading/orderbook/BTC-PLN"
-      // const corsPrefix = "https://api.allorigins.win/get?url="
-      // const url = `${corsPrefix}https://api.bittrex.com/v3/markets/ETH-USD/orderbook`
-      // axios.get(url).then(result => {
-      //   console.log(result.data)
-      //   console.log(JSON.parse(result.data.contents))
-      // })
       const store = useStore()
+      const router = useRouter()
       const isLoading = computed(() => store.getters.isLoading)
       const user: Ref<User> = computed(() => store.getters.user)
       const preferredCurrency = computed(() => user.value.account.preferredCurrency)
@@ -80,7 +80,7 @@ export default  {
 
       const assetsSummary = computed(() => store.getters.assetsSummary)
 
-      return { isLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue }
+      return { isLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router }
   }
 }
 </script>

@@ -17,7 +17,7 @@
                 </ion-toolbar>
               </ion-header>
             </header>
-            <section class="watchlist__container">
+            <section class="watchlist__container" v-if="watchedAssets.length > 0">
                 <h2 class="h2">Watchlist</h2>
                 <AssetsList :assets="watchedAssets" :walletMode="false" />
             </section>
@@ -89,8 +89,8 @@ export default defineComponent({
 .balance {
   @apply text-4xl;
 }
-.watchlist__container {
-  @apply my-8;
+.watchlist__container, .topMovers__container {
+  @apply mt-8;
 }
 .assetsList {
   @apply shadow-md;
