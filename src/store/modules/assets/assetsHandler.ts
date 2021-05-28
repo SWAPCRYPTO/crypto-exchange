@@ -304,7 +304,6 @@ const actions = {
                             ? pairOffers(assetData.bid, assetQuantity, transactionFee)
                             : [{ quantity: assetQuantity, rate: assetDetails?.current_price }]
 
-                    console.log(pairedOffers, asset.symbol)
                     const offersValue = calculateValue(pairedOffers)
                     const nettoValue = findNettoValue(pairedOffers, asset.transactions, TAX_PERCENTAGE)
 

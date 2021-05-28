@@ -18,6 +18,9 @@
                 <tr v-for="asset in assetsSummary" :key="asset.name">
                     <td v-for="prop in asset" :key="prop">{{ displayProp(prop) }}</td>
                 </tr>
+                <tr>
+                    <td v-for="(cell, index) in sumCells" :key="index">{{ displayProp(cell) }}</td>
+                </tr>
             </tbody>
         </table>
         <table class="grid" v-else>
@@ -43,6 +46,7 @@ import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, Ion
 import { useStore } from 'vuex'
 import { displayOnlySignificatDigits } from '@/services/FormatValue'
 import { ArbitrageDetails } from '@/store/modules/assets/models/estimation/ArbitrageDetails'
+import AssetSummary from '@/store/modules/assets/models/estimation/AssetSummary'
 
 export default defineComponent({
     name: 'EstimationPortfolioModal',
@@ -59,17 +63,24 @@ export default defineComponent({
 
         const tableHeaders = ['asset', 'quantity', 'price', 'value', 'nettoValue', `value ${props.percentageOfPortfolio * 100}%`, `nettoValue ${props.percentageOfPortfolio * 100}%`, 'exchange name', 'arbitrage']
 
+        const sumColumnValues = (array: AssetSummary[], key: string) => array.reduce((acc, elem) => acc + (elem as any)[key], 0)
+        const sumValues = computed(() => sumColumnValues(props.assetsSummary, 'value'))
+        const sumNettoValues = computed(() => sumColumnValues(props.assetsSummary, 'nettoValue'))
+        const sumPercentageValue = computed(() => sumColumnValues(props.assetsSummary, 'percentageValue'))
+        const sumPercentageNettoValue = computed(() => sumColumnValues(props.assetsSummary, 'percentageNettoValue'))
+        const sumCells = computed(() => ['Sum', '', '', sumValues.value, sumNettoValues.value, sumPercentageValue.value, sumPercentageNettoValue.value, '', ''])
+
         const displayProp = (prop: number | string | ArbitrageDetails) => {
           if (typeof prop === 'number') {
             return displayOnlySignificatDigits(prop, 6)
           } else if (typeof prop === 'object' && typeof prop !== 'string') {
             if (Object.keys(prop).length !== 0) {
               return `${prop.exchangeMarkets[0]}->${prop.exchangeMarkets[1]} ${prop.market} +${displayOnlySignificatDigits(prop.profit, 6)} ${prop.market.split('-')[1]}`
-            } else return 'Arbitrage not possible'
+            } else return 'not possible'
           } else return prop
         }
         
-        return { dismiss, isEstimationLoading, tableHeaders, SKELETON_ITEMS, displayOnlySignificatDigits, displayProp }
+        return { dismiss, isEstimationLoading, tableHeaders, SKELETON_ITEMS, displayOnlySignificatDigits, displayProp, sumCells }
     }
 })
 </script>
@@ -88,9 +99,9 @@ th, td {
   border-right: solid 2px transparent;
 }
 
-td:last-of-type {
+/* tr td:last-of-type {
   min-width: 24rem;
-}
+} */
 
 th:last-child,
 td:last-child {
