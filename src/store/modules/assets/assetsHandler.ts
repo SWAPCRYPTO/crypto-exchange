@@ -5,6 +5,7 @@ import findNettoValue from './calculateNettoValue'
 import { APIS, CORS_PREFIX } from './constants'
 import { calculateValue, pairOffers } from './estimatePortfolioValue'
 import Asset from './models/Asset'
+import { ArbitrageDetails } from './models/estimation/ArbitrageDetails'
 import AssetModel from './models/estimation/AssetModel'
 import AssetSummary from './models/estimation/AssetSummary'
 import ExtendedSparkline from './models/ExtendedSparkline'
@@ -241,29 +242,32 @@ const actions = {
         payload: {
             portfolio: PortfolioItem[]
             percentageOfPortfolio: number
+            checkArbitrage: boolean
         }
     ) => {
-        const { portfolio, percentageOfPortfolio } = payload
+        const { portfolio, percentageOfPortfolio, checkArbitrage } = payload
 
         try {
             commit('setEstimationLoading', true)
 
             // arbitrages
-            const userPortfolioAssets: string[] = getters.user.account.portfolio.map((asset: { symbol: string }) =>
-                asset.symbol.toUpperCase()
-            )
-            const marketsIntersection: string[] = await dispatch('fetchMarketsIntersection', userPortfolioAssets)
-            console.log('Markets: ' + marketsIntersection)
+            let sortedArbitrages: ArbitrageDetails[] = []
+            if (checkArbitrage) {
+                const userPortfolioAssets: string[] = getters.user.account.portfolio.map((asset: { symbol: string }) =>
+                    asset.symbol.toUpperCase()
+                )
+                const marketsIntersection: string[] = await dispatch('fetchMarketsIntersection', userPortfolioAssets)
+                // console.log('Markets: ' + marketsIntersection)
 
-            const exchanges = [APIS[0].name, APIS[1].name] as [string, string]
-            const allOffers = await collectOffers(exchanges, marketsIntersection)
-            console.log('allOffers', allOffers)
+                const exchanges = [APIS[0].name, APIS[1].name] as [string, string]
+                const allOffers = await collectOffers(exchanges, marketsIntersection)
+                // console.log('allOffers', allOffers)
 
-            const arbitrages1 = await findArbitrages(exchanges, allOffers)
-            const arbitrages2 = await findArbitrages([exchanges[1], exchanges[0]], allOffers)
-            console.log(arbitrages1)
-            const sortedArbitrages = sortArbitrages(arbitrages1, arbitrages2)
-            console.log(sortedArbitrages)
+                const arbitrages1 = await findArbitrages(exchanges, allOffers)
+                const arbitrages2 = await findArbitrages([exchanges[1], exchanges[0]], allOffers)
+                sortedArbitrages = sortArbitrages(arbitrages1, arbitrages2)
+                // console.log(sortedArbitrages)
+            }
 
             const assetsSummary: AssetSummary[] = []
             Object.values(portfolio).forEach(async (asset) => {
@@ -314,9 +318,11 @@ const actions = {
                     )
 
                     // check if arbitrage is available for this asset
-                    const matchingArbitrages = sortedArbitrages.filter(
-                        (arbitrage) => arbitrage.market.split('-')[0] === assetSymbol.toUpperCase()
-                    )
+                    const matchingArbitrages = checkArbitrage
+                        ? sortedArbitrages.filter(
+                              (arbitrage) => arbitrage.market.split('-')[0] === assetSymbol.toUpperCase()
+                          )
+                        : []
                     let mostProfitableArbitrage = {}
                     if (matchingArbitrages.length > 0) {
                         matchingArbitrages.sort((a, b) => b.profit - a.profit)

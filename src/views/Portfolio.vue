@@ -40,7 +40,7 @@
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonModal, IonSkeletonText } from "@ionic/vue";
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonModal, IonSkeletonText, alertController } from "@ionic/vue";
 import { computed, ref, Ref } from 'vue';
 import { useStore } from 'vuex';
 import AssetsList from "../components/AssetsList.vue"
@@ -67,15 +67,46 @@ export default  {
       const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
       const balance = computed(() => convertCurrency(user.value.account.balance, currencyRate))
 
-      const estimatePortfolio = (percentageOfPortfolio: number) => store.dispatch('estimatePortfolioValue', { portfolio: user.value.account.portfolio, percentageOfPortfolio })
+      const estimatePortfolio = (percentageOfPortfolio: number, checkArbitrage: boolean) => store.dispatch('estimatePortfolioValue', { portfolio: user.value.account.portfolio, percentageOfPortfolio, checkArbitrage })
      
       const isActive = ref(false);
       const setOpen = (state: boolean) => isActive.value = state;
 
+      const presentAlertConfirm = async () => {
+        const alert = await alertController
+          .create({
+            cssClass: 'my-custom-class',
+            header: 'Arbitrage',
+            message: 'Would you like to check whether the arbitrage is possible?',
+            buttons: [
+              {
+                text: 'Yes',
+                handler: () => {
+                  estimatePortfolio(0.1, true).then(() => {
+                    setOpen(true)
+                  })
+                },
+                cssClass: 'primary'
+              },
+              {
+                text: 'No',
+                handler: () => {
+                  estimatePortfolio(0.1, false).then(() => {
+                    setOpen(true)
+                  })
+                },
+              },
+              {
+                text: 'Cancel',
+                role: 'cancel',
+              }
+            ],
+        });
+        return alert.present();
+      }
+
       const openModal = () => {
-        estimatePortfolio(0.1).then(() => {
-          setOpen(true)
-        })
+        presentAlertConfirm()
       }
 
       const assetsSummary = computed(() => store.getters.assetsSummary)
