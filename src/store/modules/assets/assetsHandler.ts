@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { PortfolioItem } from '../auth/models/UserAccount'
-import { collectOffers, findArbitrages, findIntersection } from './arbitrage'
+import { collectOffers, findArbitrages, findIntersection, sortArbitrages } from './arbitrage'
 import findNettoValue from './calculateNettoValue'
 import { APIS, CORS_PREFIX } from './constants'
 import { calculateValue, pairOffers } from './estimatePortfolioValue'
@@ -261,13 +261,21 @@ const actions = {
 
             const arbitrages1 = await findArbitrages(exchanges, allOffers)
             const arbitrages2 = await findArbitrages([exchanges[1], exchanges[0]], allOffers)
-            console.log(arbitrages1, arbitrages2)
-            // printArbitrages(arbitrages1, arbitrages2, 100)
+            console.log(arbitrages1)
+            const sortedArbitrages = sortArbitrages(arbitrages1, arbitrages2)
+            console.log(sortedArbitrages)
 
             const assetsSummary: AssetSummary[] = []
             Object.values(portfolio).forEach(async (asset) => {
                 const assetSymbol = asset.symbol
                 const preferredCurrency = rootGetters.preferredCurrency
+                // BTC can also be a preferredCurrency, it will work
+
+                // cannot estimate the value of the asset as it is the main currency
+                // for example if BTC is the main currency instead of fiat currency
+                if (assetSymbol === preferredCurrency) {
+                    return
+                }
 
                 const sameAssetSummaries = []
                 for (const { name } of APIS) {
@@ -277,10 +285,13 @@ const actions = {
                     })
 
                     const assetsOrders = getters.assetsOrders
-                    console.log(assetsOrders)
                     const assetData: { bid: AssetModel[]; ask: AssetModel[] } = assetsOrders[assetSymbol]
-                    const assetQuantity = asset.quantity
 
+                    if (!assetData?.bid) {
+                        break
+                    }
+
+                    const assetQuantity = asset.quantity
                     const transactionFee = 0
                     const pairedOffers = pairOffers(assetData.bid, assetQuantity, transactionFee)
 
@@ -302,6 +313,17 @@ const actions = {
                         TAX_PERCENTAGE
                     )
 
+                    // check if arbitrage is available for this asset
+                    const matchingArbitrages = sortedArbitrages.filter(
+                        (arbitrage) => arbitrage.market.split('-')[0] === assetSymbol.toUpperCase()
+                    )
+                    let mostProfitableArbitrage = {}
+                    if (matchingArbitrages.length > 0) {
+                        matchingArbitrages.sort((a, b) => b.profit - a.profit)
+                        console.log(matchingArbitrages)
+                        mostProfitableArbitrage = matchingArbitrages[0]
+                    }
+
                     const assetSummary: AssetSummary = {
                         name: asset.name,
                         quantity: assetQuantity,
@@ -311,7 +333,7 @@ const actions = {
                         percentageValue: percentageOffersValue,
                         percentageNettoValue,
                         exchangeName: name,
-                        arbitrage: '',
+                        arbitrage: mostProfitableArbitrage,
                     }
 
                     // add asset summary to the list of summaries of the same asset
@@ -328,10 +350,12 @@ const actions = {
                 // )
 
                 // find the summary with the greatest netto value
-                const mostValuableSummary = sameAssetSummaries.reduce((prevSummary, currSummary) =>
-                    prevSummary.nettoValue < currSummary.nettoValue ? currSummary : prevSummary
-                )
-                assetsSummary.push(mostValuableSummary)
+                if (sameAssetSummaries.length > 0) {
+                    const mostValuableSummary = sameAssetSummaries.reduce((prevSummary, currSummary) =>
+                        prevSummary.nettoValue < currSummary.nettoValue ? currSummary : prevSummary
+                    )
+                    assetsSummary.push(mostValuableSummary)
+                }
             })
 
             commit('setAssetsSummary', assetsSummary)

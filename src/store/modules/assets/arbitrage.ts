@@ -120,19 +120,15 @@ export const findArbitrages = async (apiNames: [string, string], exchangeOffers:
         }
     }
 
-    console.log(arbitrageOffers)
-
     return arbitrageOffers
 }
 
 export const sortArbitrages = (...arbitrages: ArbitrageOffers[]) => {
-    const listOfArbitrages = [] // ArbitrageDetails[]
+    const listOfArbitrages: ArbitrageDetails[][] = []
 
     for (const arb of arbitrages) {
-        console.log('test')
-        console.log(Object.values(arb).flat())
         listOfArbitrages.push(Object.values(arb).flat(2))
     }
 
-    // return listOfArbitrages.sort((a, b) => a)
+    return listOfArbitrages.flat()
 }

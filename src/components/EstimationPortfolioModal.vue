@@ -16,7 +16,7 @@
             </thead>
             <tbody>
                 <tr v-for="asset in assetsSummary" :key="asset.name">
-                    <td v-for="prop in asset" :key="prop">{{ typeof prop === 'number' ? prop.toFixed(2) : prop }}</td>
+                    <td v-for="prop in asset" :key="prop">{{ displayProp(prop) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -41,6 +41,8 @@
 import { computed, defineComponent } from 'vue'
 import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonSkeletonText } from '@ionic/vue'
 import { useStore } from 'vuex'
+import { displayOnlySignificatDigits } from '@/services/FormatValue'
+import { ArbitrageDetails } from '@/store/modules/assets/models/estimation/ArbitrageDetails'
 
 export default defineComponent({
     name: 'EstimationPortfolioModal',
@@ -56,8 +58,18 @@ export default defineComponent({
         const SKELETON_ITEMS = 4
 
         const tableHeaders = ['asset', 'quantity', 'price', 'value', 'nettoValue', `value ${props.percentageOfPortfolio * 100}%`, `nettoValue ${props.percentageOfPortfolio * 100}%`, 'exchange name', 'arbitrage']
+
+        const displayProp = (prop: number | string | ArbitrageDetails) => {
+          if (typeof prop === 'number') {
+            return displayOnlySignificatDigits(prop, 6)
+          } else if (typeof prop === 'object' && typeof prop !== 'string') {
+            if (Object.keys(prop).length !== 0) {
+              return `${prop.exchangeMarkets[0]}->${prop.exchangeMarkets[1]} ${prop.market} ${displayOnlySignificatDigits(prop.profit, 6)} +${prop.market.split('-')[1]}`
+            } else return 'Arbitrage not possible'
+          } else return prop
+        }
         
-        return { dismiss, isEstimationLoading, tableHeaders, SKELETON_ITEMS }
+        return { dismiss, isEstimationLoading, tableHeaders, SKELETON_ITEMS, displayOnlySignificatDigits, displayProp }
     }
 })
 </script>
@@ -71,9 +83,13 @@ table {
 }
 
 th, td {
-  min-width: 14rem; /* Forcing the width */
+  min-width: 16rem; /* Forcing the width */
   border-right: solid 2px transparent;
   border-right: solid 2px transparent;
+}
+
+td:last-of-type {
+  min-width: 24rem;
 }
 
 th:last-child,

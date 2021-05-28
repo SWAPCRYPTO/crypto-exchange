@@ -1,3 +1,5 @@
+import { ArbitrageDetails } from './ArbitrageDetails'
+
 export default interface AssetSummary {
     name: string
     quantity: number
@@ -7,5 +9,5 @@ export default interface AssetSummary {
     percentageValue: number
     percentageNettoValue: number
     exchangeName: string
-    arbitrage: string
+    arbitrage: ArbitrageDetails | {}
 }
