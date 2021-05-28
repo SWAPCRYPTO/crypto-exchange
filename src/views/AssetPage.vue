@@ -52,6 +52,9 @@ import { useRoute } from 'vue-router';
 import { computed, ref, Ref } from 'vue';
 import { starOutline, star, addOutline, removeOutline, repeatOutline, close } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
+import { PortfolioItem } from '@/store/modules/auth/models/UserAccount';
+import Asset from '@/store/modules/assets/models/Asset';
+import firebase from 'firebase';
 
 type TimeOption = '1d' | '1w' | '1m' | '1y'
 
@@ -106,7 +109,19 @@ export default  {
               text: `Buy ${asset.value.symbol.toUpperCase()}`,
               icon: addOutline,
               handler: () => {
-                console.log('Delete clicked')
+                const assetToBuy: PortfolioItem = {
+                  name: asset.value.name.toLowerCase(),
+                  quantity: 0.5,
+                  symbol: asset.value.symbol.toLowerCase(),
+                  transactions: [
+                    {
+                      purchasePrice: 1000,
+                      quantity: 0.5,
+                      transactionDate: firebase.firestore.Timestamp.now()
+                    }
+                  ],
+                }
+                store.dispatch('buyAsset', assetToBuy)
               },
             },
             {

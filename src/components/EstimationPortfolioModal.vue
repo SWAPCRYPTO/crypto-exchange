@@ -64,7 +64,7 @@ export default defineComponent({
             return displayOnlySignificatDigits(prop, 6)
           } else if (typeof prop === 'object' && typeof prop !== 'string') {
             if (Object.keys(prop).length !== 0) {
-              return `${prop.exchangeMarkets[0]}->${prop.exchangeMarkets[1]} ${prop.market} ${displayOnlySignificatDigits(prop.profit, 6)} +${prop.market.split('-')[1]}`
+              return `${prop.exchangeMarkets[0]}->${prop.exchangeMarkets[1]} ${prop.market} +${displayOnlySignificatDigits(prop.profit, 6)} ${prop.market.split('-')[1]}`
             } else return 'Arbitrage not possible'
           } else return prop
         }

@@ -20,78 +20,7 @@ netto = currentCost - podatekOdZysku
 import { Transaction } from '../auth/models/UserAccount'
 import AssetModel from './models/estimation/AssetModel'
 
-const assetQuantity = 120
-const offersValue = 100
-// const transactions = [
-//     {
-//         purchasePrice: 0.23,
-//         quantity: 70,
-//         transactionDate: {
-//             nanoseconds: 2,
-//             seconds: 0,
-//         },
-//     },
-//     {
-//         purchasePrice: 10,
-//         quantity: 50,
-//         transactionDate: {
-//             nanoseconds: 0,
-//             seconds: 30000,
-//         },
-//     },
-// ]
-
-const pairedOffers = [
-    {
-        quantity: 3,
-        rate: 3511.848,
-    },
-    {
-        quantity: 101,
-        rate: 3516.538,
-    },
-    {
-        quantity: 15,
-        rate: 3528.294,
-    },
-    {
-        quantity: 1,
-        rate: 3535.524,
-    },
-]
-
-const transactions = [
-    {
-        purchasePrice: 4000,
-        quantity: 2,
-        transactionDate: {
-            nanoseconds: 0,
-            seconds: 0,
-        },
-    },
-    {
-        purchasePrice: 50,
-        quantity: 48,
-        transactionDate: {
-            nanoseconds: 0,
-            seconds: 20,
-        },
-    },
-    {
-        purchasePrice: 2535.524,
-        quantity: 70,
-        transactionDate: {
-            nanoseconds: 0,
-            seconds: 120,
-        },
-    },
-]
-
-const calculateNettoValue = (
-    currentValue: number,
-    acquisitionCost: number,
-    taxValue: number
-) => {
+const calculateNettoValue = (currentValue: number, acquisitionCost: number, taxValue: number) => {
     const profit = currentValue - acquisitionCost
     if (profit > 0) {
         const profitTax = profit * taxValue
@@ -100,15 +29,9 @@ const calculateNettoValue = (
     } else return currentValue
 }
 
-export default function findNettoValue(
-    pairedOffers: AssetModel[],
-    transactions: Transaction[],
-    taxValue: number
-) {
+export default function findNettoValue(pairedOffers: AssetModel[], transactions: Transaction[], taxValue: number) {
     // past transactions sorted ascending by date
-    transactions.sort(
-        (a, b) => a.transactionDate.seconds - b.transactionDate.seconds
-    )
+    transactions.sort((a, b) => a.transactionDate.seconds - b.transactionDate.seconds)
 
     let netValue = 0
 
@@ -141,11 +64,7 @@ export default function findNettoValue(
             if (currentTransaction.quantity >= currentOffer.quantity) {
                 const quantity = currentOffer.quantity
                 const offersValue = quantity * currentOffer.rate
-                netValue += calculateNettoValue(
-                    offersValue,
-                    quantity * currentTransaction.purchasePrice,
-                    taxValue
-                )
+                netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
                 currentTransaction.quantity -= quantity
                 pairedOffersQueue.shift()
 
@@ -156,11 +75,7 @@ export default function findNettoValue(
                 const quantity = currentTransaction.quantity
                 const offersValue = quantity * currentOffer.rate
 
-                netValue += calculateNettoValue(
-                    offersValue,
-                    quantity * currentTransaction.purchasePrice,
-                    taxValue
-                )
+                netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
 
                 currentTransaction.quantity -= quantity
                 if (currentTransaction.quantity === 0) {

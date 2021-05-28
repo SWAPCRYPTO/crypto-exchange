@@ -290,24 +290,29 @@ const actions = {
 
                     const assetsOrders = getters.assetsOrders
                     const assetData: { bid: AssetModel[]; ask: AssetModel[] } = assetsOrders[assetSymbol]
-
-                    if (!assetData?.bid) {
-                        break
-                    }
-
                     const assetQuantity = asset.quantity
                     const transactionFee = 0
-                    const pairedOffers = pairOffers(assetData.bid, assetQuantity, transactionFee)
 
+                    // if there's no bid/ask data for this asset, use basic data from charts api
+                    const assetDetails: Asset = getters.asset(asset.symbol)
+
+                    // for normal currencies
+                    if (!assetData.bid && !assetDetails) break
+
+                    const pairedOffers =
+                        assetData.bid && !(assetData as any).code
+                            ? pairOffers(assetData.bid, assetQuantity, transactionFee)
+                            : [{ quantity: assetQuantity, rate: assetDetails?.current_price }]
+
+                    console.log(pairedOffers, asset.symbol)
                     const offersValue = calculateValue(pairedOffers)
                     const nettoValue = findNettoValue(pairedOffers, asset.transactions, TAX_PERCENTAGE)
 
                     // percentageOfPortfolio
-                    const pairedPercentageOffers = pairOffers(
-                        assetData.bid,
-                        assetQuantity * percentageOfPortfolio,
-                        transactionFee
-                    )
+                    const pairedPercentageOffers =
+                        assetData.bid && !(assetData as any)
+                            ? pairOffers(assetData.bid, assetQuantity * percentageOfPortfolio, transactionFee)
+                            : [{ quantity: assetQuantity * percentageOfPortfolio, rate: assetDetails?.current_price }]
 
                     const percentageOffersValue = calculateValue(pairedPercentageOffers)
 
@@ -326,7 +331,6 @@ const actions = {
                     let mostProfitableArbitrage = {}
                     if (matchingArbitrages.length > 0) {
                         matchingArbitrages.sort((a, b) => b.profit - a.profit)
-                        console.log(matchingArbitrages)
                         mostProfitableArbitrage = matchingArbitrages[0]
                     }
 

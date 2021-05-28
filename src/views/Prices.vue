@@ -85,8 +85,6 @@ export default defineComponent({
           }
         })
 
-        // const sortingOptions = ['Rank', 'Change (24h) %', 'Market Cap (24h)', 'Total Volume']
-
         const sortBy = (sortingCategory: string, sortingKey: string, reverseSorting: boolean, absoluteValues: boolean) => {
             console.log(sortingCategory)
             activeSorting.value = sortingCategory
@@ -112,10 +110,6 @@ export default defineComponent({
                 icon: sortAscending.value ? arrowUpOutline : arrowDownOutline,
                 handler: () => {
                   sortBy('Change (24h) %', 'price_change_percentage_24h_in_currency', false, true)
-                  // console.log('Change (24h) %')
-                  // activeSorting.value = 'Change (24h) %'
-                  // sortedAssets.value = sortAscending.value ? sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", true) : sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", true).reverse()
-                  // sortAscending.value = !sortAscending.value
                 },
               },
               {
@@ -144,12 +138,6 @@ export default defineComponent({
                 icon: cashOutline,
                 handler: () => {
                   sortBy('Price', 'current_price', false, false)
-                },
-              },
-              {
-                text: `Name`,
-                handler: () => {
-                  sortBy('Name', 'name', false, false) // bug
                 },
               },
               {

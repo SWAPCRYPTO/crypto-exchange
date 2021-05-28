@@ -1,7 +1,7 @@
 import { useRouter } from 'vue-router'
 import firebase from '../../../firebase'
 import User from './models/User'
-import UserAccount from './models/UserAccount'
+import UserAccount, { PortfolioItem } from './models/UserAccount'
 import UserSettings from './models/UserSettings'
 
 export interface AuthState {
@@ -55,16 +55,12 @@ const getters = {
     isVerfied: () => firebase.auth().currentUser?.emailVerified,
     userBalance: (state: AuthState) => state.user?.account.balance,
     userPortfolio: (state: AuthState) => state.user?.account.portfolio,
-    preferredCurrency: (state: AuthState) =>
-        state.user?.account.preferredCurrency,
+    preferredCurrency: (state: AuthState) => state.user?.account.preferredCurrency,
     watchedAssets: (state: AuthState) => state.user?.account.watchedAssets,
 }
 
 const actions = {
-    async signUserIn(
-        { commit }: { commit: Function },
-        payload: { email: string; password: string }
-    ) {
+    async signUserIn({ commit }: { commit: Function }, payload: { email: string; password: string }) {
         commit('setLoading', true)
         commit('clearError')
 
@@ -102,10 +98,7 @@ const actions = {
                 }
             })
     },
-    async signUserUp(
-        { commit }: { commit: Function },
-        payload: { name: string; email: string; password: string }
-    ) {
+    async signUserUp({ commit }: { commit: Function }, payload: { name: string; email: string; password: string }) {
         commit('setLoading', true)
         await firebase
             .auth()
@@ -168,10 +161,7 @@ const actions = {
                 commit('setLoading', false)
             })
     },
-    async autoSignUserIn(
-        { commit }: { commit: Function },
-        payload: firebase.User
-    ) {
+    async autoSignUserIn({ commit }: { commit: Function }, payload: firebase.User) {
         commit('setLoading', true)
         const cachedUserId = payload.uid
         firebase
@@ -191,10 +181,7 @@ const actions = {
                 }
             )
     },
-    async updateUserAccount(
-        { commit, state }: { commit: Function; state: AuthState },
-        payload: UserAccount
-    ) {
+    async updateUserAccount({ commit, state }: { commit: Function; state: AuthState }, payload: UserAccount) {
         if (state.user) {
             commit('setLoading', true)
             commit('clearError')
@@ -212,11 +199,7 @@ const actions = {
         }
     },
     async changeEmail(
-        {
-            commit,
-            dispatch,
-            state,
-        }: { commit: Function; dispatch: any; state: AuthState },
+        { commit, dispatch, state }: { commit: Function; dispatch: any; state: AuthState },
         payload: { newEmail: string }
     ) {
         commit('setLoading', true)
@@ -258,10 +241,7 @@ const actions = {
                     }
                 })
     },
-    async changePassword(
-        { commit, dispatch }: { commit: Function; dispatch: any },
-        payload: { email: string }
-    ) {
+    async changePassword({ commit, dispatch }: { commit: Function; dispatch: any }, payload: { email: string }) {
         commit('setLoading', true)
         firebase
             .auth()
@@ -283,22 +263,12 @@ const actions = {
                 commit('setLoading', false)
                 commit('setAuthError', e.message)
                 if (e.code === 'auth/requires-recent-login') {
-                    console.error(
-                        'Reauthentication needed to perform this action.'
-                    )
+                    console.error('Reauthentication needed to perform this action.')
                     // dispatch("setReauthenticationDialog", true);
                 }
             })
     },
-    async deleteAccount({
-        commit,
-        dispatch,
-        state,
-    }: {
-        commit: Function
-        dispatch: any
-        state: AuthState
-    }) {
+    async deleteAccount({ commit, dispatch, state }: { commit: Function; dispatch: any; state: AuthState }) {
         commit('setLoading', false)
         const user = firebase.auth().currentUser
         if (user) {
@@ -312,10 +282,7 @@ const actions = {
                         const router = useRouter()
                         router.push('/')
                     }
-                    const user = firebase
-                        .firestore()
-                        .collection('users')
-                        .doc(uid)
+                    const user = firebase.firestore().collection('users').doc(uid)
                     user.delete()
                     // Notify.create({
                     //   type: "positive",
@@ -326,12 +293,33 @@ const actions = {
                     commit('setLoading', false)
                     commit('setAuthError', e.message)
                     if (e.code === 'auth/requires-recent-login') {
-                        console.error(
-                            'Reauthentication needed to perform this action.'
-                        )
+                        console.error('Reauthentication needed to perform this action.')
                         // dispatch("setReauthenticationDialog", true);
                     }
                 })
+        }
+    },
+    async buyAsset(
+        { dispatch, commit, state }: { dispatch: any; commit: Function; state: AuthState },
+        payload: PortfolioItem
+    ) {
+        const { user } = state
+        if (user) {
+            commit('setLoading', true)
+            commit('clearError')
+            const portfolio = user.account.portfolio
+
+            const assetExists = portfolio.find((asset) => asset.name === payload.name)
+            console.log(assetExists)
+            if (assetExists) {
+                assetExists.quantity += payload.quantity
+                assetExists.transactions.push(...payload.transactions)
+            } else {
+                portfolio.push(payload)
+            }
+
+            await dispatch('updateUserAccount', user.account)
+            commit('setLoading', false)
         }
     },
 }
