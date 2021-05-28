@@ -2,7 +2,7 @@
     <ion-header translucent>
         <ion-toolbar mode="ios">
             <ion-title>{{ title }}</ion-title>
-            <ion-buttons slot="end">
+              <ion-buttons slot="end">
             <ion-button @click="dismiss">Close</ion-button>
             </ion-buttons>
         </ion-toolbar>
@@ -58,10 +58,11 @@ export default defineComponent({
             emit('onDismiss', false)
         }        
         const store = useStore()
+        const preferredCurrency = computed(() => store.getters.preferredCurrency)
         const isEstimationLoading = computed(() => store.getters.isEstimationLoading)
         const SKELETON_ITEMS = 4
 
-        const tableHeaders = ['asset', 'quantity', 'price', 'value', 'nettoValue', `value ${props.percentageOfPortfolio * 100}%`, `nettoValue ${props.percentageOfPortfolio * 100}%`, 'exchange name', 'arbitrage']
+        const tableHeaders = computed(() => ['asset', 'quantity', `price [${preferredCurrency.value}]`, `value [${preferredCurrency.value}]`, `nettoValue [${preferredCurrency.value}]`, `value ${props.percentageOfPortfolio * 100}% [${preferredCurrency.value}]`, `nettoValue ${props.percentageOfPortfolio * 100}% [${preferredCurrency.value}]`, 'exchange name', 'arbitrage'])
 
         const sumColumnValues = (array: AssetSummary[], key: string) => array.reduce((acc, elem) => acc + (elem as any)[key], 0)
         const sumValues = computed(() => sumColumnValues(props.assetsSummary, 'value'))

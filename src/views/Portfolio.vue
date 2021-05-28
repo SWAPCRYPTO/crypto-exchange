@@ -21,7 +21,7 @@
           <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">
             <ion-spinner v-if="isEstimationLoading" />
             <ion-label v-else>Estimate portfolio value</ion-label>
-            </ion-button>
+          </ion-button>
           <ion-modal
             :is-open="isActive"
             css-class="my-custom-class"

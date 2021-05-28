@@ -308,8 +308,7 @@ const actions = {
             commit('setLoading', true)
             commit('clearError')
             const portfolio = user.account.portfolio
-
-            const assetExists = portfolio.find((asset) => asset.name === payload.name)
+            const assetExists = portfolio.find((asset) => asset.symbol === payload.symbol)
             console.log(assetExists)
             if (assetExists) {
                 assetExists.quantity += payload.quantity
@@ -319,6 +318,23 @@ const actions = {
             }
 
             await dispatch('updateUserAccount', user.account)
+            commit('setLoading', false)
+        }
+    },
+    async sellAsset(
+        { dispatch, commit, state }: { dispatch: any; commit: Function; state: AuthState },
+        payload: { symbol: string }
+    ) {
+        const { user } = state
+        const { symbol } = payload
+        if (user) {
+            commit('setLoading', true)
+            commit('clearError')
+            let portfolio = user.account.portfolio
+            console.log(portfolio)
+            portfolio = portfolio.filter((asset) => asset.symbol !== symbol)
+
+            await dispatch('updateUserAccount', { ...user.account, portfolio })
             commit('setLoading', false)
         }
     },

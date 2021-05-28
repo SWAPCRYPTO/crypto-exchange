@@ -38,23 +38,30 @@
             <ion-button @click="presentActionSheet" expand="block" class="text-lg text-white font-bold">Trade</ion-button>
           </div>
         </div>
+        <ion-modal
+            :is-open="isActive"
+            css-class="transaction-modal"
+            @didDismiss="setOpen(false)"
+            mode="ios"
+            swipeToClose
+          >
+            <TransactionModal @onDismiss="setOpen(false)" :title="`${chosenTransactionType} ${asset.symbol.toUpperCase()}`" :asset="asset" :transactionType="chosenTransactionType" />
+          </ion-modal>
       </section>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonIcon, IonButton, actionSheetController, IonChip, IonLabel, onIonViewWillEnter } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, actionSheetController, IonChip, IonLabel, onIonViewWillEnter } from '@ionic/vue';
 import AssetsList from "../components/AssetsList.vue"
+import TransactionModal from "../components/TransactionModal.vue"
 import ChartComponent from "../components/charts/ChartComponent.vue"
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 import { computed, ref, Ref } from 'vue';
 import { starOutline, star, addOutline, removeOutline, repeatOutline, close } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
-import { PortfolioItem } from '@/store/modules/auth/models/UserAccount';
-import Asset from '@/store/modules/assets/models/Asset';
-import firebase from 'firebase';
 
 type TimeOption = '1d' | '1w' | '1m' | '1y'
 
@@ -67,7 +74,7 @@ interface TimeOptions {
 
 export default  {
   name: 'Asset',
-  components: { AssetsList, ChartComponent, IonHeader, IonTitle, IonToolbar, IonContent, IonPage, IonButtons, IonBackButton, IonIcon, IonButton, IonChip, IonLabel },
+  components: { AssetsList, TransactionModal, ChartComponent, IonHeader, IonTitle, IonToolbar, IonContent, IonPage, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, IonChip, IonLabel },
   setup() {
       const store = useStore()
       const route = useRoute()
@@ -99,6 +106,11 @@ export default  {
         store.dispatch('updateUserAccount', { ...user.value.account, watchedAssets: filteredAssets })
       }
 
+      const transactionType = ['Buy', 'Sell', 'Convert']
+      const chosenTransactionType = ref(transactionType[0])
+      const isActive = ref(false);
+      const setOpen = (state: boolean) => isActive.value = state;
+
       const presentActionSheet = async () => {
         const actionSheet = await actionSheetController
         .create({
@@ -109,33 +121,24 @@ export default  {
               text: `Buy ${asset.value.symbol.toUpperCase()}`,
               icon: addOutline,
               handler: () => {
-                const assetToBuy: PortfolioItem = {
-                  name: asset.value.name.toLowerCase(),
-                  quantity: 0.5,
-                  symbol: asset.value.symbol.toLowerCase(),
-                  transactions: [
-                    {
-                      purchasePrice: 1000,
-                      quantity: 0.5,
-                      transactionDate: firebase.firestore.Timestamp.now()
-                    }
-                  ],
-                }
-                store.dispatch('buyAsset', assetToBuy)
+                chosenTransactionType.value = transactionType[0]
+                setOpen(true)
               },
             },
             {
               text: `Sell ${asset.value.symbol.toUpperCase()}`,
               icon: removeOutline,
               handler: () => {
-                console.log('Share clicked')
+                chosenTransactionType.value = transactionType[1]
+                setOpen(true)
               },
             },
             {
               text: `Convert ${asset.value.symbol.toUpperCase()}`,
               icon: repeatOutline,
               handler: () => {
-                console.log('Play clicked')
+                chosenTransactionType.value = transactionType[1]
+                setOpen(true)
               },
             },
             {
@@ -167,7 +170,7 @@ export default  {
         chartData.value = asset.value[`sparkline_in_${numberOfDays}d`].price
       }
 
-      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet, toggleFavourite, chartData, timeOptions, activeTimeOption, changeActiveTimeOption }
+      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet, toggleFavourite, chartData, timeOptions, activeTimeOption, changeActiveTimeOption, isActive, setOpen, chosenTransactionType }
   }
 }
 </script>
