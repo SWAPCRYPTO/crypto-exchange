@@ -22,10 +22,23 @@
                   <ion-searchbar v-if="!isLoading" v-model="searchQuery" show-cancel-button="never" debounce="500" placeholder="Find your asset" animated></ion-searchbar>
                   <ion-skeleton-text v-else style="height: 100%; width: 100%; line-height: 2.5rem; min-height: 2.5rem;" animated />
               </div>
+              <div class="chips__container">
+                <ion-chip>
+                  <ion-label>{{ preferredCurrency }}</ion-label>
+                </ion-chip>
+                <ion-chip @click="presentSortActionSheet">
+                  <ion-label>Sort</ion-label>
+                </ion-chip>
+                <ion-chip color="primary" v-if="activeSorting" @click="sortAscending = !sortAscending">
+                  <ion-label>{{ activeSorting }}</ion-label>
+                  <ion-icon :icon="sortAscending ? arrowUpOutline : arrowDownOutline" color="primary"></ion-icon>
+                  <ion-icon :icon="close" @click="removeSorting" color="primary"></ion-icon>
+                </ion-chip>
+              </div>
             </div>
           </ion-toolbar>
         </ion-header>
-        <AssetsList :assets="assets" :searchQuery="searchQuery" />
+        <AssetsList :assets="sortedAssets" :searchQuery="searchQuery" />
       </section>
     </ion-content>
   </ion-page>
@@ -33,20 +46,24 @@
 
 <script lang="ts">
 import Asset from '@/store/modules/assets/models/Asset';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonSkeletonText } from '@ionic/vue';
-import { starOutline } from 'ionicons/icons'
-import { computed, defineComponent, ref, Ref } from "vue"
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonSkeletonText, IonChip, IonLabel, IonIcon, actionSheetController } from '@ionic/vue';
+import { computed, defineComponent, ref, Ref, watch } from "vue"
 import { useStore } from "vuex"
 import AssetsList from "../components/AssetsList.vue"
+import { arrowDownOutline, arrowUpOutline, statsChartOutline, rocketOutline, ribbonOutline, cashOutline, textOutline, repeatOutline, close } from 'ionicons/icons'
 
+const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
+  items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
 
 export default defineComponent({
     name: "Prices",
-    components: { AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonSearchbar, IonSkeletonText },
+    components: { AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonSearchbar, IonSkeletonText, IonChip, IonLabel, IonIcon },
     setup() {
         const store = useStore()
         const isLoading = computed(() => store.getters.isLoading)
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
+        const sortedAssets: Ref<Asset[]> = ref(assets.value)
+        const preferredCurrency = computed(() => store.getters.preferredCurrency)
 
         const marketChangePercentage = ref(assets.value.reduce((acc, elem) => acc + elem.market_cap_change_percentage_24h, 0) / assets.value.length)
         const isMarketUp = ref(marketChangePercentage.value > 0)
@@ -54,7 +71,103 @@ export default defineComponent({
         const marketChangePercentageText = ref(`${isMarketUp.value ? '+' : ''}${marketChangePercentage.value.toFixed(2)}%`)
         const searchQuery = ref("")
 
-        return { isLoading, assets, marketChangePercentageText, marketChangeStatus, isMarketUp, starOutline, searchQuery }
+        const activeSorting = ref("")
+        const sortAscending = ref(true)
+
+        const removeSorting = () => {
+          sortedAssets.value = assets.value
+          activeSorting.value = ""
+        }
+
+        watch(sortAscending, (newSorting, oldSorting) => {
+          if(newSorting != oldSorting && activeSorting.value) {
+            sortedAssets.value = sortedAssets.value.reverse()
+          }
+        })
+
+        const sortingOptions = ['Rank', 'Change (24h) %', 'Market Cap (24h)', 'Total Volume']
+
+        const sortBy = (sortingCategory: string, sortingKey: string, reverseSorting: boolean, absoluteValues: boolean) => {
+            console.log(sortingCategory)
+            activeSorting.value = sortingCategory
+            sortedAssets.value = sortAscending.value && !reverseSorting ? sortAssets(assets.value.slice(), sortingKey, absoluteValues) : sortAssets(assets.value.slice(), sortingKey, absoluteValues).reverse()
+            sortAscending.value = !sortAscending.value
+        }
+
+        const presentSortActionSheet = async () => {
+        const actionSheet = await actionSheetController
+          .create({
+            header: 'Sort by',
+            cssClass: 'sort',
+            buttons: [
+              {
+                text: `Rank`,
+                icon: ribbonOutline,
+                handler: () => {
+                  sortBy('Rank', 'market_cap_rank', false, true)
+                },
+              },
+              {
+                text: `Change (24h) %`,
+                icon: sortAscending.value ? arrowUpOutline : arrowDownOutline,
+                handler: () => {
+                  sortBy('Change (24h) %', 'price_change_percentage_24h_in_currency', false, true)
+                  // console.log('Change (24h) %')
+                  // activeSorting.value = 'Change (24h) %'
+                  // sortedAssets.value = sortAscending.value ? sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", true) : sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", true).reverse()
+                  // sortAscending.value = !sortAscending.value
+                },
+              },
+              {
+                text: `Market Cap Change (24h)`,
+                icon: statsChartOutline,
+                handler: () => {
+                  sortBy('Market Cap (24h)', 'market_cap_change_24h', false, true)
+                },
+              },
+              {
+                text: `Total Volume`,
+                icon: rocketOutline,
+                handler: () => {
+                  sortBy('Total Volume', 'total_volume', false, false)
+                },
+              },
+              {
+                text: `Circulating Supply`,
+                icon: repeatOutline,
+                handler: () => {
+                  sortBy('Circulating Supply', 'circulating_supply', false, false)
+                },
+              },
+              {
+                text: `Price`,
+                icon: cashOutline,
+                handler: () => {
+                  sortBy('Price', 'current_price', false, false)
+                },
+              },
+              {
+                text: `Name`,
+                handler: () => {
+                  sortBy('Name', 'name', false, false) // bug
+                },
+              },
+              {
+                text: 'Cancel',
+                icon: close,
+                role: 'cancel',
+                handler: () => {
+                  console.log('Cancel clicked')
+                },
+              },
+            ],
+          });
+          await actionSheet.present();
+
+          const { role } = await actionSheet.onDidDismiss();
+      }
+
+        return { isLoading, assets, sortedAssets, preferredCurrency, marketChangePercentageText, marketChangeStatus, isMarketUp, searchQuery, presentSortActionSheet, close, activeSorting, removeSorting, arrowDownOutline, arrowUpOutline, sortAscending }
     }
 })
 </script>
