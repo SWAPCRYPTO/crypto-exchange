@@ -48,6 +48,47 @@ const APIS = [
     },
 ]
 
+export const fetchAssetsOrders = async (
+    marketSymbols: [string, string],
+    apiName: string
+) => {
+    const apiObject = APIS.find((api) => api.name === apiName)
+    if (!apiObject) throw new Error('Invalid api name.')
+
+    const url = apiObject?.urlFormatFunction(
+        apiObject.baseUrl,
+        [marketSymbols[0].toUpperCase(), marketSymbols[1].toUpperCase()],
+        apiObject.orderBookEndpoint
+    ) as string
+
+    const { data } = await axios.get(url)
+    let ordersData = JSON.parse(data.contents)
+
+    // format data structure and convert string to number
+    if (ordersData?.bids && ordersData?.asks) {
+        const newOrdersData = { bid: [], ask: [] }
+        for (const order in ordersData) {
+            const propKey = order.slice(0, -1) as 'bid' | 'ask'
+            newOrdersData[propKey] = ordersData[order].map(
+                (order: [string, string]) => ({
+                    quantity: +order[1],
+                    rate: +order[0],
+                })
+            )
+        }
+        ordersData = newOrdersData
+    } else if (ordersData?.bid && ordersData?.ask) {
+        for (const order in ordersData) {
+            ordersData[order] = ordersData[order].map((offer: AssetModel) => ({
+                quantity: +offer.quantity,
+                rate: +offer.rate,
+            }))
+        }
+    }
+
+    return ordersData
+}
+
 export interface AssetsState {
     assets: Asset[]
     assetsOrders: any
@@ -157,7 +198,7 @@ const actions = {
             })
         }
     },
-    fetchAssetsOrders: async (
+    collectAssetsOrders: async (
         {
             commit,
             state,
@@ -165,48 +206,19 @@ const actions = {
             commit: Function
             state: AssetsState
         },
-        payload: { apiName: string; symbol: string; currency: string }
-    ) => {
-        const { apiName, symbol, currency } = payload
-
-        const apiObject = APIS.find((api) => api.name === apiName)
-        const url = apiObject?.urlFormatFunction(
-            apiObject.baseUrl,
-            [symbol.toUpperCase(), currency],
-            apiObject.orderBookEndpoint
-        ) as string
-
-        const { data } = await axios.get(url)
-        let ordersData = JSON.parse(data.contents)
-
-        // format data structure and convert string to number
-        if (ordersData?.bids && ordersData?.asks) {
-            const newOrdersData = { bid: [], ask: [] }
-            for (const order in ordersData) {
-                const propKey = order.slice(0, -1) as 'bid' | 'ask'
-                newOrdersData[propKey] = ordersData[order].map(
-                    (order: [string, string]) => ({
-                        quantity: +order[1],
-                        rate: +order[0],
-                    })
-                )
-            }
-            ordersData = newOrdersData
-        } else if (ordersData?.bid && ordersData?.ask) {
-            for (const order in ordersData) {
-                ordersData[order] = ordersData[order].map(
-                    (offer: AssetModel) => ({
-                        quantity: +offer.quantity,
-                        rate: +offer.rate,
-                    })
-                )
-            }
+        payload: {
+            apiName: string
+            marketSymbols: [string, string]
         }
+    ) => {
+        const { apiName, marketSymbols } = payload
+        const ordersData = await fetchAssetsOrders(marketSymbols, apiName)
 
         const assetsOrders = {
             ...state.assetsOrders,
-            [symbol]: ordersData,
+            [marketSymbols[0]]: ordersData,
         }
+
         commit('setAssetsOrders', assetsOrders)
     },
     fetchCurrencies: async ({
@@ -237,7 +249,7 @@ const actions = {
             commit('setLoading', false)
         }
     },
-    fetchAvailableMarkets: async (
+    fetchMarketsIntersection: async (
         {
             commit,
             state,
@@ -275,9 +287,10 @@ const actions = {
         }
 
         const marketsIntersection = findIntersection(...availableMarkets)
+        console.log(availableMarkets)
+        console.log(marketsIntersection)
 
-        // console.log(availableMarkets)
-        // console.log(marketsIntersection)
+        return marketsIntersection
     },
     estimatePortfolioValue: async (
         {
@@ -307,10 +320,9 @@ const actions = {
 
                 const sameAssetSummaries = []
                 for (const { name } of APIS) {
-                    await dispatch('fetchAssetsOrders', {
+                    await dispatch('collectAssetsOrders', {
                         apiName: name,
-                        symbol: assetSymbol,
-                        currency: preferredCurrency,
+                        marketSymbols: [assetSymbol, preferredCurrency],
                     })
 
                     const assetsOrders = getters.assetsOrders

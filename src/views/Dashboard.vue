@@ -64,7 +64,7 @@ export default defineComponent({
         const fetchData = () => store.dispatch('fetchAssets')
         const fetchCurrencies = () => store.dispatch('fetchCurrencies')
 
-        store.dispatch('fetchAvailableMarkets', user.value.account.portfolio.map(asset => asset.symbol.toUpperCase()))
+        store.dispatch('fetchMarketsIntersection', user.value.account.portfolio.map(asset => asset.symbol.toUpperCase()))
         
         fetchData()
         fetchCurrencies()
