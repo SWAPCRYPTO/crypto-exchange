@@ -309,7 +309,7 @@ const actions = {
             commit('clearError')
             const portfolio = user.account.portfolio
             const assetExists = portfolio.find((asset) => asset.symbol === payload.symbol)
-            console.log(assetExists)
+
             if (assetExists) {
                 assetExists.quantity += payload.quantity
                 assetExists.transactions.push(...payload.transactions)

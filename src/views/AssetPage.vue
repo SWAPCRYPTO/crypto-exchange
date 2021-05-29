@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, actionSheetController, IonChip, IonLabel, onIonViewWillEnter } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, actionSheetController, IonChip, IonLabel, onIonViewWillEnter, toastController } from '@ionic/vue';
 import AssetsList from "../components/AssetsList.vue"
 import TransactionModal from "../components/TransactionModal.vue"
 import ChartComponent from "../components/charts/ChartComponent.vue"
@@ -111,6 +111,16 @@ export default  {
       const isActive = ref(false);
       const setOpen = (state: boolean) => isActive.value = state;
 
+      const openToast = async () => {
+        const toast = await toastController
+          .create({
+            message: 'You don\'t have this asset.',
+            duration: 2000,
+            position: 'bottom',
+          })
+          return toast.present();
+      }
+
       const presentActionSheet = async () => {
         const actionSheet = await actionSheetController
         .create({
@@ -130,15 +140,12 @@ export default  {
               icon: removeOutline,
               handler: () => {
                 chosenTransactionType.value = transactionType[1]
-                setOpen(true)
-              },
-            },
-            {
-              text: `Convert ${asset.value.symbol.toUpperCase()}`,
-              icon: repeatOutline,
-              handler: () => {
-                chosenTransactionType.value = transactionType[1]
-                setOpen(true)
+                const currentAsset = user.value.account.portfolio.find(curAsset => curAsset.symbol == asset.value.symbol)
+                if(currentAsset && currentAsset.quantity > 0) {
+                  setOpen(true)
+                } else {
+                  openToast()
+                }
               },
             },
             {
