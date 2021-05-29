@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title v-if="!isLoading">{{ preferredCurrency }} {{ formatValue(balance, 2) }}</ion-title>
+        <ion-title v-if="!isLoading">{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -12,7 +12,7 @@
               <ion-header collapse="condense">
                 <ion-toolbar>
                   <p class="font-medium mb-2">Portfolio balance</p>
-                  <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(balance, 2) }}</h1>
+                  <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</h1>
                   <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
                 </ion-toolbar>
               </ion-header>
@@ -70,8 +70,10 @@ export default defineComponent({
         fetchCurrencies()
 
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
+        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
         const findAssetRate = (assetSymbol: string, assets: Asset[]) => assets.find(asset => asset.symbol == assetSymbol)?.current_price as number
+        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+
         const balance = computed(() => {
           let portfolioSum = 0
 
@@ -82,7 +84,7 @@ export default defineComponent({
             portfolioSum += assetValue
           })
           
-          return convertCurrency(portfolioSum, currencyRate)
+          return portfolioSum
         })
         
         const watchedAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.watchedAssets?.includes(asset.symbol)))
@@ -92,7 +94,7 @@ export default defineComponent({
         
         const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets.value, "price_change_percentage_24h_in_currency", true).reverse())
 
-        return { isLoading, currencies, router, user, assets, preferredCurrency, watchedAssets, topMovers, balance, formatValue }
+        return { isLoading, currencies, currencyRate, router, user, assets, preferredCurrency, watchedAssets, topMovers, balance, formatValue, baseCurrencyRate, convertCurrency }
     }
 })
 </script>

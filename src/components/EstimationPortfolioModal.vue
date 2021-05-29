@@ -41,12 +41,14 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from 'vue'
+import { computed, defineComponent, Ref } from 'vue'
 import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonSkeletonText } from '@ionic/vue'
 import { useStore } from 'vuex'
 import { displayOnlySignificatDigits } from '@/services/FormatValue'
 import { ArbitrageDetails } from '@/store/modules/assets/models/estimation/ArbitrageDetails'
 import AssetSummary from '@/store/modules/assets/models/estimation/AssetSummary'
+import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
+import { convertCurrency } from '@/services/ConvertCurrency';
 
 export default defineComponent({
     name: 'EstimationPortfolioModal',
@@ -59,6 +61,9 @@ export default defineComponent({
         }        
         const store = useStore()
         const preferredCurrency = computed(() => store.getters.preferredCurrency)
+        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
+        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
         const isEstimationLoading = computed(() => store.getters.isEstimationLoading)
         const SKELETON_ITEMS = 4
 
@@ -73,10 +78,10 @@ export default defineComponent({
 
         const displayProp = (prop: number | string | ArbitrageDetails) => {
           if (typeof prop === 'number') {
-            return displayOnlySignificatDigits(prop, 6)
+            return displayOnlySignificatDigits(convertCurrency(prop, baseCurrencyRate.value, currencyRate.value), 6)
           } else if (typeof prop === 'object' && typeof prop !== 'string') {
             if (Object.keys(prop).length !== 0) {
-              return `${prop.exchangeMarkets[0]}->${prop.exchangeMarkets[1]} ${prop.market} +${displayOnlySignificatDigits(prop.profit, 6)} ${prop.market.split('-')[1]}`
+              return `${prop.exchangeMarkets[0]}->${prop.exchangeMarkets[1]} ${prop.market} +${displayOnlySignificatDigits(convertCurrency(prop.profit, baseCurrencyRate.value, currencyRate.value), 6)} ${prop.market.split('-')[1]}`
             } else return 'not possible'
           } else return prop
         }

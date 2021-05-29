@@ -14,8 +14,8 @@
                 <div class="sparkline">
                 </div>
                 <div class="currency__details">
-                    <p class="currency__value" v-if="walletMode">{{ preferredCurrency }} {{ displayOnlySignificatDigits(convertCurrency(asset.current_price * ownedVolume(asset.symbol, portfolio), currencyRate), 6) }}</p>
-                    <p class="currency__value" v-else>{{ preferredCurrency }} {{ displayOnlySignificatDigits(convertCurrency(asset.current_price, currencyRate), 6) }}</p>
+                    <p class="currency__value" v-if="walletMode && +ownedVolume(asset.symbol, portfolio) > 0">{{ preferredCurrency }} {{ currentAssetPrice(asset) }}</p>
+                    <p class="currency__value" v-else>{{ preferredCurrency }} {{ displayOnlySignificatDigits(convertCurrency(asset.current_price, baseCurrencyRate, currencyRate), 6) }}</p>
                     <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume(asset.symbol, portfolio) }} {{ asset.symbol }}</p>
                     <p v-else class="currency__gain" :class="asset.price_change_percentage_24h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_24h_in_currency) }}%</p>                    
                 </div>
@@ -50,6 +50,7 @@ export default defineComponent({
         const isLoading = computed(() => store.getters.isLoading)
         const SKELETON_ITEMS = 5
         const preferredCurrency = computed(() => store.getters.user.account.preferredCurrency)
+        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
         const portfolio = computed(() => store.getters.user.account.portfolio)
         const formatChange = (value: number) => (value > 0 ? '+' : '') + value.toFixed(2)
 
@@ -59,9 +60,11 @@ export default defineComponent({
         const filteredAssets: Ref<Asset[]> = computed(() => props.assets.filter((asset: Asset) => asset.symbol.toLowerCase().indexOf(searchQuery.value) > -1 || asset.name.toLowerCase().indexOf(searchQuery.value) > -1))
         
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
+        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+
+        const currentAssetPrice = (asset: Asset) => displayOnlySignificatDigits(convertCurrency((asset.current_price * (ownedVolume(asset.symbol, portfolio.value) as number)), baseCurrencyRate.value, currencyRate.value), 6)
         
-        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency, displayOnlySignificatDigits }
+        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency, displayOnlySignificatDigits, baseCurrencyRate, currentAssetPrice }
     },
 })
 </script>

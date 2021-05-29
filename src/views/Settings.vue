@@ -7,12 +7,7 @@
                 <p class="user__email">{{ user.email }}</p>
                 <h1 class="h1 user__title">{{ user.name }}</h1>
             </header>
-            <div class="options__container">
-                <ion-item>
-                  <ion-checkbox v-model="useDollars"></ion-checkbox>
-                  <ion-label>Change currency between pln and usd</ion-label>
-                </ion-item>
-                
+            <div class="options__container">                
                 <section class="options" v-for="item in optionsList" :key="item.title">
                     <h2 class="h2">{{ item.title }}</h2>
                     <ul>
@@ -92,16 +87,9 @@ export default defineComponent({
                 ]
             }
         ]
-
-        const useDollars = ref(false)
-        const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency: preferredCurrency })
-
-        watch(useDollars, (value: boolean) => {
-          updateUserAccount(value ? 'USD' : 'PLN')
-        })
         
 
-        return { user, optionsList, useDollars }
+        return { user, optionsList }
     }
 })
 </script>

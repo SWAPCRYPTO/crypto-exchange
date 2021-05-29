@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title>{{ preferredCurrency }} {{ formatValue(balance, 2) }}</ion-title>
+        <ion-title>{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -11,7 +11,7 @@
           <ion-header n-header collapse="condense">
             <ion-toolbar>
               <p class="font-medium mb-2">Portfolio balance</p>
-              <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(balance, 2) }}</h1>
+              <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</h1>
               <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
             </ion-toolbar>
           </ion-header>
@@ -68,8 +68,9 @@ export default  {
       const assets: Ref<Asset[]> = computed(() => store.getters.assets)
       const portfolioAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.portfolio.map(portfolioItem => portfolioItem.symbol).includes(asset.symbol)))
       const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-      const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
-      
+      const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+      const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+
       const findAssetRate = (assetSymbol: string, assets: Asset[]) => assets.find(asset => asset.symbol == assetSymbol)?.current_price as number
       const balance = computed(() => {
         let portfolioSum = 0
@@ -81,7 +82,7 @@ export default  {
           portfolioSum += assetValue
         })
         
-        return convertCurrency(portfolioSum, currencyRate)
+        return portfolioSum
       })
 
       const estimatePortfolio = (percentageOfPortfolio: number, checkArbitrage: boolean) => store.dispatch('estimatePortfolioValue', { portfolio: user.value.account.portfolio, percentageOfPortfolio, checkArbitrage })
@@ -128,7 +129,7 @@ export default  {
 
       const assetsSummary = computed(() => store.getters.assetsSummary)
 
-      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router }
+      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router, currencyRate, convertCurrency, currencies, baseCurrencyRate }
   }
 }
 </script>

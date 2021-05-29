@@ -1,3 +1,3 @@
-export function convertCurrency(value: number, preferedCurrencyRate: number) {
-    return value / preferedCurrencyRate
+export function convertCurrency(value: number, currentCurrencyRate: number, preferedCurrencyRate: number) {
+    return (value * currentCurrencyRate) / preferedCurrencyRate
 }

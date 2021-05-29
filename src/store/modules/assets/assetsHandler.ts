@@ -104,6 +104,7 @@ const getters = {
     assetsOrders: (state: AssetsState) => state.assetsOrders,
     asset: (state: AssetsState) => (symbol: string) => state.assets.find((asset) => asset.symbol === symbol),
     currencies: (state: AssetsState) => state.currencies,
+    baseCurrencyRate: (state: AssetsState) => state.currencies[BASE_CURRENCY],
     assetsSummary: (state: AssetsState) => state.assetsSummary,
     isEstimationLoading: (state: AssetsState) => state.isEstimationLoading,
 }
@@ -176,7 +177,7 @@ const actions = {
         commit('setAssetsOrders', assetsOrders)
     },
     fetchCurrencies: async ({ commit, state }: { commit: Function; state: AssetsState }) => {
-        if (state.currencies.length <= 0) {
+        if (Object.keys(state.currencies).length <= 0) {
             commit('setLoading', true)
             const rateTable = 'A'
             const { data } = await axios.get(`https://api.nbp.pl/api/exchangerates/tables/${rateTable}`)
@@ -185,7 +186,7 @@ const actions = {
             }
 
             data[0].rates.forEach((item: ExchangeRate) => {
-                console.log(item)
+                // console.log(item)
                 if (AVAILABLE_CURRENCIES.includes(item.code) && item.mid) {
                     currencies[item.code] = item.mid
                 }
@@ -272,7 +273,8 @@ const actions = {
             const assetsSummary: AssetSummary[] = []
             Object.values(portfolio).forEach(async (asset) => {
                 const assetSymbol = asset.symbol
-                const preferredCurrency = rootGetters.preferredCurrency
+                // const preferredCurrency = rootGetters.preferredCurrency
+                const preferredCurrency = BASE_CURRENCY
                 // BTC can also be a preferredCurrency, it will work
 
                 // cannot estimate the value of the asset as it is the main currency

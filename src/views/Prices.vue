@@ -23,7 +23,7 @@
                   <ion-skeleton-text v-else style="height: 100%; width: 100%; line-height: 2.5rem; min-height: 2.5rem;" animated />
               </div>
               <div class="chips__container">
-                <ion-chip>
+                <ion-chip @click="presentCurrencyActionSheet">
                   <ion-label>{{ preferredCurrency }}</ion-label>
                 </ion-chip>
                 <ion-chip @click="presentSortActionSheet">
@@ -51,6 +51,7 @@ import { computed, defineComponent, ref, Ref, watch } from "vue"
 import { useStore } from "vuex"
 import AssetsList from "../components/AssetsList.vue"
 import { arrowDownOutline, arrowUpOutline, statsChartOutline, rocketOutline, ribbonOutline, cashOutline, repeatOutline, close } from 'ionicons/icons'
+import User from '@/store/modules/auth/models/User';
 
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
@@ -63,7 +64,9 @@ export default defineComponent({
         const isLoading = computed(() => store.getters.isLoading)
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
         const sortedAssets: Ref<Asset[]> = ref(assets.value)
+        const user: Ref<User> = computed(() => store.getters.user)
         const preferredCurrency = computed(() => store.getters.preferredCurrency)
+        const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency })
 
         const marketChangePercentage = ref(assets.value.reduce((acc, elem) => acc + elem.market_cap_change_percentage_24h, 0) / assets.value.length)
         const isMarketUp = ref(marketChangePercentage.value > 0)
@@ -93,7 +96,7 @@ export default defineComponent({
         }
 
         const presentSortActionSheet = async () => {
-        const actionSheet = await actionSheetController
+          const actionSheet = await actionSheetController
           .create({
             header: 'Sort by',
             cssClass: 'sort',
@@ -153,9 +156,48 @@ export default defineComponent({
           await actionSheet.present();
 
           const { role } = await actionSheet.onDidDismiss();
-      }
+        }
 
-        return { isLoading, assets, sortedAssets, preferredCurrency, marketChangePercentageText, marketChangeStatus, isMarketUp, searchQuery, presentSortActionSheet, close, activeSorting, removeSorting, arrowDownOutline, arrowUpOutline, sortAscending }
+        const presentCurrencyActionSheet = async () => {
+          const actionSheet = await actionSheetController
+          .create({
+            header: 'Pick preferred currency',
+            cssClass: 'currenct',
+            buttons: [
+              {
+                text: 'USD',
+                handler: () => {
+                  if(preferredCurrency.value !== 'USD')
+                    updateUserAccount('USD')
+                },
+              },
+              {
+                text: 'PLN',
+                handler: () => {
+                  if(preferredCurrency.value !== 'PLN')
+                    updateUserAccount('PLN')
+                },
+              },
+              {
+                text: 'EUR',
+                handler: () => {
+                  if(preferredCurrency.value !== 'EUR')
+                    updateUserAccount('EUR')
+                },
+              },
+              {
+                text: 'Cancel',
+                icon: close,
+                role: 'cancel'
+              },
+            ],
+          });
+          await actionSheet.present();
+
+          const { role } = await actionSheet.onDidDismiss();
+        }
+
+        return { isLoading, assets, sortedAssets, preferredCurrency, marketChangePercentageText, marketChangeStatus, isMarketUp, searchQuery, presentSortActionSheet, close, activeSorting, removeSorting, arrowDownOutline, arrowUpOutline, sortAscending, presentCurrencyActionSheet }
     }
 })
 </script>

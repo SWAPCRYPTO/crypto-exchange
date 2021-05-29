@@ -15,8 +15,8 @@
             <div class="header__container flex flex-row items-center justify-between">
               <div class="asset__details">
                 <p class="font-medium mb-2">{{ asset.name }} price</p>
-                <h1 class="h1 balance">{{ preferredCurrency }} {{ asset.current_price.toFixed(2) }}</h1>
-                <h2 class="text-base mt-1" :class="asset.price_change_24h > 0 ? 'text-success' : 'text-error'">{{ preferredCurrency }} {{asset.price_change_24h > 0 ? '+' : ''}}{{ asset.price_change_24h.toFixed(2) }} ({{ asset.price_change_percentage_24h.toFixed(2) }}%)</h2>
+                <h1 class="h1 balance">{{ preferredCurrency }} {{ convertCurrency(asset.current_price, baseCurrencyRate, currencyRate).toFixed(2) }}</h1>
+                <h2 class="text-base mt-1" :class="asset.price_change_24h > 0 ? 'text-success' : 'text-error'">{{ preferredCurrency }} {{asset.price_change_24h > 0 ? '+' : ''}}{{ convertCurrency(asset.price_change_24h, baseCurrencyRate, currencyRate).toFixed(4) }} ({{ asset.price_change_percentage_24h.toFixed(2) }}%)</h2>
               </div>
               <div class="icon__wrapper">
                 <ion-icon @click="toggleFavourite" size="large" :icon="isFavourite ? star : starOutline"></ion-icon>
@@ -57,10 +57,12 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBa
 import AssetsList from "../components/AssetsList.vue"
 import TransactionModal from "../components/TransactionModal.vue"
 import ChartComponent from "../components/charts/ChartComponent.vue"
+import { convertCurrency } from '@/services/ConvertCurrency';
+import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 import { computed, ref, Ref } from 'vue';
-import { starOutline, star, addOutline, removeOutline, repeatOutline, close } from 'ionicons/icons'
+import { starOutline, star, addOutline, removeOutline, close } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
 
 type TimeOption = '1d' | '1w' | '1m' | '1y'
@@ -81,6 +83,9 @@ export default  {
 
       const watchedAssets = computed(() => store.getters.watchedAssets)
       const preferredCurrency = computed(() => store.getters.preferredCurrency)
+      const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
+      const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+      const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
       const asset = ref(store.getters.asset(route.params.symbol))
       const isFavourite = computed(() => watchedAssets.value.includes(route.params.symbol))
       const user: Ref<User> = computed(() => store.getters.user)
@@ -177,7 +182,7 @@ export default  {
         chartData.value = asset.value[`sparkline_in_${numberOfDays}d`].price
       }
 
-      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet, toggleFavourite, chartData, timeOptions, activeTimeOption, changeActiveTimeOption, isActive, setOpen, chosenTransactionType }
+      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet, toggleFavourite, chartData, timeOptions, activeTimeOption, changeActiveTimeOption, isActive, setOpen, chosenTransactionType, convertCurrency, currencyRate, baseCurrencyRate }
   }
 }
 </script>

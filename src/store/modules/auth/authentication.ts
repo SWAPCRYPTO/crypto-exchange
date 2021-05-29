@@ -37,6 +37,11 @@ const mutations = {
             state.user.account.watchedAssets = payload
         }
     },
+    setPreferredCurrency(state: AuthState, payload: string) {
+        if (state.user?.account) {
+            state.user.account.preferredCurrency = payload
+        }
+    },
     setLoading(state: AuthState, payload: boolean) {
         state.loading = payload
     },

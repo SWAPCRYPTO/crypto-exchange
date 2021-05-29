@@ -5,11 +5,13 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, watch } from 'vue'
+import { computed, defineComponent, Ref, ref, watch } from 'vue'
 import Vue3ChartJs from "@j-t-mcc/vue3-chartjs"
 import dataLabels from "chartjs-plugin-datalabels"
 import { useStore } from 'vuex'
 import { displayOnlySignificatDigits } from '@/services/FormatValue'
+import { convertCurrency } from '@/services/ConvertCurrency'
+import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
 
 
 export default defineComponent({
@@ -34,6 +36,10 @@ export default defineComponent({
     setup(props) {
       const store = useStore()
       const preferredCurrency = computed(() => store.getters.preferredCurrency)
+      const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
+      const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+      const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+      
       const primaryColor = ref(window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-primary'))
       const textColor = ref(window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-light'))
       const chartRef = ref(null)
@@ -77,7 +83,7 @@ export default defineComponent({
               color: textColor.value,
               padding: 4,
               formatter: (value: number) => 
-                  (value == min || value == max) ? `${preferredCurrency.value} ${(parseFloat(value.toPrecision(6)) * 1).toString()}` : ""
+                  (value == min || value == max) ? `${preferredCurrency.value} ${displayOnlySignificatDigits(convertCurrency(value, baseCurrencyRate.value, currencyRate.value), 6)}` : ""
             },
           },
           layout: {
@@ -103,7 +109,7 @@ export default defineComponent({
         lineChart.value.data.datasets[0].data = newData
         lineChart.value.data.labels = newData.map(() => "")
         lineChart.value.options.plugins.datalabels.formatter = (value: number) => 
-                  (value == min || value == max) ? `${preferredCurrency.value} ${value.toFixed(4)}` : ""
+                  (value == min || value == max) ? `${preferredCurrency.value} ${displayOnlySignificatDigits(convertCurrency(value, baseCurrencyRate.value, currencyRate.value), 6)}` : ""
 
         if(chartRef.value)
             (chartRef.value as any).update()
