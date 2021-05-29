@@ -52,6 +52,7 @@ import { useStore } from "vuex"
 import AssetsList from "../components/AssetsList.vue"
 import { arrowDownOutline, arrowUpOutline, statsChartOutline, rocketOutline, ribbonOutline, cashOutline, repeatOutline, close } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
+import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
@@ -66,6 +67,9 @@ export default defineComponent({
         const sortedAssets: Ref<Asset[]> = ref(assets.value)
         const user: Ref<User> = computed(() => store.getters.user)
         const preferredCurrency = computed(() => store.getters.preferredCurrency)
+        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
+        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
         const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency })
 
         const marketChangePercentage = ref(assets.value.reduce((acc, elem) => acc + elem.market_cap_change_percentage_24h, 0) / assets.value.length)
@@ -188,8 +192,17 @@ export default defineComponent({
               {
                 text: 'BTC',
                 handler: () => {
-                  if(preferredCurrency.value !== 'BTC')
+                  if(preferredCurrency.value !== 'BTC') {
+                    if(!currencies.value['BTC']) {
+                      const additionalCurrency = 'BTC'
+                      const bitcoinCurrency = assets.value.find((asset: Asset) => asset.symbol === additionalCurrency.toLowerCase())
+
+                      if (bitcoinCurrency) {
+                          store.commit('addNewCurrency', { currencyName: bitcoinCurrency.symbol.toUpperCase(), currencyRate: bitcoinCurrency.current_price * baseCurrencyRate.value })
+                      }
+                    }
                     updateUserAccount('BTC')
+                  }          
                 },
               },
               {
