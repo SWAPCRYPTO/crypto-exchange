@@ -186,6 +186,13 @@ export default defineComponent({
                 },
               },
               {
+                text: 'BTC',
+                handler: () => {
+                  if(preferredCurrency.value !== 'BTC')
+                    updateUserAccount('BTC')
+                },
+              },
+              {
                 text: 'Cancel',
                 icon: close,
                 role: 'cancel'

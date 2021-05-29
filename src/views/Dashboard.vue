@@ -43,6 +43,7 @@ import { useRouter } from 'vue-router';
 import { useStore } from "vuex"
 import AssetsList from "../components/AssetsList.vue"
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
+import { BASE_CURRENCY } from '@/store/modules/assets/assetsHandler';
 
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
@@ -60,19 +61,31 @@ export default defineComponent({
         const isLoading: Ref<boolean> = computed(() => store.getters.isLoading)
         const user: Ref<User> = computed(() => store.getters.user)
         const preferredCurrency = computed(() => user.value.account.preferredCurrency)
-        const assets: Ref<Asset[]> = computed(() => store.getters.assets)
-        const fetchData = () => store.dispatch('fetchAssets')
-        const fetchCurrencies = () => store.dispatch('fetchCurrencies')
-
-        store.dispatch('fetchMarketsIntersection', user.value.account.portfolio.map(asset => asset.symbol.toUpperCase()))
-        
-        fetchData()
-        fetchCurrencies()
-
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
         const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
         const findAssetRate = (assetSymbol: string, assets: Asset[]) => assets.find(asset => asset.symbol == assetSymbol)?.current_price as number
         const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+
+        const assets: Ref<Asset[]> = computed(() => store.getters.assets)
+        const fetchData = () => store.dispatch('fetchAssets')
+        const fetchCurrencies = () => store.dispatch('fetchCurrencies')
+        const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency })
+        
+        fetchData()
+        fetchCurrencies().then(() => {
+          // set bitcoin as a currency
+          const additionalCurrency = 'BTC'
+          const bitcoinCurrency = assets.value.find((asset: Asset) => asset.symbol === additionalCurrency.toLowerCase())
+
+          if (bitcoinCurrency) {
+              store.commit('addNewCurrency', { currencyName: bitcoinCurrency.symbol.toUpperCase(), currencyRate: bitcoinCurrency.current_price * baseCurrencyRate.value })
+          }
+
+          if (preferredCurrency.value === 'BTC' && !('BTC' in currencies.value)) {
+            updateUserAccount(BASE_CURRENCY)
+          }
+        })
+
 
         const balance = computed(() => {
           let portfolioSum = 0

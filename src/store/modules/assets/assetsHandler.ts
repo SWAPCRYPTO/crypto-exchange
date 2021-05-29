@@ -12,7 +12,7 @@ import ExtendedSparkline from './models/ExtendedSparkline'
 import { ExchangeRate, Currencies } from './models/NBPCurrency'
 import Sparkline from './models/Sparkline'
 
-const BASE_CURRENCY = 'USD'
+export const BASE_CURRENCY = 'USD'
 const AVAILABLE_CURRENCIES = ['EUR', 'USD', 'PLN']
 const SPARKLINE_KEY_PREFIX = 'sparkline_in_'
 const SPARKLINE_KEY_SUFFIX = 'd'
@@ -96,6 +96,9 @@ const mutations = {
     },
     setEstimationLoading: (state: AssetsState, payload: boolean) => {
         state.isEstimationLoading = payload
+    },
+    addNewCurrency: (state: AssetsState, payload: { currencyName: string; currencyRate: number }) => {
+        state.currencies[payload.currencyName] = payload.currencyRate
     },
 }
 
@@ -186,7 +189,6 @@ const actions = {
             }
 
             data[0].rates.forEach((item: ExchangeRate) => {
-                // console.log(item)
                 if (AVAILABLE_CURRENCIES.includes(item.code) && item.mid) {
                     currencies[item.code] = item.mid
                 }

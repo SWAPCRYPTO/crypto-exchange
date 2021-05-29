@@ -16,7 +16,7 @@
             </thead>
             <tbody>
                 <tr v-for="asset in assetsSummary" :key="asset.name">
-                    <td v-for="prop in asset" :key="prop">{{ displayProp(prop) }}</td>
+                    <td v-for="(prop, key) in asset" :key="prop">{{ displayProp(prop, key) }}</td>
                 </tr>
                 <tr>
                     <td v-for="(cell, index) in sumCells" :key="index">{{ displayProp(cell) }}</td>
@@ -76,8 +76,11 @@ export default defineComponent({
         const sumPercentageNettoValue = computed(() => sumColumnValues(props.assetsSummary, 'percentageNettoValue'))
         const sumCells = computed(() => ['Sum', '', '', sumValues.value, sumNettoValues.value, sumPercentageValue.value, sumPercentageNettoValue.value, '', ''])
 
-        const displayProp = (prop: number | string | ArbitrageDetails) => {
+        const displayProp = (prop: number | string | ArbitrageDetails, key: string) => {
           if (typeof prop === 'number') {
+            if(key == 'quantity') {
+              return  displayOnlySignificatDigits(prop, 6)
+            }
             return displayOnlySignificatDigits(convertCurrency(prop, baseCurrencyRate.value, currencyRate.value), 6)
           } else if (typeof prop === 'object' && typeof prop !== 'string') {
             if (Object.keys(prop).length !== 0) {
