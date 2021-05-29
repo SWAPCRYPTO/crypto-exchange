@@ -69,7 +69,20 @@ export default  {
       const portfolioAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.portfolio.map(portfolioItem => portfolioItem.symbol).includes(asset.symbol)))
       const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
       const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
-      const balance = computed(() => convertCurrency(user.value.account.balance, currencyRate))
+      
+      const findAssetRate = (assetSymbol: string, assets: Asset[]) => assets.find(asset => asset.symbol == assetSymbol)?.current_price as number
+      const balance = computed(() => {
+        let portfolioSum = 0
+
+        user.value.account.portfolio.forEach(portfolioAsset => {
+          const assetRate = findAssetRate(portfolioAsset.symbol, assets.value)
+          const assetValue =  (assetRate ? assetRate : 0) * portfolioAsset.quantity
+          
+          portfolioSum += assetValue
+        })
+        
+        return convertCurrency(portfolioSum, currencyRate)
+      })
 
       const estimatePortfolio = (percentageOfPortfolio: number, checkArbitrage: boolean) => store.dispatch('estimatePortfolioValue', { portfolio: user.value.account.portfolio, percentageOfPortfolio, checkArbitrage })
      

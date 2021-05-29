@@ -71,7 +71,19 @@ export default defineComponent({
 
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
         const currencyRate = preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1
-        const balance = computed(() => convertCurrency(user.value.account.balance, currencyRate))
+        const findAssetRate = (assetSymbol: string, assets: Asset[]) => assets.find(asset => asset.symbol == assetSymbol)?.current_price as number
+        const balance = computed(() => {
+          let portfolioSum = 0
+
+          user.value.account.portfolio.forEach(portfolioAsset => {
+            const assetRate = findAssetRate(portfolioAsset.symbol, assets.value)
+            const assetValue =  (assetRate ? assetRate : 0) * portfolioAsset.quantity
+            
+            portfolioSum += assetValue
+          })
+          
+          return convertCurrency(portfolioSum, currencyRate)
+        })
         
         const watchedAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.watchedAssets?.includes(asset.symbol)))
         const sortedAssets: Ref<Asset[]> = computed(() => sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", false))
