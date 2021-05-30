@@ -10,41 +10,41 @@
                         </header>
                         <ion-list lines="full" class="my-4">
                             <ion-item>
-                                <ion-input autofocus autocomplete="on" placeholder="Your name" type="text" v-model="authData.name"></ion-input>
+                                <ion-input mode="ios" autofocus autocomplete="on" placeholder="Your name" type="text" v-model="authData.name"></ion-input>
                             </ion-item>
 
                             <ion-item>
-                                <ion-input autocomplete="on" placeholder="Email address" type="email" v-model="authData.email"></ion-input>
+                                <ion-input mode="ios" autocomplete="on" placeholder="Email address" type="email" v-model="authData.email"></ion-input>
                             </ion-item>
 
                             <ion-item>
-                                <ion-input clearInput autocomplete="on" placeholder="Password" type="password" v-model="authData.password"></ion-input>
+                                <ion-input mode="ios" clearInput autocomplete="on" placeholder="Password" type="password" v-model="authData.password"></ion-input>
                             </ion-item>
 
                             <ion-item>
-                                    <ion-checkbox v-model="termsAccepted"></ion-checkbox>
+                                    <ion-checkbox mode="ios" v-model="termsAccepted"></ion-checkbox>
                                     <ion-label>Accept our Terms and Conditions</ion-label>
                             </ion-item>
                         </ion-list>
-                        <ion-button class="mt-4" expand="block" @click="onSignUp">Sign up</ion-button>
+                        <ion-button class="mt-4" mode="ios" expand="block" @click="onSignUp">Sign up</ion-button>
                     </div>
                 </section>
                 <section class="signIn" v-else>
                     <div class="signIn__container flex flex-col w-full">
                         <header class="flex flex-col items-center justify-start mb-4">
                                 <h1 class="h1 text-center">Welcome back</h1>
-                                <p class="mt-2 text-center">Log in with your data and start managing your assets.</p>
+                                <p class="mt-2 text-center">Log in and start managing your assets.</p>
                         </header>
                         <ion-list lines="full" class="my-4">
                             <ion-item>
-                                <ion-input autocomplete="on" placeholder="Email address" type="email" v-model="authData.email"></ion-input>
+                                <ion-input mode="ios" autocomplete="on" placeholder="Email address" type="email" v-model="authData.email"></ion-input>
                             </ion-item>
 
                             <ion-item>
-                                <ion-input clearInput autocomplete="on" placeholder="Password" type="password" v-model="authData.password"></ion-input>
+                                <ion-input mode="ios" clearInput autocomplete="on" placeholder="Password" type="password" v-model="authData.password"></ion-input>
                             </ion-item>
                         </ion-list>
-                        <ion-button class="mt-4" expand="block" @click="onSignIn">Sign in</ion-button>
+                        <ion-button class="mt-4" mode="ios" expand="block" @click="onSignIn">Sign in</ion-button>
                     </div>
                 </section>
                 <footer class="mb-4 flex items-center justify-center">

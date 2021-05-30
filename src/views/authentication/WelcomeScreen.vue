@@ -2,19 +2,18 @@
     <ion-page>
         <ion-content class="px-4" scroll-y="false" fullscreen>
             <ion-slides class="h-full" :options="slideOpts">
-                <ion-slide class="flex flex-col items-center justify-center">
+                <ion-slide class="flex flex-col items-center justify-center p-16">
                     <div class="slide p-16">
-                        <img src="../../assets/images/currency.png"/>
-                        <h2>Welcome to</h2>
-                        <h2>CryptoExchanger</h2>
-                        <p>The <b>ionic conference app</b> is a practical preview of the ionic framework in action, and a demonstration of proper code use.</p>
+                        <img class="max-w-sm" src="../../assets/images/crypto.svg"/>
+                        <h2 class="h2 mt-8">Welcome to</h2>
+                        <h1 class="h1 mt-4">CryptoExchanger</h1>
                     </div>
                 </ion-slide>
-                <ion-slide class="flex flex-col items-center justify-center">
-                    <img src="../../assets/images/currency.png"/>
-                    <h2>Ready to Play?</h2>
-                    <router-link to="/authentication">
-                        <ion-button fill="clear">Continue <ion-icon slot="end" name="arrow-forward"></ion-icon></ion-button>           
+                <ion-slide class="flex flex-col items-center justify-center p-16">
+                    <img class="max-w-sm" src="../../assets/images/bitcoin.svg"/>
+                    <h2 class="h2 mt-8">Ready to start?</h2>
+                    <router-link to="/authentication" class="mt-8">
+                        <ion-button mode="ios" expand="block">Continue</ion-button> 
                     </router-link>
                 </ion-slide>
             </ion-slides>
@@ -23,17 +22,18 @@
 </template>
 
 <script lang="ts">
-import { IonPage, IonContent, IonSlides, IonSlide, IonIcon, IonButton } from '@ionic/vue';
+import { IonPage, IonContent, IonSlides, IonSlide, IonButton } from '@ionic/vue';
 import { defineComponent } from 'vue'
 
 export default defineComponent({
     name: "WelcomeScreen",
-    components: { IonPage, IonContent, IonSlides, IonSlide, IonIcon, IonButton },
+    components: { IonPage, IonContent, IonSlides, IonSlide, IonButton },
     setup() {
         const slideOpts = {
-            initialSlide: 1,
+            initialSlide: 0,
             speed: 400
-        };
+        }
+
         return { slideOpts }
     }
 })
