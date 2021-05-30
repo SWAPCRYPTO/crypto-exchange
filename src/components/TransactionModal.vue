@@ -41,7 +41,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, Ref, ref } from 'vue'
-import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonInput, IonLabel, IonItem, IonList, IonSpinner } from '@ionic/vue'
+import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonInput, IonLabel, IonItem, IonList, IonSpinner, toastController } from '@ionic/vue'
 import { useStore } from 'vuex'
 import { displayOnlySignificatDigits } from '@/services/FormatValue'
 import { PortfolioItem } from '@/store/modules/auth/models/UserAccount'
@@ -88,6 +88,17 @@ export default defineComponent({
           else return purchasePrice.value / convertCurrency(props.asset.current_price, baseCurrencyRate.value, currencyRate.value)
         })
 
+        const openResultToast = async (message: string) => {
+        const toast = await toastController
+          .create({
+            message,
+            duration: 2000,
+            position: 'bottom',
+            color: 'primary'
+          })
+          return toast.present();
+      }
+
         const proceedTransaction = () => {
           if(props.transactionType == 'Buy') {
               const buyQuantity = +assetQuantity.value.toFixed(4)
@@ -111,6 +122,9 @@ export default defineComponent({
           }
           setTimeout(() => {
             dismiss()
+            const symbol = props.asset.symbol.toUpperCase()
+            const resultMessage = props.transactionType == 'Buy' ? `Successfully bought ${assetQuantity.value.toFixed(4)} of ${symbol}.` : `Successfully sold all of your ${symbol}.`
+            openResultToast(resultMessage)
           }, 500)
         }
         
