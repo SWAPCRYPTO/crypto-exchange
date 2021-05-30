@@ -90,14 +90,15 @@ export default defineComponent({
 
         const proceedTransaction = () => {
           if(props.transactionType == 'Buy') {
+              const buyQuantity = +assetQuantity.value.toFixed(4)
               const assetToBuy: PortfolioItem = {
                 name: props.asset.name.toLowerCase(),
-                quantity: +assetQuantity.value.toFixed(4),
+                quantity: buyQuantity,
                 symbol: props.asset.symbol.toLowerCase(),
                 transactions: [
                   {
                     purchasePrice: props.asset.current_price,
-                    quantity: +assetQuantity.value.toFixed(4),
+                    quantity: buyQuantity,
                     transactionDate: firebase.firestore.Timestamp.now()
                   }
                 ],
