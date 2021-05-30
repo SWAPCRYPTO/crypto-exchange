@@ -35,7 +35,7 @@
         <div class="wallet__container">
           <div class="wallet">
             <AssetsList :assets="[asset]" :walletMode="true" />
-            <ion-button @click="presentActionSheet" expand="block" class="text-lg text-white font-bold">Trade</ion-button>
+            <ion-button @click="presentActionSheet" mode="ios" expand="block" class="text-lg text-white font-bold">Trade</ion-button>
           </div>
         </div>
         <ion-modal

@@ -16,7 +16,7 @@
                 <div class="currency__details">
                     <p class="currency__value" v-if="walletMode && +ownedVolume(asset.symbol, portfolio) > 0">{{ preferredCurrency }} {{ currentAssetPrice(asset) }}</p>
                     <p class="currency__value" v-else>{{ preferredCurrency }} {{ displayOnlySignificatDigits(convertCurrency(asset.current_price, baseCurrencyRate, currencyRate), 6) }}</p>
-                    <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume(asset.symbol, portfolio) }} {{ asset.symbol }}</p>
+                    <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume(asset.symbol, portfolio) ? displayOnlySignificatDigits(ownedVolume(asset.symbol, portfolio), 6) : "" }} {{ asset.symbol }}</p>
                     <p v-else class="currency__gain" :class="asset.price_change_percentage_24h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_24h_in_currency) }}%</p>                    
                 </div>
             </li>

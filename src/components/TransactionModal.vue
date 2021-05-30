@@ -10,7 +10,7 @@
     <ion-content fullscreen>
       <section class="modal__content flex flex-col items-center justify-center p-8">
         <ion-item class="mt-8">
-          <ion-input type="number" :readonly="transactionType == 'Sell'" mode="ios" autofocus value="0" placeholder="0" :min="0.01" :max="10000" color="primary" inputmode="decimal" v-model="providedQuantity"></ion-input>
+          <ion-input type="number" :readonly="transactionType == 'Sell'" mode="ios" autofocus value="0" placeholder="0" min="15" max="10000" color="primary" inputmode="decimal" v-model="providedQuantity"></ion-input>
           <ion-label color="primary" class="font-bold">{{ preferredCurrency }}</ion-label>
         </ion-item>
         <ion-list class="w-full">
@@ -40,12 +40,14 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue'
+import { computed, defineComponent, Ref, ref } from 'vue'
 import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonInput, IonLabel, IonItem, IonList, IonSpinner } from '@ionic/vue'
 import { useStore } from 'vuex'
 import { displayOnlySignificatDigits } from '@/services/FormatValue'
 import { PortfolioItem } from '@/store/modules/auth/models/UserAccount'
 import firebase from 'firebase'
+import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
+import { convertCurrency } from '@/services/ConvertCurrency'
 
 export default defineComponent({
     name: 'TransactionModal',
@@ -58,15 +60,33 @@ export default defineComponent({
         }        
         const store = useStore()
         const preferredCurrency = computed(() => store.getters.preferredCurrency)
+        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
+        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
         const isLoading = computed(() => store.getters.isLoading)
         const userPortfolio = computed(() => store.getters.userPortfolio)
         
         const portfolioAsset = computed(() => userPortfolio.value.find((asset: PortfolioItem) => asset.symbol == props.asset.symbol.toLowerCase()))
+        const providedQuantity = ref(props.transactionType === 'Sell' ? convertCurrency(portfolioAsset.value.quantity * props.asset.current_price, baseCurrencyRate.value, currencyRate.value): 0)
+        /*
+        fee = 11 pln
+        50 pln = ileKupie + fee
+        ileKupie = 39 pln
+        cenaZaSztuke = 
+        ileKupie = iloscZasobu * cena za sztuke
+        iloscZasobu = ileKupie / cena za sztuke
 
-        const providedQuantity = ref(props.transactionType === 'Sell' ? portfolioAsset.value.quantity * props.asset.current_price : 0)
-        const transactionFee = computed(() => 2.99)
-        const assetQuantity = computed(() => props.transactionType === 'Sell' ? portfolioAsset.value.quantity : providedQuantity.value - transactionFee.value < 0 ? 0 : ((providedQuantity.value - transactionFee.value) / props.asset.current_price))
+        */
+        const TRANSACTION_FEE = 2.99
+        const transactionFee = computed(() => +convertCurrency(TRANSACTION_FEE, baseCurrencyRate.value, currencyRate.value).toFixed(2))
         const purchasePrice = computed(() => providedQuantity.value - transactionFee.value < 0 ? 0 : providedQuantity.value - transactionFee.value)
+        const assetQuantity = computed(() => { 
+          if (props.transactionType === 'Sell')
+            return convertCurrency(portfolioAsset.value.quantity, baseCurrencyRate.value, currencyRate.value)
+          else if (providedQuantity.value - transactionFee.value < 0) 
+            return 0
+          else return purchasePrice.value / convertCurrency(props.asset.current_price, baseCurrencyRate.value, currencyRate.value)
+        })
 
         const proceedTransaction = () => {
           if(props.transactionType == 'Buy') {
