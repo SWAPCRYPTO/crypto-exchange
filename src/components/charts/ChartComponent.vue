@@ -31,6 +31,10 @@ export default defineComponent({
       currency: {
         type: String,
         required: true
+      },
+      displayAllLabels: {
+        type: Boolean,
+        required: true
       }
     },
     setup(props) {
@@ -67,8 +71,16 @@ export default defineComponent({
               fill: false,
               borderColor: primaryColor.value,
               data: props.data,
-              pointRadius: 0
-            }
+              pointRadius: 1 // 2
+            },
+            // {
+            //   label: props.symbol?.toUpperCase(),
+            //   lineTension: 0,
+            //   fill: false,
+            //   borderColor: 'yellow',
+            //   data: props.data.map((data: number) => data * 0.9),
+            //   pointRadius: 1 // 2
+            // }
           ]
         },
         options: {
@@ -80,14 +92,21 @@ export default defineComponent({
               font: {
                 size: 14
               },
+              clamp: true,
               color: textColor.value,
               padding: 4,
+              display: (context: any) => props.displayAllLabels ? true : context.dataIndex == 0 || context.dataIndex == props.data.length - 1,
               formatter: (value: number) => 
                   (value == min || value == max) ? `${preferredCurrency.value} ${displayOnlySignificatDigits(convertCurrency(value, baseCurrencyRate.value, currencyRate.value), 6)}` : ""
             },
           },
           layout: {
-            padding: 10
+            padding: {
+              left: !props.displayAllLabels ? 50 : 10,
+              right: !props.displayAllLabels ? 50 : 10,
+              top: 10,
+              bottom: 10
+            }
           },
           scales: {
             x: {

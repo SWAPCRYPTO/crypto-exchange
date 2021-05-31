@@ -25,7 +25,7 @@
           </ion-toolbar>
         </ion-header>
         <div class="graph__container my-4">
-          <ChartComponent :symbol="asset.symbol" :data="chartData" :currency="preferredCurrency" />
+          <ChartComponent :symbol="asset.symbol" :data="chartData" :currency="preferredCurrency" :displayAllLabels="true" />
           <div class="time__options w-full flex justify-between mt-4">
             <ion-chip @click="changeActiveTimeOption(option)" v-model="activeTimeOption" v-for="option in Object.keys(timeOptions)" :key="option" :class="{ active: option == activeTimeOption }">
               <ion-label class="uppercase">{{ option }}</ion-label>

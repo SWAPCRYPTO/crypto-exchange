@@ -16,6 +16,14 @@
             </ion-toolbar>
           </ion-header>
         </header>
+        <div class="graph__container my-4" v-if="portfolioAssets.length > 0">
+          <ChartComponent :symbol="preferredCurrency" :data="transactionsData" :currency="preferredCurrency" :displayAllLabels="false" />
+          <div class="time__options w-full flex justify-between mt-4">
+            <ion-chip @click="changeActiveTimeOption(option)" v-model="activeTimeOption" v-for="option in Object.keys(timeOptions)" :key="option" :class="{ active: option == activeTimeOption }">
+              <ion-label class="uppercase">{{ option }}</ion-label>
+            </ion-chip>
+          </div>
+        </div>
         <section class="portfolio__container" v-if="portfolioAssets.length > 0">
           <AssetsList :assets="portfolioAssets" :walletMode="true" />
           <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">
@@ -43,9 +51,10 @@
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonLabel, IonButton, IonSpinner, IonModal, IonSkeletonText, alertController } from "@ionic/vue";
-import { computed, ref, Ref } from 'vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonChip, IonLabel, IonButton, IonSpinner, IonModal, IonSkeletonText, alertController } from "@ionic/vue";
+import { computed, ref, Ref, watch } from 'vue';
 import { useStore } from 'vuex';
+import ChartComponent from "../components/charts/ChartComponent.vue"
 import AssetsList from "../components/AssetsList.vue"
 import User from '@/store/modules/auth/models/User';
 import Asset from '@/store/modules/assets/models/Asset';
@@ -54,10 +63,88 @@ import { formatValue } from '@/services/FormatValue';
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import EstimationPortfolioModal from '@/components/EstimationPortfolioModal.vue';
 import { useRouter } from 'vue-router';
+import { PortfolioItem, Transaction } from '@/store/modules/auth/models/UserAccount';
+
+const collectPurchasesData = (portfolio: PortfolioItem[]): number[] => {
+  // const transactions = portfolio.map(asset => asset.transactions)
+  const transactions: Transaction[] = []
+  for (const asset of portfolio) {
+      transactions.push(...asset.transactions)
+  }
+
+  transactions.sort((a, b) => a.transactionDate.seconds - b.transactionDate.seconds)
+  // typescript doesnt recognise firebase timestampt
+  // const dates = transactions.map(t => ({ date: (t.transactionDate as any).toDate(), purchasePrice: t.purchasePrice, quantity: t.quantity }))
+  // console.log('dates', dates)
+
+  // const data = (transactions: Transaction[]) => transactions.reduce((acc, transaction) => {
+  //     const sumValues = acc.reduce((sum, elem) => sum + elem, 0)
+  //     return [...acc, sumValues + transaction.purchasePrice * transaction.quantity]
+  // }, [0])
+
+  const LOCALE = 'pl-PL'
+  // wynik jest inny niz balance bo ten wynik nie bierze pod uwage aktualnej ceny kazdego zasobu,
+  // a przdstawiane sa dane jakie kwoty byly w momencie kupowania
+  const getDatesBetweenDates = (startDate: Date, endDate: Date, transactions: Transaction[]) => {
+    const timeBetween = endDate.getTime() - startDate.getTime()
+    const daysBetween = Math.ceil(timeBetween / (1000 * 3600 * 24))
+
+    const dates: { date: string, value: number }[] = []
+    const theDate = new Date(startDate)
+    theDate.setHours(0, 0, 0, 0)
+    for (let i = 0; i < daysBetween; i++) {
+      const dateObject = {
+        date: (new Date(theDate)).toLocaleDateString(LOCALE),
+        value: 0
+      }
+
+      transactions.forEach(transaction => {
+        const transactionDate = new Date(((transaction.transactionDate as any).toDate() as Date))
+        transactionDate.setHours(0, 0, 0, 0)
+        const transactionStringDate = transactionDate.toLocaleDateString(LOCALE)
+
+        if (transactionStringDate == dateObject.date) {
+          dateObject.value += transaction.purchasePrice * transaction.quantity
+        }
+      })
+      dates.push(dateObject)
+      theDate.setDate(theDate.getDate() + 1)
+    }
+
+    return dates
+  }
+  
+  const getData = (transactions: { date: string, value: number }[]) => {
+    const pricesInTime: number[] = [0]
+    let currentValue = 0
+    for (const transaction of transactions) {
+      if (transaction.value !== 0)
+        currentValue += transaction.value
+      pricesInTime.push(currentValue)
+    }
+
+    return pricesInTime
+  }
+
+  // const firstTransactionDate: Date = (transactions[transactions.length - 1].transactionDate as any).toDate()
+  // const dateBackwards = new Date(firstTransactionDate)
+  // dateBackwards.setDate(dateBackwards.getDate() - (daysBackwards ? daysBackwards : 0))
+  const dataValues = getDatesBetweenDates(transactions.length > 0 ? (transactions[0].transactionDate as any).toDate() : new Date(), new Date(), transactions)
+  return getData(dataValues)
+}
+
+type TimeOption = '1d' | '1w' | '1m' | '1y'
+
+interface TimeOptions {
+    '1d': 1;
+    '1w': 7;
+    '1m': 30;
+    '1y': 365;
+}
 
 export default  {
   name: "Portfolio",
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonLabel, IonButton, IonSpinner, IonModal, AssetsList, EstimationPortfolioModal, IonSkeletonText },
+  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonChip, IonLabel, IonButton, IonSpinner, IonModal, ChartComponent, AssetsList, EstimationPortfolioModal, IonSkeletonText },
   setup() {
       const store = useStore()
       const router = useRouter()
@@ -129,7 +216,24 @@ export default  {
 
       const assetsSummary = computed(() => store.getters.assetsSummary)
 
-      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router, currencyRate, convertCurrency, currencies, baseCurrencyRate }
+      const transactionsData = ref(collectPurchasesData(user.value.account.portfolio))
+
+      watch(portfolioAssets, () => {
+          transactionsData.value = collectPurchasesData(user.value.account.portfolio)
+      })
+
+      const timeOptions: TimeOptions = { '1d': 1, '1w': 7, '1m': 30, '1y': 365 }
+      const activeTimeOption: Ref<TimeOption> = ref(Object.keys(timeOptions)[1] as TimeOption)
+
+      const changeActiveTimeOption = async (option: TimeOption) => {
+        activeTimeOption.value = option
+        const numberOfDays = timeOptions[activeTimeOption.value] == 1 ? timeOptions[activeTimeOption.value] + 1 : timeOptions[activeTimeOption.value]
+
+        const collectedDates = collectPurchasesData(user.value.account.portfolio)
+        transactionsData.value = collectedDates.slice(collectedDates.length > numberOfDays ? -numberOfDays : -collectedDates.length)
+      }
+
+      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router, currencyRate, convertCurrency, currencies, baseCurrencyRate, transactionsData, timeOptions, activeTimeOption, changeActiveTimeOption }
   }
 }
 </script>
