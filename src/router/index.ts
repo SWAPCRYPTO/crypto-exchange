@@ -8,7 +8,6 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/',
         component: WelcomeScreen,
-        // redirect: '/authentication',
     },
     {
         path: '/authentication',

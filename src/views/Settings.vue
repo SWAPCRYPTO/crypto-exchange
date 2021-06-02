@@ -17,19 +17,6 @@
                         </li>
                     </ul>
                 </section>
-                <!-- <ion-list v-for="item in optionsList" :key="item.title">
-                  <h2 class="h2">{{ item.title }}</h2>
-                  <ion-item>
-                    <ion-list>
-                      <ion-item class="category" v-for="(category, index) in item.subCategories" :key="index">
-                        <ion-label @click="category.action" :class="{'text-error': category.isDangerous }">
-                          {{ category.name }}
-                        </ion-label>
-                        <ion-icon v-if="!category.action" name="chevron-forward-outline"></ion-icon>
-                      </ion-item>
-                    </ion-list>
-                  </ion-item>
-                </ion-list> -->
             </div>
           </div>
       </section>
@@ -38,7 +25,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, Ref, watch } from 'vue';
+import { computed, defineComponent, Ref } from 'vue';
 import { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel, IonCheckbox } from '@ionic/vue';
 import { useStore } from 'vuex';
 import User from '@/store/modules/auth/models/User';

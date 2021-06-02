@@ -73,14 +73,6 @@ export default defineComponent({
               data: props.data,
               pointRadius: 1 // 2
             },
-            // {
-            //   label: props.symbol?.toUpperCase(),
-            //   lineTension: 0,
-            //   fill: false,
-            //   borderColor: 'yellow',
-            //   data: props.data.map((data: number) => data * 0.9),
-            //   pointRadius: 1 // 2
-            // }
           ]
         },
         options: {

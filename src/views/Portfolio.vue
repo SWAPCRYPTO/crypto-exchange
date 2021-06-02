@@ -66,21 +66,12 @@ import { useRouter } from 'vue-router';
 import { PortfolioItem, Transaction } from '@/store/modules/auth/models/UserAccount';
 
 const collectPurchasesData = (portfolio: PortfolioItem[]): number[] => {
-  // const transactions = portfolio.map(asset => asset.transactions)
   const transactions: Transaction[] = []
   for (const asset of portfolio) {
       transactions.push(...asset.transactions)
   }
 
   transactions.sort((a, b) => a.transactionDate.seconds - b.transactionDate.seconds)
-  // typescript doesnt recognise firebase timestampt
-  // const dates = transactions.map(t => ({ date: (t.transactionDate as any).toDate(), purchasePrice: t.purchasePrice, quantity: t.quantity }))
-  // console.log('dates', dates)
-
-  // const data = (transactions: Transaction[]) => transactions.reduce((acc, transaction) => {
-  //     const sumValues = acc.reduce((sum, elem) => sum + elem, 0)
-  //     return [...acc, sumValues + transaction.purchasePrice * transaction.quantity]
-  // }, [0])
 
   const LOCALE = 'pl-PL'
   // wynik jest inny niz balance bo ten wynik nie bierze pod uwage aktualnej ceny kazdego zasobu,
@@ -126,9 +117,6 @@ const collectPurchasesData = (portfolio: PortfolioItem[]): number[] => {
     return pricesInTime
   }
 
-  // const firstTransactionDate: Date = (transactions[transactions.length - 1].transactionDate as any).toDate()
-  // const dateBackwards = new Date(firstTransactionDate)
-  // dateBackwards.setDate(dateBackwards.getDate() - (daysBackwards ? daysBackwards : 0))
   const dataValues = getDatesBetweenDates(transactions.length > 0 ? (transactions[0].transactionDate as any).toDate() : new Date(), new Date(), transactions)
   return getData(dataValues)
 }
