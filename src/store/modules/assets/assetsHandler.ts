@@ -264,16 +264,13 @@ const actions = {
                     asset.symbol.toUpperCase()
                 )
                 const marketsIntersection: string[] = await dispatch('fetchMarketsIntersection', userPortfolioAssets)
-                // console.log('Markets: ' + marketsIntersection)
 
                 const exchanges = [APIS[0].name, APIS[1].name] as [string, string]
                 const allOffers = await collectOffers(exchanges, marketsIntersection)
-                // console.log('allOffers', allOffers)
 
                 const arbitrages1 = await findArbitrages(exchanges, allOffers)
                 const arbitrages2 = await findArbitrages([exchanges[1], exchanges[0]], allOffers)
                 sortedArbitrages = sortArbitrages(arbitrages1, arbitrages2)
-                // console.log(sortedArbitrages)
             }
 
             const assetsSummary: AssetSummary[] = []

@@ -68,15 +68,6 @@ export default defineComponent({
         
         const portfolioAsset = computed(() => userPortfolio.value.find((asset: PortfolioItem) => asset.symbol == props.asset.symbol.toLowerCase()))
         const providedQuantity = ref(props.transactionType === 'Sell' ? convertCurrency(portfolioAsset.value.quantity * props.asset.current_price, baseCurrencyRate.value, currencyRate.value): 0)
-        /*
-        fee = 11 pln
-        50 pln = ileKupie + fee
-        ileKupie = 39 pln
-        cenaZaSztuke = 
-        ileKupie = iloscZasobu * cena za sztuke
-        iloscZasobu = ileKupie / cena za sztuke
-
-        */
         const TRANSACTION_FEE = 2.99
         const transactionFee = computed(() => +convertCurrency(TRANSACTION_FEE, baseCurrencyRate.value, currencyRate.value).toFixed(2))
         const purchasePrice = computed(() => providedQuantity.value - transactionFee.value < 0 ? 0 : providedQuantity.value - transactionFee.value)
