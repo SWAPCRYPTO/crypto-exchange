@@ -17,6 +17,7 @@ podatekOdZysku = zysk * taxValue = 20 * 0.19 = 3.8
 netto = currentCost - podatekOdZysku
 */
 
+import Big from 'big.js'
 import { Transaction } from '../auth/models/UserAccount'
 import AssetModel from './models/estimation/AssetModel'
 
@@ -61,11 +62,15 @@ export default function findNettoValue(pairedOffers: AssetModel[], transactions:
         const currentOffer = pairedOffersQueue[0]
         const currentTransaction = transactionsQueue[0]
         if (currentOffer) {
+            console.log(currentTransaction?.quantity, currentOffer.quantity)
             if (currentTransaction.quantity >= currentOffer.quantity) {
                 const quantity = currentOffer.quantity
                 const offersValue = quantity * currentOffer.rate
                 netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
-                currentTransaction.quantity -= quantity
+
+                console.log(currentTransaction.quantity - quantity)
+                console.log(Big(currentTransaction.quantity).minus(quantity).toNumber())
+                currentTransaction.quantity = Big(currentTransaction.quantity).minus(quantity).toNumber()
                 pairedOffersQueue.shift()
 
                 if (currentTransaction.quantity === 0) {
@@ -77,12 +82,12 @@ export default function findNettoValue(pairedOffers: AssetModel[], transactions:
 
                 netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
 
-                currentTransaction.quantity -= quantity
+                currentTransaction.quantity = Big(currentTransaction.quantity).minus(quantity).toNumber()
                 if (currentTransaction.quantity === 0) {
                     transactionsQueue.shift()
                 }
 
-                currentOffer.quantity -= quantity
+                currentOffer.quantity = Big(currentOffer.quantity).minus(quantity).toNumber()
 
                 if (currentOffer.quantity === 0) {
                     pairedOffersQueue.shift()
