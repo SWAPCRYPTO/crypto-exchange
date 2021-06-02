@@ -6,7 +6,7 @@ const APIS = [
         marketsUrl: 'https://api.bitbay.net/rest/trading/ticker',
         marketsKey: 'items',
         orderBookEndpoint: 'orderbook.json',
-        takerFee: 0.0042,
+        takerFee: 0.00042,
         transferFee: {
             AAVE: 0.1,
             BAT: 10.0,
@@ -46,7 +46,7 @@ const APIS = [
         marketsUrl: 'https://api.bittrex.com/v3/markets',
         marketsKey: 'symbol',
         orderBookEndpoint: '/orderbook',
-        takerFee: 0.0075,
+        takerFee: 0.00075,
         transferFee: {
             '1INCH': 8.0,
             '1ST': 4.5,

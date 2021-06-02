@@ -1,22 +1,3 @@
-/* 
-Obliczamy całkowity koszt nabycia zasobu - ilość zasobu * cena za 1 sztuke opłaty transakcyjne
-
-Kazda wykonana przez nas transakcja ma okreslona date zakupu.
-Wiec parujemy to ile chcemy sprzedac z transakcjami ktore wykonalismy od najstarszej daty
-
-Do funkcji podajemy calkowity koszt nabycia zasobu (acquisitionCost)
-oraz obecną wartość danej ilości zasobu.
-Obecna wartość danej ilości zasobu to ilość zasobu * cena za 1 sztukę - za tyle teraz chcemy sprzedać (currentCost)
-
-acquisitionCost = 100
-currentCost = 120
-
-zysk = currentCost - acquisitionCost = 20
-taskValue = 0.19
-podatekOdZysku = zysk * taxValue = 20 * 0.19 = 3.8
-netto = currentCost - podatekOdZysku
-*/
-
 import Big from 'big.js'
 import { Transaction } from '../auth/models/UserAccount'
 import AssetModel from './models/estimation/AssetModel'
@@ -62,14 +43,11 @@ export default function findNettoValue(pairedOffers: AssetModel[], transactions:
         const currentOffer = pairedOffersQueue[0]
         const currentTransaction = transactionsQueue[0]
         if (currentOffer) {
-            console.log(currentTransaction?.quantity, currentOffer.quantity)
             if (currentTransaction.quantity >= currentOffer.quantity) {
                 const quantity = currentOffer.quantity
                 const offersValue = quantity * currentOffer.rate
                 netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
 
-                console.log(currentTransaction.quantity - quantity)
-                console.log(Big(currentTransaction.quantity).minus(quantity).toNumber())
                 currentTransaction.quantity = Big(currentTransaction.quantity).minus(quantity).toNumber()
                 pairedOffersQueue.shift()
 

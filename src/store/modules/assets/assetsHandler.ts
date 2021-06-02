@@ -17,6 +17,8 @@ const AVAILABLE_CURRENCIES = ['EUR', 'USD', 'PLN']
 const SPARKLINE_KEY_PREFIX = 'sparkline_in_'
 const SPARKLINE_KEY_SUFFIX = 'd'
 const TAX_PERCENTAGE = 0.19
+const COINGECKO_API = 'https://api.coingecko.com/api/v3'
+const NBP_URL = 'https://api.nbp.pl/api/'
 
 export const fetchAssetsOrders = async (marketSymbols: [string, string], apiName: string) => {
     const apiObject = APIS.find((api) => api.name === apiName)
@@ -117,7 +119,7 @@ const actions = {
         if (state.assets.length <= 0) {
             commit('setLoading', true)
             const { data } = await axios.get(
-                `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${BASE_CURRENCY}&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h%2C24h%2C7d%2C30d%2C1y`
+                `${COINGECKO_API}/coins/markets?vs_currency=${BASE_CURRENCY}&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h%2C24h%2C7d%2C30d%2C1y`
             )
             commit('setAssets', data)
             commit('setLoading', false)
@@ -142,7 +144,7 @@ const actions = {
         // check if asset exists and whether data needs to be fetched
         if (asset && !(asset as any)[key]) {
             const { data }: { data: ExtendedSparkline } = await axios.get(
-                `https://api.coingecko.com/api/v3/coins/${payload.assetId}/market_chart?vs_currency=${payload.currency}&days=${payload.timeOption}`
+                `${COINGECKO_API}/coins/${payload.assetId}/market_chart?vs_currency=${payload.currency}&days=${payload.timeOption}`
             )
             const splitEveryNth = 4
             let prices = data?.prices.map((price) => price[1])
@@ -183,12 +185,16 @@ const actions = {
         if (Object.keys(state.currencies).length <= 0) {
             commit('setLoading', true)
             const rateTable = 'A'
-            const { data } = await axios.get(`https://api.nbp.pl/api/exchangerates/tables/${rateTable}`)
+
+            const { data } = await axios.get(`${CORS_PREFIX}${NBP_URL}exchangerates/tables/${rateTable}`)
+
             const currencies: Currencies = {
                 PLN: 1,
+                USD: 3.65,
+                EUR: 4.6,
             }
 
-            data[0].rates.forEach((item: ExchangeRate) => {
+            data[0]?.rates.forEach((item: ExchangeRate) => {
                 if (AVAILABLE_CURRENCIES.includes(item.code) && item.mid) {
                     currencies[item.code] = item.mid
                 }
@@ -235,12 +241,10 @@ const actions = {
             commit,
             dispatch,
             getters,
-            rootGetters,
         }: {
             commit: Function
             dispatch: any
             getters: any
-            rootGetters: any
         },
         payload: {
             portfolio: PortfolioItem[]
@@ -277,9 +281,8 @@ const actions = {
                 const assetSymbol = asset.symbol
                 // const preferredCurrency = rootGetters.preferredCurrency
                 const preferredCurrency = BASE_CURRENCY
-                // BTC can also be a preferredCurrency, it will work
 
-                // cannot estimate the value of the asset as it is the main currency
+                // cannot estimate the value of an asset as it is the main currency
                 // for example if BTC is the main currency instead of fiat currency
                 if (assetSymbol === preferredCurrency) {
                     return
@@ -353,15 +356,7 @@ const actions = {
                     sameAssetSummaries.push(assetSummary)
                 }
 
-                // Check which exchange market has the most valuable prices
-                // console.log(
-                //     sameAssetSummaries.map((asset) => [
-                //         asset.nettoValue,
-                //         asset.name,
-                //         asset.exchangeName,
-                //     ])
-                // )
-
+                // check which exchange market has the most valuable prices
                 // find the summary with the greatest netto value
                 if (sameAssetSummaries.length > 0) {
                     const mostValuableSummary = sameAssetSummaries.reduce((prevSummary, currSummary) =>

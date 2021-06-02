@@ -16,14 +16,14 @@
             </ion-toolbar>
           </ion-header>
         </header>
-        <div class="graph__container my-4" v-if="portfolioAssets.length > 0">
+        <!-- <div class="graph__container my-4" v-if="portfolioAssets.length > 0">
           <ChartComponent :symbol="preferredCurrency" :data="transactionsData" :currency="preferredCurrency" :displayAllLabels="false" />
           <div class="time__options w-full flex justify-between mt-4">
             <ion-chip @click="changeActiveTimeOption(option)" v-model="activeTimeOption" v-for="option in Object.keys(timeOptions)" :key="option" :class="{ active: option == activeTimeOption }">
               <ion-label class="uppercase">{{ option }}</ion-label>
             </ion-chip>
           </div>
-        </div>
+        </div> -->
         <section class="portfolio__container" v-if="portfolioAssets.length > 0">
           <AssetsList :assets="portfolioAssets" :walletMode="true" />
           <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">
@@ -54,7 +54,7 @@
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonChip, IonLabel, IonButton, IonSpinner, IonModal, IonSkeletonText, alertController } from "@ionic/vue";
 import { computed, ref, Ref, watch } from 'vue';
 import { useStore } from 'vuex';
-import ChartComponent from "../components/charts/ChartComponent.vue"
+// import ChartComponent from "../components/charts/ChartComponent.vue"
 import AssetsList from "../components/AssetsList.vue"
 import User from '@/store/modules/auth/models/User';
 import Asset from '@/store/modules/assets/models/Asset';
@@ -132,7 +132,7 @@ interface TimeOptions {
 
 export default  {
   name: "Portfolio",
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonChip, IonLabel, IonButton, IonSpinner, IonModal, ChartComponent, AssetsList, EstimationPortfolioModal, IonSkeletonText },
+  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonLabel, IonButton, IonSpinner, IonModal, AssetsList, EstimationPortfolioModal, IonSkeletonText },
   setup() {
       const store = useStore()
       const router = useRouter()
