@@ -295,7 +295,6 @@ const actions = {
                     const assetsOrders = getters.assetsOrders
                     const assetData: { bid: AssetModel[]; ask: AssetModel[] } = assetsOrders[assetSymbol]
                     const assetQuantity = asset.quantity
-                    const transactionFee = 0
 
                     // if there's no bid/ask data for this asset, use basic data from charts api
                     const assetDetails: Asset = getters.asset(asset.symbol)
@@ -305,7 +304,7 @@ const actions = {
 
                     const pairedOffers =
                         assetData.bid && !(assetData as any).code
-                            ? pairOffers(assetData.bid, assetQuantity, transactionFee)
+                            ? pairOffers(assetData.bid, assetQuantity)
                             : [{ quantity: assetQuantity, rate: assetDetails?.current_price }]
 
                     const offersValue = calculateValue(pairedOffers)
@@ -314,7 +313,7 @@ const actions = {
                     // percentageOfPortfolio
                     const pairedPercentageOffers =
                         assetData.bid && !(assetData as any)
-                            ? pairOffers(assetData.bid, assetQuantity * percentageOfPortfolio, transactionFee)
+                            ? pairOffers(assetData.bid, assetQuantity * percentageOfPortfolio)
                             : [{ quantity: assetQuantity * percentageOfPortfolio, rate: assetDetails?.current_price }]
 
                     const percentageOffersValue = calculateValue(pairedPercentageOffers)

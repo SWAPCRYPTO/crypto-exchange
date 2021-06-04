@@ -10,7 +10,7 @@ Jesli sie nie uda, to dopasowujemy do ofert, za ktore sprzedamy
 jak najwiecej sie da z tego co mamy.
 */
 
-export const pairOffers = (offers: AssetModel[], givenQuantity: number, transferFee: number) => {
+export const pairOffers = (offers: AssetModel[], givenQuantity: number) => {
     const sortedOffers = offers.sort((a, b) => b.rate - a.rate)
     let availableQuantity = givenQuantity
     let currentOfferIndex = 0
@@ -31,7 +31,7 @@ export const pairOffers = (offers: AssetModel[], givenQuantity: number, transfer
             rate = lowestRateOffer.rate
         } else {
             const offerQuantity = sortedOffers[currentOfferIndex].quantity
-            tradeQuantity = Math.min(availableQuantity, offerQuantity) // - transferFee
+            tradeQuantity = Math.min(availableQuantity, offerQuantity)
             rate = sortedOffers[currentOfferIndex].rate
             currentOfferIndex++
         }
