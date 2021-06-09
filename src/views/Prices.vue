@@ -38,7 +38,7 @@
             </div>
           </ion-toolbar>
         </ion-header>
-        <AssetsList :assets="sortedAssets" :searchQuery="searchQuery" />
+        <AssetsList :assets="sortedAssets" :searchQuery="searchQuery" :allowHistory="false" />
       </section>
     </ion-content>
   </ion-page>

@@ -8,22 +8,14 @@
     <ion-content fullscreen>
       <section class="home container">
         <div class="home__container">
-            <header class="balance__container">
-              <ion-header collapse="condense">
-                <ion-toolbar>
-                  <p class="font-medium mb-2">Portfolio balance</p>
-                  <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</h1>
-                  <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
-                </ion-toolbar>
-              </ion-header>
-            </header>
+            <BalanceHeader />
             <section class="watchlist__container" v-if="watchedAssets.length > 0">
                 <h2 class="h2">Watchlist</h2>
-                <AssetsList :assets="watchedAssets" :walletMode="false" />
+                <AssetsList :assets="watchedAssets" :walletMode="false" :allowHistory="false" />
             </section>
             <section class="topMovers__container">
                 <h2 class="h2">Top movers</h2>
-                <AssetsList :assets="topMovers" :walletMode="false" />
+                <AssetsList :assets="topMovers" :walletMode="false" :allowHistory="false" />
             </section>
         </div>
       </section>
@@ -32,18 +24,20 @@
 </template>
 
 <script lang="ts">
-import Asset from '@/store/modules/assets/models/Asset';
-import { convertCurrency } from "@/services/ConvertCurrency"
-import { formatValue } from "@/services/FormatValue"
-import User from '@/store/modules/auth/models/User';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSkeletonText } from '@ionic/vue';
-
 import { computed, defineComponent, Ref } from "vue"
 import { useRouter } from 'vue-router';
 import { useStore } from "vuex"
+
+import BalanceHeader from '@/components/BalanceHeader.vue'
 import AssetsList from "../components/AssetsList.vue"
+import Asset from '@/store/modules/assets/models/Asset';
+import User from '@/store/modules/auth/models/User';
+import { convertCurrency } from "@/services/ConvertCurrency"
+import { formatValue } from "@/services/FormatValue"
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import { BASE_CURRENCY } from '@/store/modules/assets/assetsHandler';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
+import useBalance from "@/hooks/useBalance";
 
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
@@ -54,7 +48,7 @@ const findTopMovers = (items: any[], numberOfItems: number) => {
 
 export default defineComponent({
     name: "Dashboard",
-    components: { AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonSkeletonText },
+    components: { BalanceHeader, AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage },
     setup() {
         const store = useStore()
         const router = useRouter()
@@ -63,7 +57,6 @@ export default defineComponent({
         const preferredCurrency = computed(() => user.value.account.preferredCurrency)
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
         const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
-        const findAssetRate = (assetSymbol: string, assets: Asset[]) => assets.find(asset => asset.symbol == assetSymbol)?.current_price as number
         const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
 
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
@@ -87,18 +80,7 @@ export default defineComponent({
         })
 
 
-        const balance = computed(() => {
-          let portfolioSum = 0
-
-          user.value.account.portfolio.forEach(portfolioAsset => {
-            const assetRate = findAssetRate(portfolioAsset.symbol, assets.value)
-            const assetValue =  (assetRate ? assetRate : 0) * portfolioAsset.quantity
-            
-            portfolioSum += assetValue
-          })
-          
-          return portfolioSum
-        })
+        const balance = useBalance()
         
         const watchedAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.watchedAssets?.includes(asset.symbol)))
         const sortedAssets: Ref<Asset[]> = computed(() => sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", false))

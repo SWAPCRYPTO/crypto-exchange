@@ -182,27 +182,25 @@ const actions = {
         commit('setAssetsOrders', assetsOrders)
     },
     fetchCurrencies: async ({ commit, state }: { commit: Function; state: AssetsState }) => {
-        if (Object.keys(state.currencies).length <= 0) {
-            commit('setLoading', true)
-            const rateTable = 'A'
+        commit('setLoading', true)
+        const rateTable = 'A'
 
-            const { data } = await axios.get(`${CORS_PREFIX}${NBP_URL}exchangerates/tables/${rateTable}`)
+        const { data } = await axios.get(`${CORS_PREFIX}${NBP_URL}exchangerates/tables/${rateTable}`)
 
-            const currencies: Currencies = {
-                PLN: 1,
-                USD: 3.65,
-                EUR: 4.6,
-            }
-
-            data[0]?.rates.forEach((item: ExchangeRate) => {
-                if (AVAILABLE_CURRENCIES.includes(item.code) && item.mid) {
-                    currencies[item.code] = item.mid
-                }
-            })
-
-            commit('setCurrencies', currencies)
-            commit('setLoading', false)
+        const currencies: Currencies = {
+            PLN: 1,
+            USD: 3.65,
+            EUR: 4.6,
         }
+
+        data[0]?.rates.forEach((item: ExchangeRate) => {
+            if (AVAILABLE_CURRENCIES.includes(item.code) && item.mid) {
+                currencies[item.code] = item.mid
+            }
+        })
+
+        commit('setCurrencies', currencies)
+        commit('setLoading', false)
     },
     fetchMarketsIntersection: async (
         {
@@ -264,7 +262,6 @@ const actions = {
                     asset.symbol.toUpperCase()
                 )
                 const marketsIntersection: string[] = await dispatch('fetchMarketsIntersection', userPortfolioAssets)
-
                 const exchanges = [APIS[0].name, APIS[1].name] as [string, string]
                 const allOffers = await collectOffers(exchanges, marketsIntersection)
 
@@ -276,7 +273,6 @@ const actions = {
             const assetsSummary: AssetSummary[] = []
             Object.values(portfolio).forEach(async (asset) => {
                 const assetSymbol = asset.symbol
-                // const preferredCurrency = rootGetters.preferredCurrency
                 const preferredCurrency = BASE_CURRENCY
 
                 // cannot estimate the value of an asset as it is the main currency
@@ -364,10 +360,10 @@ const actions = {
 
             commit('setAssetsSummary', assetsSummary)
 
-            // helps to propertly render a modal component with data
+            // helps to properly render a modal component with data
             setTimeout(() => {
                 commit('setEstimationLoading', false)
-            }, 1000)
+            }, 2500)
         } catch (e) {
             console.log(e.message)
         }

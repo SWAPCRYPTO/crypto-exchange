@@ -7,15 +7,7 @@
     </ion-header>
     <ion-content fullscreen>
       <section class="portfolio container">
-        <header class="balance__container">
-          <ion-header n-header collapse="condense">
-            <ion-toolbar>
-              <p class="font-medium mb-2">Portfolio balance</p>
-              <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</h1>
-              <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
-            </ion-toolbar>
-          </ion-header>
-        </header>
+        <BalanceHeader />
         <!-- <div class="graph__container my-4" v-if="portfolioAssets.length > 0">
           <ChartComponent :symbol="preferredCurrency" :data="transactionsData" :currency="preferredCurrency" :displayAllLabels="false" />
           <div class="time__options w-full flex justify-between mt-4">
@@ -37,10 +29,10 @@
             mode="ios"
             swipeToClose
           >
-            <EstimationPortfolioModal @onDismiss="setOpen(false)" title="Portfolio estimation" :assetsSummary="assetsSummary" :percentageOfPortfolio="0.1" />
+            <EstimationPortfolioModal @onDismiss="setOpen(false)" title="Portfolio estimation" :assetsSummary="assetsSummary" :percentageOfPortfolio="percentageDecimal" />
           </ion-modal>
         </section>
-        <section class="empty__portfolio my-8 flex flex-col items-center justify-center text-center" v-else>
+        <section class="empty__portfolio mt-16 mb-8 flex flex-col items-center justify-center text-center" v-else>
           <h2 class="h2">Your portfolio is empty</h2>
           <p class="my-4">Keep track of your profits, losses and portfolio valuation. Start building the portfolio today.</p>
           <ion-button @click="router.push('/tabs/prices')" mode="ios" expand="block" class="text-lg text-white font-bold">Check available assets</ion-button>
@@ -51,11 +43,12 @@
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonChip, IonLabel, IonButton, IonSpinner, IonModal, IonSkeletonText, alertController } from "@ionic/vue";
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonLabel, IonButton, IonSpinner, IonModal, alertController } from "@ionic/vue";
 import { computed, ref, Ref, watch } from 'vue';
 import { useStore } from 'vuex';
 // import ChartComponent from "../components/charts/ChartComponent.vue"
-import AssetsList from "../components/AssetsList.vue"
+import BalanceHeader from '@/components/BalanceHeader.vue'
+import AssetsList from "@/components/AssetsList.vue"
 import User from '@/store/modules/auth/models/User';
 import Asset from '@/store/modules/assets/models/Asset';
 import { convertCurrency } from '@/services/ConvertCurrency';
@@ -64,6 +57,8 @@ import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import EstimationPortfolioModal from '@/components/EstimationPortfolioModal.vue';
 import { useRouter } from 'vue-router';
 import { PortfolioItem, Transaction } from '@/store/modules/auth/models/UserAccount';
+import useBalance from '@/hooks/useBalance';
+import { LOCALE } from '@/store/modules/assets/constants';
 
 const collectPurchasesData = (portfolio: PortfolioItem[]): number[] => {
   const transactions: Transaction[] = []
@@ -72,8 +67,6 @@ const collectPurchasesData = (portfolio: PortfolioItem[]): number[] => {
   }
 
   transactions.sort((a, b) => a.transactionDate.seconds - b.transactionDate.seconds)
-
-  const LOCALE = 'pl-PL'
   // wynik jest inny niz balance bo ten wynik nie bierze pod uwage aktualnej ceny kazdego zasobu,
   // a przdstawiane sa dane jakie kwoty byly w momencie kupowania
   const getDatesBetweenDates = (startDate: Date, endDate: Date, transactions: Transaction[]) => {
@@ -132,7 +125,7 @@ interface TimeOptions {
 
 export default  {
   name: "Portfolio",
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonLabel, IonButton, IonSpinner, IonModal, AssetsList, EstimationPortfolioModal, IonSkeletonText },
+  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonLabel, IonButton, IonSpinner, IonModal, BalanceHeader, AssetsList, EstimationPortfolioModal },
   setup() {
       const store = useStore()
       const router = useRouter()
@@ -146,24 +139,14 @@ export default  {
       const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
       const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
 
-      const findAssetRate = (assetSymbol: string, assets: Asset[]) => assets.find(asset => asset.symbol == assetSymbol)?.current_price as number
-      const balance = computed(() => {
-        let portfolioSum = 0
-
-        user.value.account.portfolio.forEach(portfolioAsset => {
-          const assetRate = findAssetRate(portfolioAsset.symbol, assets.value)
-          const assetValue =  (assetRate ? assetRate : 0) * portfolioAsset.quantity
-          
-          portfolioSum += assetValue
-        })
-        
-        return portfolioSum
-      })
+      const balance = useBalance()
 
       const estimatePortfolio = (percentageOfPortfolio: number, checkArbitrage: boolean) => store.dispatch('estimatePortfolioValue', { portfolio: user.value.account.portfolio, percentageOfPortfolio, checkArbitrage })
      
       const isActive = ref(false);
       const setOpen = (state: boolean) => isActive.value = state;
+      const percentagePortfolio = ref(10)
+      const percentageDecimal = computed(() => percentagePortfolio.value / 100)
 
       const presentAlertConfirm = async () => {
         const alert = await alertController
@@ -174,8 +157,8 @@ export default  {
             buttons: [
               {
                 text: 'Yes',
-                handler: () => {
-                  estimatePortfolio(0.1, true).then(() => {
+                handler: () => {                  
+                  estimatePortfolio(percentageDecimal.value, true).then(() => {
                     setOpen(true)
                   })
                 },
@@ -184,7 +167,7 @@ export default  {
               {
                 text: 'No',
                 handler: () => {
-                  estimatePortfolio(0.1, false).then(() => {
+                  estimatePortfolio(percentageDecimal.value, false).then(() => {
                     setOpen(true)
                   })
                 },
@@ -198,8 +181,45 @@ export default  {
         return alert.present();
       }
 
+      const askForPercentage = async () => {
+        const alert = await alertController
+          .create({
+            cssClass: 'my-custom-class',
+            header: 'Percentage',
+            message: 'What percentage of your portfolio would you like to estimate?',
+            inputs: [
+              {
+                name: 'percentage',
+                type: 'number',
+                placeholder: 'Provide a number (0-100]: ie. 10 (%)',
+                attributes: {
+                  maxlength: 3,
+                  min: 0,
+                  max: 100,
+                  inputmode: 'decimal'
+                }
+              }
+            ],
+            buttons: [
+              {
+                text: 'Estimate',
+                handler: (alertData) => {
+                  percentagePortfolio.value = alertData.percentage
+                  presentAlertConfirm()
+                },
+                cssClass: 'primary'
+              },
+              {
+                text: 'Cancel',
+                role: 'cancel',
+              }
+            ]
+        });
+        return alert.present();
+      }
+
       const openModal = () => {
-        presentAlertConfirm()
+        askForPercentage()
       }
 
       const assetsSummary = computed(() => store.getters.assetsSummary)
@@ -221,7 +241,7 @@ export default  {
         transactionsData.value = collectedDates.slice(collectedDates.length > numberOfDays ? -numberOfDays : -collectedDates.length)
       }
 
-      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router, currencyRate, convertCurrency, currencies, baseCurrencyRate, transactionsData, timeOptions, activeTimeOption, changeActiveTimeOption }
+      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router, currencyRate, convertCurrency, currencies, baseCurrencyRate, transactionsData, timeOptions, activeTimeOption, changeActiveTimeOption, percentageDecimal }
   }
 }
 </script>

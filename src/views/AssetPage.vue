@@ -15,7 +15,7 @@
             <div class="header__container flex flex-row items-center justify-between">
               <div class="asset__details">
                 <p class="font-medium mb-2">{{ asset.name }} price</p>
-                <h1 class="h1 balance">{{ preferredCurrency }} {{ convertCurrency(asset.current_price, baseCurrencyRate, currencyRate).toFixed(2) }}</h1>
+                <h1 class="h1 balance">{{ preferredCurrency }} {{ formatValue(convertCurrency(asset.current_price, baseCurrencyRate, currencyRate), 2) }}</h1>
                 <h2 class="text-base mt-1" :class="asset.price_change_24h > 0 ? 'text-success' : 'text-error'">{{ preferredCurrency }} {{asset.price_change_24h > 0 ? '+' : ''}}{{ convertCurrency(asset.price_change_24h, baseCurrencyRate, currencyRate).toFixed(4) }} ({{ asset.price_change_percentage_24h.toFixed(2) }}%)</h2>
               </div>
               <div class="icon__wrapper">
@@ -34,7 +34,7 @@
         </div>
         <div class="wallet__container">
           <div class="wallet">
-            <AssetsList :assets="[asset]" :walletMode="true" />
+            <AssetsList :assets="[asset]" :walletMode="true" :allowHistory="true" />
             <ion-button @click="presentActionSheet" mode="ios" expand="block" class="text-lg text-white font-bold">Trade</ion-button>
           </div>
         </div>
@@ -58,6 +58,7 @@ import AssetsList from "../components/AssetsList.vue"
 import TransactionModal from "../components/TransactionModal.vue"
 import ChartComponent from "../components/charts/ChartComponent.vue"
 import { convertCurrency } from '@/services/ConvertCurrency';
+import { formatValue } from '@/services/FormatValue'
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
@@ -182,7 +183,7 @@ export default  {
         chartData.value = asset.value[`sparkline_in_${numberOfDays}d`].price
       }
 
-      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet, toggleFavourite, chartData, timeOptions, activeTimeOption, changeActiveTimeOption, isActive, setOpen, chosenTransactionType, convertCurrency, currencyRate, baseCurrencyRate }
+      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet, toggleFavourite, chartData, timeOptions, activeTimeOption, changeActiveTimeOption, isActive, setOpen, chosenTransactionType, convertCurrency, formatValue, currencyRate, baseCurrencyRate }
   }
 }
 </script>

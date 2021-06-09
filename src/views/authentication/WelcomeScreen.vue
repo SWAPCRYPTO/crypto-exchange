@@ -11,7 +11,7 @@
                 </ion-slide>
                 <ion-slide class="flex flex-col items-center justify-center p-16">
                     <img class="max-w-sm" src="../../assets/images/bitcoin.svg"/>
-                    <h2 class="h2 mt-8">Ready to start?</h2>
+                    <h1 class="h2 mt-8">Ready to start?</h1>
                     <router-link to="/authentication" class="mt-8">
                         <ion-button mode="ios" expand="block">Continue</ion-button> 
                     </router-link>

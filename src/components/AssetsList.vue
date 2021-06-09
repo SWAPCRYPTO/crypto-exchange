@@ -1,7 +1,7 @@
 <template>
     <div class="assetsList" :class="{ 'round': walletMode }">
         <ul class="assetsList__items" v-if="!isLoading">
-            <li class="assetsList__item" v-for="asset in filteredAssets" :key="asset.id" @click="router.push(`/tabs/asset/${asset.symbol}`)">
+            <li class="assetsList__item" v-for="asset in filteredAssets" :key="asset.id" @click="router.push(`/tabs/asset/${asset.symbol}${allowHistory ? '/history' : ''}`)">
                 <div class="currency__title">
                     <div class="currency__icon">
                         <img :src="asset.image" class="currency__icon" alt="currency icon">
@@ -31,7 +31,7 @@
 
 <script lang="ts">
 import { convertCurrency } from "@/services/ConvertCurrency"
-import { displayOnlySignificatDigits } from "@/services/FormatValue"
+import { displayOnlySignificatDigits, formatValue } from "@/services/FormatValue"
 import Asset from "@/store/modules/assets/models/Asset"
 import { Currencies } from "@/store/modules/assets/models/NBPCurrency"
 import { PortfolioItem } from "@/store/modules/auth/models/UserAccount"
@@ -43,7 +43,7 @@ import { useStore } from "vuex"
 export default defineComponent({
     name: "AssetsList",
     components: { IonSkeletonText },
-    props: ['assets', 'walletMode', 'searchQuery'],
+    props: ['assets', 'walletMode', 'searchQuery', 'allowHistory'],
     setup(props) {
         const store = useStore()
         const router = useRouter()
@@ -64,7 +64,7 @@ export default defineComponent({
 
         const currentAssetPrice = (asset: Asset) => displayOnlySignificatDigits(convertCurrency((asset.current_price * (ownedVolume(asset.symbol, portfolio.value) as number)), baseCurrencyRate.value, currencyRate.value), 6)
         
-        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency, displayOnlySignificatDigits, baseCurrencyRate, currentAssetPrice }
+        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency, displayOnlySignificatDigits, baseCurrencyRate, currentAssetPrice, formatValue }
     },
 })
 </script>

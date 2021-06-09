@@ -1,3 +1,4 @@
+const LOCALE = 'pl-PL'
 const CORS_PREFIX = 'https://api.allorigins.win/get?url='
 const APIS = [
     {
@@ -16,7 +17,7 @@ const APIS = [
             DAI: 27.0,
             DOT: 0.001,
             EOS: 0.1,
-            ETH: 0.006,
+            ETH: 0.0006,
             GAME: 196.0,
             GRT: 17.0,
             LINK: 1.65,
@@ -186,7 +187,7 @@ const APIS = [
             ENJ: 16.0,
             EOS: 0.1,
             ETC: 0.01,
-            ETH: 0.0073,
+            ETH: 0.00073,
             ETHBEAR: 100.0,
             ETHBULL: 0.013,
             EUR: 0.0,
@@ -287,7 +288,7 @@ const APIS = [
             LSK: 0.1,
             LTC: 0.01,
             LUCY: 0.2,
-            LUNA: 2.2,
+            LUNA: 0.022,
             MAID: 10.0,
             MANA: 29.0,
             MARO: 0.006,
@@ -475,7 +476,7 @@ const APIS = [
             USDC: 42.0,
             USDN: 0.1,
             USDS: 40.0,
-            USDT: 42.0,
+            USDT: 10.0,
             USO: 0.0,
             UST: 3.08,
             UTI: 19193.0,
@@ -537,4 +538,4 @@ const APIS = [
     },
 ]
 
-export { CORS_PREFIX, APIS }
+export { LOCALE, CORS_PREFIX, APIS }

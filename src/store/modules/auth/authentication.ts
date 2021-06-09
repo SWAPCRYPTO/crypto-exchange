@@ -1,3 +1,4 @@
+import router from '@/router'
 import { useRouter } from 'vue-router'
 import firebase from '../../../firebase'
 import User from './models/User'
@@ -164,6 +165,7 @@ const actions = {
             .then(() => {
                 commit('setUser', null)
                 commit('setLoading', false)
+                router.push('/')
             })
     },
     async autoSignUserIn({ commit }: { commit: Function }, payload: firebase.User) {

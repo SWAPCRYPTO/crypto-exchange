@@ -4,8 +4,12 @@
       <section class="settings container">
         <div class="settings__container">
             <header class="userDetails__container">
-                <p class="user__email">{{ user.email }}</p>
-                <h1 class="h1 user__title">{{ user.name }}</h1>
+                <ion-header>
+                  <ion-toolbar>
+                    <p class="user__email">{{ user.email }}</p>
+                    <h1 class="h1 user__title">{{ user.name }}</h1>
+                  </ion-toolbar>
+                </ion-header>
             </header>
             <div class="options__container">                
                 <section class="options" v-for="item in optionsList" :key="item.title">
@@ -26,7 +30,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, Ref } from 'vue';
-import { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel, IonCheckbox } from '@ionic/vue';
+import { IonPage, IonContent, IonIcon, IonHeader, IonToolbar } from '@ionic/vue';
 import { useStore } from 'vuex';
 import User from '@/store/modules/auth/models/User';
 
@@ -41,8 +45,8 @@ interface Option {
 
 export default defineComponent({
     name: "Settings",
-    // eslint-disable-next-line vue/no-unused-components
-    components: { IonPage, IonContent, IonIcon, IonList, IonItem, IonLabel, IonCheckbox },
+    
+    components: { IonPage, IonContent, IonIcon, IonHeader, IonToolbar },
     setup() {
         const store = useStore()
         const user: Ref<User> = computed(() => store.getters.user)
@@ -104,7 +108,7 @@ export default defineComponent({
 }
 
 .category {
-  @apply flex justify-between items-center my-12;
+  @apply flex justify-between items-center my-12 text-lg;
 }
 
 .category:first-of-type {

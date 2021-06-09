@@ -42,6 +42,10 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'asset/:symbol',
                 component: () => import('@/views/AssetPage.vue'),
             },
+            {
+                path: 'asset/:symbol/history',
+                component: () => import('@/views/AssetHistory.vue'),
+            },
         ],
     },
 ]
