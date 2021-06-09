@@ -45,8 +45,13 @@ export default function findNettoValue(pairedOffers: AssetModel[], transactions:
         if (currentOffer) {
             if (currentTransaction.quantity >= currentOffer.quantity) {
                 const quantity = currentOffer.quantity
-                const offersValue = quantity * currentOffer.rate
-                netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
+                // const offersValue = quantity * currentOffer.rate
+                const offersValue = Big(quantity).times(currentOffer.rate).toNumber()
+
+                // netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
+                netValue = Big(netValue)
+                    .plus(calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue))
+                    .toNumber()
 
                 currentTransaction.quantity = Big(currentTransaction.quantity).minus(quantity).toNumber()
                 pairedOffersQueue.shift()
@@ -56,9 +61,13 @@ export default function findNettoValue(pairedOffers: AssetModel[], transactions:
                 }
             } else {
                 const quantity = currentTransaction.quantity
-                const offersValue = quantity * currentOffer.rate
+                // const offersValue = quantity * currentOffer.rate
+                const offersValue = Big(quantity).times(currentOffer.rate).toNumber()
 
-                netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
+                // netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
+                netValue = Big(netValue)
+                    .plus(calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue))
+                    .toNumber()
 
                 currentTransaction.quantity = Big(currentTransaction.quantity).minus(quantity).toNumber()
                 if (currentTransaction.quantity === 0) {
