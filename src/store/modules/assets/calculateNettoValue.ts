@@ -3,10 +3,10 @@ import { Transaction } from '../auth/models/UserAccount'
 import AssetModel from './models/estimation/AssetModel'
 
 const calculateNettoValue = (currentValue: number, acquisitionCost: number, taxValue: number) => {
-    const profit = currentValue - acquisitionCost
+    const profit = Big(currentValue).minus(acquisitionCost)
     if (profit > 0) {
-        const profitTax = profit * taxValue
-        const netto = currentValue - profitTax
+        const profitTax = Big(profit).times(taxValue).toNumber()
+        const netto = Big(currentValue).minus(profitTax).toNumber()
         return netto
     } else return currentValue
 }
@@ -45,12 +45,15 @@ export default function findNettoValue(pairedOffers: AssetModel[], transactions:
         if (currentOffer) {
             if (currentTransaction.quantity >= currentOffer.quantity) {
                 const quantity = currentOffer.quantity
-                // const offersValue = quantity * currentOffer.rate
                 const offersValue = Big(quantity).times(currentOffer.rate).toNumber()
-
-                // netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
                 netValue = Big(netValue)
-                    .plus(calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue))
+                    .plus(
+                        calculateNettoValue(
+                            offersValue,
+                            Big(quantity * currentTransaction.purchasePrice).toNumber(),
+                            taxValue
+                        )
+                    )
                     .toNumber()
 
                 currentTransaction.quantity = Big(currentTransaction.quantity).minus(quantity).toNumber()
@@ -61,12 +64,16 @@ export default function findNettoValue(pairedOffers: AssetModel[], transactions:
                 }
             } else {
                 const quantity = currentTransaction.quantity
-                // const offersValue = quantity * currentOffer.rate
                 const offersValue = Big(quantity).times(currentOffer.rate).toNumber()
 
-                // netValue += calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue)
                 netValue = Big(netValue)
-                    .plus(calculateNettoValue(offersValue, quantity * currentTransaction.purchasePrice, taxValue))
+                    .plus(
+                        calculateNettoValue(
+                            offersValue,
+                            Big(quantity * currentTransaction.purchasePrice).toNumber(),
+                            taxValue
+                        )
+                    )
                     .toNumber()
 
                 currentTransaction.quantity = Big(currentTransaction.quantity).minus(quantity).toNumber()
