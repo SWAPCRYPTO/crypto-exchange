@@ -1,0 +1,40 @@
+<template>
+    <header class="balance__container">
+        <ion-header collapse="condense">
+            <ion-toolbar mode="ios">
+                <p class="font-medium mb-2">Portfolio balance</p>
+                <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</h1>
+                <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
+            </ion-toolbar>
+        </ion-header>
+    </header>
+</template>
+
+<script lang="ts">
+import { computed, defineComponent, Ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import { convertCurrency } from "@/services/ConvertCurrency"
+import { formatValue } from "@/services/FormatValue"
+import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
+import { IonHeader, IonToolbar, IonSkeletonText } from '@ionic/vue'
+
+import useBalance from '@/hooks/useBalance'
+
+export default defineComponent({
+    components: { IonHeader, IonToolbar, IonSkeletonText },
+    setup() {
+        const store = useStore()
+        const router = useRouter()
+        const isLoading: Ref<boolean> = computed(() => store.getters.isLoading)
+        const preferredCurrency = computed(() => store.getters.preferredCurrency)
+        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
+        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+
+        const balance = useBalance()
+
+        return { isLoading, preferredCurrency, router, formatValue, convertCurrency, currencyRate, baseCurrencyRate, balance }
+    },
+})
+</script>
