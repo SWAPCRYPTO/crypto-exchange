@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title v-if="!isLoading">{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</ion-title>
+        <ion-title v-if="!isLoading">{{ isPrivacyModeActive ? PRIVACY_MASK : `${preferredCurrency} ${formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2)}` }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -38,6 +38,7 @@ import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import { BASE_CURRENCY } from '@/store/modules/assets/assetsHandler';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
 import useBalance from "@/hooks/useBalance";
+import usePrivacyMode from "@/hooks/usePrivacyMode";
 
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
@@ -60,11 +61,17 @@ export default defineComponent({
         const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
 
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
-        const fetchData = () => store.dispatch('fetchAssets')
+        const fetchData = (forceUpdate: boolean) => store.dispatch('fetchAssets', forceUpdate)
         const fetchCurrencies = () => store.dispatch('fetchCurrencies')
         const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency })
         
-        fetchData()
+        fetchData(false)
+        // this may cause a isLoading = true bug
+        setInterval(() => {
+          fetchData(true)
+        }, 1000 * 1 * 60 * 5) // refresh assets data every 5 mins on client side
+        
+
         fetchCurrencies().then(() => {
           // set bitcoin as a currency
           const additionalCurrency = 'BTC'
@@ -89,7 +96,9 @@ export default defineComponent({
         
         const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets.value, "price_change_percentage_24h_in_currency", true).reverse())
 
-        return { isLoading, currencies, currencyRate, router, user, assets, preferredCurrency, watchedAssets, topMovers, balance, formatValue, baseCurrencyRate, convertCurrency }
+        const { PRIVACY_MASK, isPrivacyModeActive } = usePrivacyMode()
+
+        return { isLoading, currencies, currencyRate, router, user, assets, preferredCurrency, watchedAssets, topMovers, balance, formatValue, baseCurrencyRate, convertCurrency, PRIVACY_MASK, isPrivacyModeActive }
     }
 })
 </script>

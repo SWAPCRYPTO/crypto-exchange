@@ -15,8 +15,8 @@
           <ion-toolbar>
             <div class="header__container flex flex-row items-center justify-between">
               <div class="asset__details">
-                <p class="font-medium mb-2">{{ portfolioAsset ? portfolioAsset.quantity : 0 }} <span class="uppercase">{{ asset.symbol }}</span></p>
-                <h1 class="h1 balance">{{ preferredCurrency }} {{ formatValue(portfolioAsset ? convertCurrency(portfolioAsset.quantity * asset.current_price, baseCurrencyRate, currencyRate) : 0.00, 2) }}</h1>
+                <p class="font-medium mb-2">{{ isPrivacyModeActive ? PRIVACY_MASK : portfolioAsset ? portfolioAsset.quantity : 0 }} <span class="uppercase">{{ isPrivacyModeActive ? '' : asset.symbol }}</span></p>
+                <h1 class="h1 balance">{{ isPrivacyModeActive ? PRIVACY_MASK : `${preferredCurrency} ${formatValue(portfolioAsset ? convertCurrency(portfolioAsset.quantity * asset.current_price, baseCurrencyRate, currencyRate) : 0.00, 2)}` }}</h1>
               </div>
             </div>
           </ion-toolbar>
@@ -27,13 +27,13 @@
                 <li class="assetsList__item cursor-default" v-for="(transaction, i) in portfolioAsset.transactions" :key="i">
                     <div class="currency__title">
                         <div class="currency__name">
-                            <p class="capitalize">Recieved {{ portfolioAsset.name }}</p>
+                            <p class="capitalize">Received {{ portfolioAsset.name }}</p>
                             <span class="capitalize text-sm">From Exchange Earn</span>
                         </div>
                     </div>
                     <div class="currency__details">
-                        <p class="currency__value">{{ transaction.quantity }} <span class="uppercase">{{ portfolioAsset.symbol }}</span></p>
-                        <p class="uppercase text-sm">{{ preferredCurrency }} {{ formatValue(convertCurrency(transaction.quantity * transaction.purchasePrice, baseCurrencyRate, currencyRate), 2) }}</p>
+                        <p class="currency__value">{{ isPrivacyModeActive ? PRIVACY_MASK : transaction.quantity }} <span class="uppercase">{{ isPrivacyModeActive ? '' : portfolioAsset.symbol }}</span></p>
+                        <p class="uppercase text-sm">{{ isPrivacyModeActive ? PRIVACY_MASK : `${preferredCurrency} ${formatValue(convertCurrency(transaction.quantity * transaction.purchasePrice, baseCurrencyRate, currencyRate), 2)}` }}</p>
                     </div>
                 </li>
             </ul>
@@ -55,6 +55,7 @@ import { PortfolioItem } from '@/store/modules/auth/models/UserAccount'
 import Asset from '@/store/modules/assets/models/Asset'
 
 import { IonBackButton, IonButtons, IonToolbar, IonHeader, IonContent, IonPage } from '@ionic/vue'
+import usePrivacyMode from '@/hooks/usePrivacyMode';
 
 export default defineComponent({
     name: 'AssetHistory',
@@ -71,7 +72,9 @@ export default defineComponent({
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
         const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
 
-        return { preferredCurrency, baseCurrencyRate, currencyRate, asset, portfolioAsset, convertCurrency, formatValue }
+        const { PRIVACY_MASK, isPrivacyModeActive } = usePrivacyMode()
+
+        return { preferredCurrency, baseCurrencyRate, currencyRate, asset, portfolioAsset, convertCurrency, formatValue, PRIVACY_MASK, isPrivacyModeActive }
     },
 })
 </script>

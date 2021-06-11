@@ -14,9 +14,9 @@
                 <div class="sparkline">
                 </div>
                 <div class="currency__details">
-                    <p class="currency__value" v-if="walletMode && +ownedVolume(asset.symbol, portfolio) > 0">{{ preferredCurrency }} {{ currentAssetPrice(asset) }}</p>
-                    <p class="currency__value" v-else>{{ preferredCurrency }} {{ displayOnlySignificatDigits(convertCurrency(asset.current_price, baseCurrencyRate, currencyRate), 6) }}</p>
-                    <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume(asset.symbol, portfolio) ? displayOnlySignificatDigits(ownedVolume(asset.symbol, portfolio), 6) : "" }} {{ asset.symbol }}</p>
+                    <p class="currency__value" v-if="walletMode && +ownedVolume(asset.symbol, portfolio) > 0">{{ isPrivacyModeActive ? PRIVACY_MASK : `${preferredCurrency} ${currentAssetPrice(asset)}` }}</p>
+                    <p class="currency__value" v-else>{{ preferredCurrency }} {{ formatValue(convertCurrency(asset.current_price, baseCurrencyRate, currencyRate), 6) }}</p>
+                    <p class="uppercase text-sm" v-if="walletMode">{{ ownedVolume(asset.symbol, portfolio) ? isPrivacyModeActive ? PRIVACY_MASK : formatValue(ownedVolume(asset.symbol, portfolio), 6) : "" }} {{ isPrivacyModeActive ? '' : asset.symbol }}</p>
                     <p v-else class="currency__gain" :class="asset.price_change_percentage_24h_in_currency > 0 ? 'text-success' : 'text-error'">{{ formatChange(asset.price_change_percentage_24h_in_currency) }}%</p>                    
                 </div>
             </li>
@@ -30,6 +30,7 @@
 </template>
 
 <script lang="ts">
+import usePrivacyMode from "@/hooks/usePrivacyMode"
 import { convertCurrency } from "@/services/ConvertCurrency"
 import { displayOnlySignificatDigits, formatValue } from "@/services/FormatValue"
 import Asset from "@/store/modules/assets/models/Asset"
@@ -62,9 +63,11 @@ export default defineComponent({
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
         const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
 
-        const currentAssetPrice = (asset: Asset) => displayOnlySignificatDigits(convertCurrency((asset.current_price * (ownedVolume(asset.symbol, portfolio.value) as number)), baseCurrencyRate.value, currencyRate.value), 6)
+        const currentAssetPrice = (asset: Asset) => formatValue(convertCurrency((asset.current_price * (ownedVolume(asset.symbol, portfolio.value) as number)), baseCurrencyRate.value, currencyRate.value), 6)
+
+        const { PRIVACY_MASK, isPrivacyModeActive } = usePrivacyMode()
         
-        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency, displayOnlySignificatDigits, baseCurrencyRate, currentAssetPrice, formatValue }
+        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency, displayOnlySignificatDigits, baseCurrencyRate, currentAssetPrice, formatValue, PRIVACY_MASK, isPrivacyModeActive }
     },
 })
 </script>
@@ -122,5 +125,9 @@ export default defineComponent({
 
 .currency__details {
     @apply flex flex-col items-end;
+}
+
+.currency__value {
+    @apply text-right;
 }
 </style>

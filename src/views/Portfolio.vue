@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title>{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</ion-title>
+        <ion-title>{{ isPrivacyModeActive ? PRIVACY_MASK : `${preferredCurrency} ${formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2)}` }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -46,7 +46,6 @@
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonLabel, IonButton, IonSpinner, IonModal, alertController } from "@ionic/vue";
 import { computed, ref, Ref, watch } from 'vue';
 import { useStore } from 'vuex';
-// import ChartComponent from "../components/charts/ChartComponent.vue"
 import BalanceHeader from '@/components/BalanceHeader.vue'
 import AssetsList from "@/components/AssetsList.vue"
 import User from '@/store/modules/auth/models/User';
@@ -59,6 +58,7 @@ import { useRouter } from 'vue-router';
 import { PortfolioItem, Transaction } from '@/store/modules/auth/models/UserAccount';
 import useBalance from '@/hooks/useBalance';
 import { LOCALE } from '@/store/modules/assets/constants';
+import usePrivacyMode from '@/hooks/usePrivacyMode';
 
 const collectPurchasesData = (portfolio: PortfolioItem[]): number[] => {
   const transactions: Transaction[] = []
@@ -194,6 +194,7 @@ export default  {
                 placeholder: 'Provide a number (0-100]: ie. 10 (%)',
                 attributes: {
                   maxlength: 3,
+                  value: 10,
                   min: 0,
                   max: 100,
                   inputmode: 'decimal'
@@ -241,7 +242,9 @@ export default  {
         transactionsData.value = collectedDates.slice(collectedDates.length > numberOfDays ? -numberOfDays : -collectedDates.length)
       }
 
-      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router, currencyRate, convertCurrency, currencies, baseCurrencyRate, transactionsData, timeOptions, activeTimeOption, changeActiveTimeOption, percentageDecimal }
+      const { PRIVACY_MASK, isPrivacyModeActive } = usePrivacyMode()
+
+      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router, currencyRate, convertCurrency, currencies, baseCurrencyRate, transactionsData, timeOptions, activeTimeOption, changeActiveTimeOption, percentageDecimal, PRIVACY_MASK, isPrivacyModeActive }
   }
 }
 </script>

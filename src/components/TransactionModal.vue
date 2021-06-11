@@ -71,7 +71,7 @@ export default defineComponent({
         const isLoading = computed(() => store.getters.isLoading)
         const userPortfolio = computed(() => store.getters.userPortfolio)
 
-        const provideCustomPurchasePrice = true
+        const provideCustomPurchasePrice = false
         const portfolioAsset = computed(() => userPortfolio.value.find((asset: PortfolioItem) => asset.symbol == props.asset.symbol.toLowerCase()))
         const customPurchasePrice = ref(props.asset.current_price)
         const providedQuantity = ref(props.transactionType === 'Sell' ? convertCurrency(portfolioAsset.value.quantity * +customPurchasePrice.value, baseCurrencyRate.value, currencyRate.value): 0)

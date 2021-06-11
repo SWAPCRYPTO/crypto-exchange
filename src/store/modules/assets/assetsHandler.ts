@@ -115,8 +115,8 @@ const getters = {
 }
 
 const actions = {
-    fetchAssets: async ({ commit, state }: { commit: Function; state: AssetsState }) => {
-        if (state.assets.length <= 0) {
+    fetchAssets: async ({ commit, state }: { commit: Function; state: AssetsState }, forceUpdate: boolean) => {
+        if (state.assets.length <= 0 || forceUpdate) {
             commit('setLoading', true)
             const { data } = await axios.get(
                 `${COINGECKO_API}/coins/markets?vs_currency=${BASE_CURRENCY}&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h%2C24h%2C7d%2C30d%2C1y`
@@ -135,7 +135,6 @@ const actions = {
         },
         payload: {
             assetId: string
-            currency: string
             timeOption: number
         }
     ) => {
@@ -144,7 +143,9 @@ const actions = {
         // check if asset exists and whether data needs to be fetched
         if (asset && !(asset as any)[key]) {
             const { data }: { data: ExtendedSparkline } = await axios.get(
-                `${COINGECKO_API}/coins/${payload.assetId}/market_chart?vs_currency=${payload.currency}&days=${payload.timeOption}`
+                `${COINGECKO_API}/coins/${
+                    payload.assetId
+                }/market_chart?vs_currency=${BASE_CURRENCY.toLowerCase()}&days=${payload.timeOption}`
             )
             const splitEveryNth = 4
             let prices = data?.prices.map((price) => price[1])

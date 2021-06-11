@@ -174,12 +174,12 @@ export default  {
       const timeOptions: TimeOptions = { '1d': 1, '1w': 7, '1m': 30, '1y': 365 }
       const activeTimeOption: Ref<TimeOption> = ref(Object.keys(timeOptions)[1] as TimeOption)
 
-      const fetchAssetChart = (assetId: string, currency: string, timeOption: number) => store.dispatch('fetchAssetChart', { assetId, currency, timeOption })
+      const fetchAssetChart = (assetId: string, timeOption: number) => store.dispatch('fetchAssetChart', { assetId, timeOption })
 
       const changeActiveTimeOption = async (option: TimeOption) => {
         activeTimeOption.value = option
         const numberOfDays = timeOptions[activeTimeOption.value]
-        await fetchAssetChart(asset.value.id, preferredCurrency.value.toLowerCase(), numberOfDays)
+        await fetchAssetChart(asset.value.id, numberOfDays)
         chartData.value = asset.value[`sparkline_in_${numberOfDays}d`].price
       }
 

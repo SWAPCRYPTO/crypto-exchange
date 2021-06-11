@@ -16,10 +16,10 @@
             </thead>
             <tbody>
                 <tr v-for="asset in assetsSummary" :key="asset.name">
-                    <td v-for="(prop, key) in asset" :key="prop">{{ displayProp(prop, key) }}</td>
+                    <td v-for="(prop, key) in asset" :key="prop">{{ isPrivacyModeActive ? PRIVACY_MASK : displayProp(prop, key) }}</td>
                 </tr>
                 <tr>
-                    <td v-for="(cell, index) in sumCells" :key="index">{{ displayProp(cell) }}</td>
+                    <td v-for="(cell, index) in sumCells" :key="index">{{ isPrivacyModeActive ? PRIVACY_MASK : displayProp(cell) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -49,6 +49,7 @@ import { ArbitrageDetails } from '@/store/modules/assets/models/estimation/Arbit
 import AssetSummary from '@/store/modules/assets/models/estimation/AssetSummary'
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
 import { convertCurrency } from '@/services/ConvertCurrency';
+import usePrivacyMode from '@/hooks/usePrivacyMode'
 
 export default defineComponent({
     name: 'EstimationPortfolioModal',
@@ -88,8 +89,10 @@ export default defineComponent({
             } else return 'not possible'
           } else return prop
         }
+
+        const { PRIVACY_MASK, isPrivacyModeActive } = usePrivacyMode()
         
-        return { dismiss, isEstimationLoading, tableHeaders, SKELETON_ITEMS, displayOnlySignificatDigits, displayProp, sumCells }
+        return { dismiss, isEstimationLoading, tableHeaders, SKELETON_ITEMS, displayOnlySignificatDigits, displayProp, sumCells, PRIVACY_MASK, isPrivacyModeActive }
     }
 })
 </script>

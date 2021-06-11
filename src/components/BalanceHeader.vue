@@ -3,7 +3,7 @@
         <ion-header collapse="condense">
             <ion-toolbar mode="ios">
                 <p class="font-medium mb-2">Portfolio balance</p>
-                <h1 v-if="!isLoading" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</h1>
+                <h1 v-if="!isLoading" v-longpress="handlePrivacyMode" class="h1 balance cursor-pointer" @click="router.push('/tabs/portfolio')">{{ isPrivacyModeActive ? PRIVACY_MASK : `${preferredCurrency} ${formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2)}` }}</h1>
                 <ion-skeleton-text v-else animated style="height: 100%; width: 80%; line-height: 2.5rem;" />
             </ion-toolbar>
         </ion-header>
@@ -20,6 +20,7 @@ import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
 import { IonHeader, IonToolbar, IonSkeletonText } from '@ionic/vue'
 
 import useBalance from '@/hooks/useBalance'
+import usePrivacyMode from '@/hooks/usePrivacyMode'
 
 export default defineComponent({
     components: { IonHeader, IonToolbar, IonSkeletonText },
@@ -33,8 +34,9 @@ export default defineComponent({
         const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
 
         const balance = useBalance()
+        const { PRIVACY_MASK, isPrivacyModeActive, handlePrivacyMode } = usePrivacyMode()
 
-        return { isLoading, preferredCurrency, router, formatValue, convertCurrency, currencyRate, baseCurrencyRate, balance }
+        return { isLoading, preferredCurrency, router, formatValue, convertCurrency, currencyRate, baseCurrencyRate, balance, PRIVACY_MASK, isPrivacyModeActive, handlePrivacyMode }
     },
 })
 </script>

@@ -1,5 +1,6 @@
 const LOCALE = 'pl-PL'
 const CORS_PREFIX = 'https://api.allorigins.win/get?url='
+const MIN_PRECISION = 6
 const APIS = [
     {
         name: 'bitbay',
@@ -538,4 +539,4 @@ const APIS = [
     },
 ]
 
-export { LOCALE, CORS_PREFIX, APIS }
+export { LOCALE, CORS_PREFIX, MIN_PRECISION, APIS }
