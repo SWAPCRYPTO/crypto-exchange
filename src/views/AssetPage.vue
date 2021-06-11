@@ -8,7 +8,7 @@
             <ion-title class="uppercase">{{ route.params.symbol }}</ion-title>
         </ion-toolbar>
     </ion-header>
-    <ion-content fullscreen>
+    <ion-content>
       <section class="prices container">
         <ion-header collapse="condense">
           <ion-toolbar>
@@ -38,7 +38,18 @@
             <ion-button @click="presentActionSheet" mode="ios" expand="block" class="text-lg text-white font-bold">Trade</ion-button>
           </div>
         </div>
-        <ion-modal
+      </section>
+      <section class="market__stats container">
+        <h2 class="h2">Market Stats</h2>
+        <ion-list class="my-4">
+          <ion-item lines="none" v-for="stat in assetStats" :key="stat.value">
+            <ion-icon slot="start" color="primary" :icon="stat.icon" />
+            <ion-label slot="start">{{ stat.title }}</ion-label>
+            <ion-label class="ion-text-right">{{ stat.value }}</ion-label>
+          </ion-item>
+        </ion-list>
+      </section>
+      <ion-modal
             :is-open="isActive"
             css-class="transaction-modal"
             @didDismiss="setOpen(false)"
@@ -46,14 +57,13 @@
             swipeToClose
           >
             <TransactionModal @onDismiss="setOpen(false)" :title="`${chosenTransactionType} ${asset.symbol.toUpperCase()}`" :asset="asset" :transactionType="chosenTransactionType" />
-          </ion-modal>
-      </section>
+        </ion-modal>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, actionSheetController, IonChip, IonLabel, onIonViewWillEnter, toastController } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, IonChip, IonLabel, IonList, IonItem, actionSheetController, onIonViewWillEnter, toastController } from '@ionic/vue';
 import AssetsList from "../components/AssetsList.vue"
 import TransactionModal from "../components/TransactionModal.vue"
 import ChartComponent from "../components/charts/ChartComponent.vue"
@@ -63,7 +73,7 @@ import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 import { computed, ref, Ref } from 'vue';
-import { starOutline, star, addOutline, removeOutline, close } from 'ionicons/icons'
+import { starOutline, star, addOutline, removeOutline, close, barChartOutline, statsChartOutline, pieChartOutline, trendingUpOutline, trendingDownOutline, sparklesOutline } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
 
 type TimeOption = '1d' | '1w' | '1m' | '1y'
@@ -77,7 +87,7 @@ interface TimeOptions {
 
 export default  {
   name: 'Asset',
-  components: { AssetsList, TransactionModal, ChartComponent, IonHeader, IonTitle, IonToolbar, IonContent, IonPage, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, IonChip, IonLabel },
+  components: { AssetsList, TransactionModal, ChartComponent, IonHeader, IonTitle, IonToolbar, IonContent, IonPage, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, IonChip, IonLabel, IonList, IonItem },
   setup() {
       const store = useStore()
       const route = useRoute()
@@ -183,7 +193,40 @@ export default  {
         chartData.value = asset.value[`sparkline_in_${numberOfDays}d`].price
       }
 
-      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet, toggleFavourite, chartData, timeOptions, activeTimeOption, changeActiveTimeOption, isActive, setOpen, chosenTransactionType, convertCurrency, formatValue, currencyRate, baseCurrencyRate }
+      const assetStats = computed(() => [
+        {
+          title: 'Market cap',
+          value: `${preferredCurrency.value} ${formatValue(convertCurrency(asset.value.market_cap, baseCurrencyRate.value, currencyRate.value))}`,
+          icon: barChartOutline
+        },
+        {
+          title: 'Volume',
+          value: `${preferredCurrency.value} ${formatValue(convertCurrency(asset.value.total_volume, baseCurrencyRate.value, currencyRate.value))}`,
+          icon: statsChartOutline
+        },
+        {
+          title: 'Circulating supply',
+          value: asset.value.circulating_supply,
+          icon: pieChartOutline
+        },
+        {
+          title: 'All time high',
+          value: `${preferredCurrency.value} ${formatValue(convertCurrency(asset.value.ath, baseCurrencyRate.value, currencyRate.value))}`,
+          icon: trendingUpOutline
+        },
+        {
+          title: 'All time low',
+          value: `${preferredCurrency.value} ${formatValue(convertCurrency(asset.value.atl, baseCurrencyRate.value, currencyRate.value))}`,
+          icon: trendingDownOutline
+        },
+        {
+          title: 'Popularity rank',
+          value: `#${asset.value.market_cap_rank}`,
+          icon: sparklesOutline
+        }
+      ])
+
+      return { route, asset, preferredCurrency, starOutline, star, isFavourite, presentActionSheet, toggleFavourite, chartData, timeOptions, activeTimeOption, changeActiveTimeOption, isActive, setOpen, chosenTransactionType, convertCurrency, formatValue, currencyRate, baseCurrencyRate, assetStats }
   }
 }
 </script>
@@ -192,5 +235,23 @@ export default  {
 .time__options ion-chip.active {
   --background: var(--ion-color-primary);
   --color: var(--ion-text-color);
+}
+
+@media (max-width: 460px) and (orientation: portrait) {
+  .prices {
+    @apply min-h-full;
+  }
+}
+
+.market__stats ion-icon {
+  font-size: 20px;
+  --ionicon-stroke-width: 32px;
+}
+
+.market__stats ion-item {
+  --inner-padding-start: 0;
+  --inner-padding-end: 0;
+  --padding-start: 0;
+  --padding-end: 0;
 }
 </style>
