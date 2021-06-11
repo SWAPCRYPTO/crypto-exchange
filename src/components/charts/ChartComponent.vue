@@ -9,7 +9,7 @@ import { computed, defineComponent, Ref, ref, watch } from 'vue'
 import Vue3ChartJs from "@j-t-mcc/vue3-chartjs"
 import dataLabels from "chartjs-plugin-datalabels"
 import { useStore } from 'vuex'
-import { displayOnlySignificatDigits } from '@/services/FormatValue'
+import { displayOnlySignificatDigits, formatValue } from '@/services/FormatValue'
 import { convertCurrency } from '@/services/ConvertCurrency'
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
 
@@ -48,13 +48,6 @@ export default defineComponent({
       const textColor = ref(window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-light'))
       const chartRef = ref(null)
 
-      // update chart in route symbol is changed
-      // onIonViewWillEnter(() => {
-      //   if(route.params.symbol !== props.symbol) {
-      //     asset.value = store.getters.asset(route.params.symbol)
-      //   }
-      // })
-
       const dataSet = ref(Object.values(props.data))    
       const max = Math.max(...dataSet.value)
       const min = Math.min(...dataSet.value)
@@ -66,12 +59,12 @@ export default defineComponent({
           labels: props.data.map(() => ''),
           datasets: [
             {
-              label: props.symbol?.toUpperCase(),
+              label: preferredCurrency.value.toUpperCase(),
               lineTension: 0,
               fill: false,
               borderColor: primaryColor.value,
               data: props.data,
-              pointRadius: 1 // 2
+              pointRadius: 1
             },
           ]
         },
@@ -88,9 +81,22 @@ export default defineComponent({
               color: textColor.value,
               padding: 4,
               display: (context: any) => props.displayAllLabels ? true : context.dataIndex == 0 || context.dataIndex == props.data.length - 1,
-              formatter: (value: number) => 
-                  (value == min || value == max) ? `${preferredCurrency.value} ${displayOnlySignificatDigits(convertCurrency(value, baseCurrencyRate.value, currencyRate.value), 6)}` : ""
+              formatter: (value: number) => {
+                const convertedValue = convertCurrency(value, baseCurrencyRate.value, currencyRate.value)
+                return (value == min || value == max) ? `${preferredCurrency.value} ${formatValue(convertedValue)}` : ""
+              }  
             },
+            tooltip: {
+                callbacks: {
+                    label: (context: any) => {
+                      return `${context.dataset.label} ${formatValue(convertCurrency(context.raw, baseCurrencyRate.value, currencyRate.value))}`
+                    },
+                    labelColor: () => ({
+                      backgroundColor: primaryColor.value,
+                    }),
+                    labelTextColor: () => textColor.value
+                }
+            }
           },
           layout: {
             padding: {
@@ -120,7 +126,7 @@ export default defineComponent({
         lineChart.value.data.datasets[0].data = newData
         lineChart.value.data.labels = newData.map(() => "")
         lineChart.value.options.plugins.datalabels.formatter = (value: number) => 
-                  (value == min || value == max) ? `${preferredCurrency.value} ${displayOnlySignificatDigits(convertCurrency(value, baseCurrencyRate.value, currencyRate.value), 6)}` : ""
+                  (value == min || value == max) ? `${preferredCurrency.value} ${formatValue(convertCurrency(value, baseCurrencyRate.value, currencyRate.value))}` : ""
 
         if(chartRef.value)
             (chartRef.value as any).update()
