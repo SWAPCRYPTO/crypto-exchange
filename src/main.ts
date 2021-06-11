@@ -1,4 +1,4 @@
-import { createApp } from 'vue'
+import { createApp, DirectiveBinding, VNode } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
@@ -27,8 +27,14 @@ import './assets/styles/global.css'
 import './assets/styles/tailwind.css'
 import './assets/styles/utility-patterns.css'
 
+import { beforeMount } from '@/hooks/useLongPress'
+
 const app = createApp(App).use(IonicVue).use(router).use(store)
 
 router.isReady().then(() => {
     app.mount('#app')
+})
+
+app.directive('longpress', {
+    beforeMount,
 })
