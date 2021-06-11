@@ -234,8 +234,13 @@ export default  {
 <style>
 .time__options ion-chip.active {
   --background: var(--ion-color-primary);
-  --color: var(--ion-text-color);
 }
+
+.time__options ion-chip.active ion-label {
+  --color: #ffffff;
+  color: #ffffff;
+}
+
 
 @media (max-width: 460px) and (orientation: portrait) {
   .prices {

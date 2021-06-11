@@ -5,14 +5,13 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, Ref, ref, watch } from 'vue'
+import { computed, defineComponent, onMounted, onUnmounted, Ref, ref, watch } from 'vue'
 import Vue3ChartJs from "@j-t-mcc/vue3-chartjs"
 import dataLabels from "chartjs-plugin-datalabels"
 import { useStore } from 'vuex'
-import { displayOnlySignificatDigits, formatValue } from '@/services/FormatValue'
+import { formatValue } from '@/services/FormatValue'
 import { convertCurrency } from '@/services/ConvertCurrency'
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
-
 
 export default defineComponent({
     name: "ChartComponent",
@@ -118,6 +117,10 @@ export default defineComponent({
         },
       });
 
+      watch(primaryColor, (newO, old) => {
+        console.log(newO, old)
+      })
+
       watch(() => props.data, newData => {
         dataSet.value = Object.values(newData)
         const max = Math.max(...dataSet.value)
@@ -132,11 +135,30 @@ export default defineComponent({
             (chartRef.value as any).update()
       })
 
+      const updateChartColors = (e: MediaQueryListEvent) => {
+          const newColorScheme = e.matches ? "dark" : "light";
+          lineChart.value.data.datasets[0].borderColor = newColorScheme == 'dark' ? '#d0b1fd' : '#893dfa'
+          lineChart.value.options.plugins.datalabels.color = newColorScheme == 'dark' ? '#ffffff' : '#000'
+          
+          if(chartRef.value)
+            (chartRef.value as any).update()
+      }
+
+      onMounted(() => {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateChartColors)
+      })
+
+      onUnmounted(() => {
+        window.removeEventListener('change', e => { console.log(e) })
+      })
+
       return {
         chartRef,
         lineChart,
         min,
-        max
+        max,
+        primaryColor,
+        textColor
       };
     },
 })
