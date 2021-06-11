@@ -5,7 +5,7 @@
             <ion-buttons slot="start">
                 <ion-back-button default-href="/tabs" text=""></ion-back-button>
             </ion-buttons>
-            <ion-title class="uppercase">{{ route.params.symbol }}</ion-title>
+            <ion-title>{{ preferredCurrency }} {{ formatValue(convertCurrency(asset.current_price, baseCurrencyRate, currencyRate), 2) }}</ion-title>
         </ion-toolbar>
     </ion-header>
     <ion-content>

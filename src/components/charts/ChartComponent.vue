@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full h-auto">
+    <div class="w-full h-60 max-h-60">
         <vue3-chart-js ref="chartRef" v-bind="{ ...lineChart }" />
     </div>
 </template>
@@ -68,6 +68,7 @@ export default defineComponent({
           ]
         },
         options: {
+          maintainAspectRatio: false,
           plugins: {
             legend: {
               display: false

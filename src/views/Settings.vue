@@ -1,10 +1,15 @@
 <template>
   <ion-page>
+    <ion-header translucent>
+      <ion-toolbar mode="ios">
+        <ion-title v-if="!isLoading">{{ user.name }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
     <ion-content fullscreen>
       <section class="settings container">
         <div class="settings__container">
             <header class="userDetails__container">
-                <ion-header>
+                <ion-header collapse="condense">
                   <ion-toolbar>
                     <p class="user__email">{{ user.email }}</p>
                     <h1 class="h1 user__title">{{ user.name }}</h1>
@@ -18,6 +23,7 @@
                         <li class="category" v-for="(category, index) in item.subCategories" :key="index">
                             <p @click="category.action" :class="{'text-error': category.isDangerous }">{{ category.name }}</p>
                             <ion-icon v-if="!category.action" name="chevron-forward-outline"></ion-icon>
+                            <ion-toggle v-if="!category.action && category.hasOwnProperty('toggleValue')" v-model="category.toggleValue" color="primary"></ion-toggle>
                         </li>
                     </ul>
                 </section>
@@ -30,7 +36,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, Ref } from 'vue';
-import { IonPage, IonContent, IonIcon, IonHeader, IonToolbar } from '@ionic/vue';
+import { IonPage, IonContent, IonIcon, IonHeader, IonToolbar, IonToggle, IonTitle } from '@ionic/vue';
 import { useStore } from 'vuex';
 import User from '@/store/modules/auth/models/User';
 
@@ -38,7 +44,8 @@ interface Option {
   title: string
   subCategories: Array<{
     name: string
-    isDangerous: boolean 
+    isDangerous: boolean
+    toggleValue?: boolean
     action?: () => void
   }>
 }
@@ -46,9 +53,10 @@ interface Option {
 export default defineComponent({
     name: "Settings",
     
-    components: { IonPage, IonContent, IonIcon, IonHeader, IonToolbar },
+    components: { IonPage, IonContent, IonIcon, IonHeader, IonToolbar, IonToggle, IonTitle },
     setup() {
         const store = useStore()
+        const isLoading = computed(() => store.getters.isLoading)
         const user: Ref<User> = computed(() => store.getters.user)
         const optionsList: Option[] = [
             {
@@ -70,6 +78,21 @@ export default defineComponent({
                         name: "Notification settings",
                         isDangerous: false
                     },
+                ]
+            },
+            {
+                title: "Security",
+                subCategories: [
+                    {
+                        name: "Require PIN / Biometrics",
+                        isDangerous: false,
+                        toggleValue: false
+                    },
+                    {
+                        name: "Privacy mode",
+                        isDangerous: false,
+                        toggleValue: true
+                    },
                     {
                         name: "Sign out",
                         isDangerous: true,
@@ -80,7 +103,7 @@ export default defineComponent({
         ]
         
 
-        return { user, optionsList }
+        return { isLoading, user, optionsList }
     }
 })
 </script>
