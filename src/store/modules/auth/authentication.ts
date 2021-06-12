@@ -1,4 +1,5 @@
 import router from '@/router'
+import { openToast } from '@/services/OpenToast'
 import { useRouter } from 'vue-router'
 import firebase from '../../../firebase'
 import User from './models/User'
@@ -65,6 +66,10 @@ const getters = {
     watchedAssets: (state: AuthState) => state.user?.account.watchedAssets,
 }
 
+const openErrorToast = (message: string) => {
+    openToast(message, 'bottom', 4000)
+}
+
 const actions = {
     async signUserIn({ commit }: { commit: Function }, payload: { email: string; password: string }) {
         commit('setLoading', true)
@@ -90,22 +95,39 @@ const actions = {
                             }
                         },
                         (e: Error) => {
+                            const error = "User doesn't exist."
                             commit('setLoading', false)
-                            commit('setAuthError', "User doesn't exist.")
+                            commit('setAuthError', error)
+                            openErrorToast(error)
                             console.error(e)
                         }
                     )
                 } else {
-                    commit('setLoading', false)
-                    commit(
-                        'setAuthError',
+                    const error =
                         'Error while connecting to the servers. Wait for some time or contact the administrator.'
-                    )
+                    commit('setLoading', false)
+                    commit('setAuthError', error)
+                    openErrorToast(error)
+                    console.error(error)
                 }
+            })
+            .catch((e: firebase.auth.Error) => {
+                let error = ''
+                commit('setLoading', false)
+                if (e.code == 'auth/network-request-failed') {
+                    error = 'Network error occured. Try connecting to the internet.'
+                    commit('setAuthError', error)
+                } else {
+                    error = e.message
+                    commit('setAuthError', error)
+                }
+
+                openErrorToast(error)
             })
     },
     async signUserUp({ commit }: { commit: Function }, payload: { name: string; email: string; password: string }) {
         commit('setLoading', true)
+        commit('clearError')
         await firebase
             .auth()
             .createUserWithEmailAndPassword(payload.email, payload.password)
@@ -134,26 +156,22 @@ const actions = {
                         .set(newUser)
                         .catch((e: firebase.auth.Error) => {
                             commit('setLoading', false)
+                            commit('setAuthError', e.message)
+                            openErrorToast(e.message)
                             console.error(e)
                         })
                 }
             })
             .catch((e: firebase.auth.Error) => {
-                commit('setAuthError', e)
+                commit('setAuthError', e.message)
                 if (e.code === 'auth/email-already-in-use') {
+                    openErrorToast('This email is already in use.')
                     console.error(e)
-                    //   Notify.create({
-                    //     type: "negative",
-                    //     message: "This email is already in use."
-                    //   });
                 } else {
+                    openErrorToast('Error occured. Try again later or contact the administrator.')
                     console.error(e)
-                    //   Notify.create({
-                    //     type: "negative",
-                    //     message:
-                    //       "Error occured. Try again later or contact the administrator."
-                    //   });
                 }
+                commit('setLoading', false)
             })
     },
     async signUserOut({ commit }: { commit: Function }) {
@@ -181,9 +199,10 @@ const actions = {
                     commit('setUser', retrievedUser)
                     commit('setLoading', false)
                 },
-                (e: Error) => {
+                (e: firebase.auth.Error) => {
                     commit('setLoading', false)
                     commit('setAuthError', e.message)
+                    openErrorToast(e.message)
                     console.error(e)
                 }
             )
@@ -238,10 +257,7 @@ const actions = {
                     commit('setAuthError', e.message)
                     console.error(e)
                     if (e.code === 'auth/email-already-in-use') {
-                        // Notify.create({
-                        //   type: "negative",
-                        //   message: "Provided email is occupied. Please choose another one.",
-                        // });
+                        openErrorToast('Provided email is occupied. Please choose another one.')
                     } else if (e.code === 'auth/requires-recent-login') {
                         // handle reauthentication if needed
                         // dispatch("setReauthenticationDialog", true);
@@ -272,6 +288,8 @@ const actions = {
                 if (e.code === 'auth/requires-recent-login') {
                     console.error('Reauthentication needed to perform this action.')
                     // dispatch("setReauthenticationDialog", true);
+                } else {
+                    openErrorToast(e.message)
                 }
             })
     },
@@ -302,6 +320,8 @@ const actions = {
                     if (e.code === 'auth/requires-recent-login') {
                         console.error('Reauthentication needed to perform this action.')
                         // dispatch("setReauthenticationDialog", true);
+                    } else {
+                        openErrorToast(e.message)
                     }
                 })
         }

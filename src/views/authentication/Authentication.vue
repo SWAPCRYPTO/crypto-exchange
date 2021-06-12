@@ -15,16 +15,16 @@
                             </ion-item>
 
                             <ion-item>
-                                <ion-label color="danger" v-if="v$.email.required.$invalid" position="stacked">Provide your email</ion-label>
+                                <ion-label position="stacked" v-if="!v$.email.$dirty || !v$.email.$error">Email</ion-label>
+                                <ion-label color="danger" v-else-if="v$.email.required.$invalid" position="stacked">Provide your email</ion-label>
                                 <ion-label color="danger" v-else-if="v$.email.email.$invalid" position="stacked">Provide a valid email</ion-label>
-                                <ion-label position="stacked" v-else-if="!v$.email.dirty">Email</ion-label>
                                 <ion-input mode="ios" :disabled="isLoading" :color="v$.email.$error ? 'danger' : ''" inputmode="email" autocomplete="on" placeholder="Email address" type="email" v-model="authData.email"></ion-input>
                             </ion-item>
 
                             <ion-item>
-                                <ion-label color="danger" v-if="v$.password.required.$invalid" position="stacked">Provide a password</ion-label>
+                                <ion-label position="stacked" v-if="!v$.password.$dirty || !v$.password.$error">Password</ion-label>
+                                <ion-label color="danger" v-else-if="v$.password.required.$invalid" position="stacked">Provide a password</ion-label>
                                 <ion-label color="danger" v-else-if="v$.password.minLength.$invalid" position="stacked">Password must be at least 8 characters long</ion-label>
-                                <ion-label position="stacked" v-else-if="!v$.password.dirty">Password</ion-label>
                                 <ion-input mode="ios" :disabled="isLoading" :color="v$.password.$error ? 'danger' : ''" clearInput autocomplete="new-password" placeholder="Password" type="password" v-model="authData.password"></ion-input>
                             </ion-item>
 
@@ -44,16 +44,16 @@
                         </header>
                         <ion-list lines="full" class="my-4">
                             <ion-item>
-                                <ion-label color="danger" v-if="v$.email.required.$invalid" position="stacked">Provide your email</ion-label>
+                                <ion-label position="stacked" v-if="!v$.email.$dirty || !v$.email.$error">Email</ion-label>
+                                <ion-label color="danger" v-else-if="v$.email.required.$invalid" position="stacked">Provide your email</ion-label>
                                 <ion-label color="danger" v-else-if="v$.email.email.$invalid" position="stacked">Provide a valid email</ion-label>
-                                <ion-label position="stacked" v-else-if="!v$.email.dirty">Email</ion-label>
-                                <ion-input mode="ios" :disabled="isLoading" :color="v$.password.$error ? 'danger' : ''" inputmode="email" autocomplete="on" placeholder="Email address" type="email" v-model="authData.email"></ion-input>
+                                <ion-input mode="ios" :disabled="isLoading" :color="v$.email.$error ? 'danger' : ''" inputmode="email" autocomplete="on" placeholder="Email address" type="email" v-model="authData.email"></ion-input>
                             </ion-item>
 
                             <ion-item>
-                                <ion-label color="danger" v-if="v$.password.required.$invalid" position="stacked">Provide a password</ion-label>
+                                <ion-label position="stacked" v-if="!v$.password.$dirty || !v$.password.$error">Password</ion-label>
+                                <ion-label color="danger" v-else-if="v$.password.required.$invalid" position="stacked">Provide a password</ion-label>
                                 <ion-label color="danger" v-else-if="v$.password.minLength.$invalid" position="stacked">Password must be at least 8 characters long</ion-label>
-                                <ion-label position="stacked" v-else-if="!v$.password.dirty">Password</ion-label>
                                 <ion-input mode="ios" :disabled="isLoading" :color="v$.password.$error ? 'danger' : ''" clearInput autocomplete="current-password" placeholder="Password" type="password" v-model="authData.password"></ion-input>
                             </ion-item>
                         </ion-list>
@@ -120,7 +120,7 @@ export default defineComponent({
                 authData.name = ""
                 authData.email = ""
                 authData.password = ""
-                // v$.value.$reset()
+                v$.value.$reset()
             })
         }
 
@@ -129,7 +129,7 @@ export default defineComponent({
                 store.dispatch('signUserIn', { email: authData.email, password: authData.password }).then(() => {
                     authData.email = ""
                     authData.password = ""
-                    // v$.value.$reset()
+                    v$.value.$reset()
                 })
             }
         }
