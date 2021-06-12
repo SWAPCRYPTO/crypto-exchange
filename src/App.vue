@@ -11,6 +11,7 @@ import { computed, watch, defineComponent } from 'vue';
 import { useStore } from 'vuex';
 import router from './router';
 import User from './store/modules/auth/models/User';
+import { LocalNotifications } from '@capacitor/local-notifications'
 
 export default defineComponent({
   name: 'App',
@@ -32,6 +33,22 @@ export default defineComponent({
             router.push('/authentication')
         }
     })
+
+
+    LocalNotifications.schedule({
+      notifications: [
+        {
+          title: "Title",
+          body: "Body",
+          id: 1,
+          schedule: { at: new Date(Date.now() + 1000 * 5) },
+          // sound: null,
+          // attachments: null,
+          actionTypeId: "",
+          extra: null
+        }
+      ]
+    });
   }
 });
 </script>

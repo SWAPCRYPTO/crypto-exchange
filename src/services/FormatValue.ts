@@ -4,6 +4,7 @@ const MIN_PRECISION = 6
 // Find number of zeros after comma before a significant digit
 const findMagnitute = (value: number) => Math.floor(Math.log10(value) + 1)
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const formatValue = (value: number, precision = 2) => {
     const numberMagnitute = findMagnitute(value)
     if (value > -1 && value != 0 && value < 1) {

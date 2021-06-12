@@ -177,7 +177,8 @@ export default  {
         });
         await actionSheet.present()
 
-        const { role } = await actionSheet.onDidDismiss()
+        // const { role } = 
+        await actionSheet.onDidDismiss()
       }
 
       const chartData = ref(asset.value.sparkline_in_7d.price)

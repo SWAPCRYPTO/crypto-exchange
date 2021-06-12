@@ -68,7 +68,7 @@ export default defineComponent({
         const user: Ref<User> = computed(() => store.getters.user)
         const preferredCurrency = computed(() => store.getters.preferredCurrency)
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+        // const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
         const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
         const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency })
 
@@ -159,7 +159,8 @@ export default defineComponent({
           });
           await actionSheet.present();
 
-          const { role } = await actionSheet.onDidDismiss();
+          // const { role } = 
+          await actionSheet.onDidDismiss();
         }
 
         const presentCurrencyActionSheet = async () => {
@@ -214,7 +215,8 @@ export default defineComponent({
           });
           await actionSheet.present();
 
-          const { role } = await actionSheet.onDidDismiss();
+          // const { role } = 
+          await actionSheet.onDidDismiss();
         }
 
         return { isLoading, assets, sortedAssets, preferredCurrency, marketChangePercentageText, marketChangeStatus, isMarketUp, searchQuery, presentSortActionSheet, close, activeSorting, removeSorting, arrowDownOutline, arrowUpOutline, sortAscending, presentCurrencyActionSheet }

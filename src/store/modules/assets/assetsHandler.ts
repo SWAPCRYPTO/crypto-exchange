@@ -182,7 +182,7 @@ const actions = {
 
         commit('setAssetsOrders', assetsOrders)
     },
-    fetchCurrencies: async ({ commit, state }: { commit: Function; state: AssetsState }) => {
+    fetchCurrencies: async ({ commit }: { commit: Function }) => {
         commit('setLoading', true)
         const rateTable = 'A'
 
@@ -203,14 +203,7 @@ const actions = {
         commit('setCurrencies', currencies)
         commit('setLoading', false)
     },
-    fetchMarketsIntersection: async (
-        {
-            commit,
-        }: {
-            commit: Function
-        },
-        payload: string[]
-    ) => {
+    fetchMarketsIntersection: async ({ commit }: { commit: Function }, payload: string[]) => {
         const availableMarkets: string[][] = []
         for (const apiObject of APIS) {
             const url = apiObject.marketsUrl

@@ -1,5 +1,4 @@
 import { DirectiveBinding } from 'vue'
-import { Haptics, ImpactStyle } from '@capacitor/haptics'
 
 export const beforeMount = (el: HTMLElement, binding: DirectiveBinding) => {
     if (typeof binding.value !== 'function') {
@@ -31,15 +30,9 @@ export const beforeMount = (el: HTMLElement, binding: DirectiveBinding) => {
         }
     }
 
-    const hapticsVibrate = async () => {
-        await Haptics.vibrate()
-    }
-
     // Add Event listeners
     el.addEventListener('mousedown', start)
     el.addEventListener('touchstart', start)
-
-    hapticsVibrate()
 
     // Cancel timeouts if this events happen
     el.addEventListener('click', cancel)
