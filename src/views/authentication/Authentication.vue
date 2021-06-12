@@ -62,7 +62,7 @@
                 </section>
                 <footer class="mb-4 flex items-center justify-center">
                     <p class="flex items-center justify-center">{{ showSignUp ? 'Already have an account?' : 'Don\'t have an account?' }}</p>
-                    <ion-text mode="ios" color="primary" @click="showSignUp = !showSignUp"><p class="ml-1">{{ showSignUp ? 'Log in' : 'Sign up' }}</p></ion-text>
+                    <ion-text mode="ios" color="primary" class="cursor-pointer" @click="showSignUp = !showSignUp"><p class="ml-1">{{ showSignUp ? 'Log in' : 'Sign up' }}</p></ion-text>
                 </footer>
             </section>
         </ion-content>
