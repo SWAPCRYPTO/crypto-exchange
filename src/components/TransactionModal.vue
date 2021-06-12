@@ -9,7 +9,7 @@
     </ion-header>
     <ion-content fullscreen>
       <section class="modal__content flex flex-col items-center justify-center p-8">
-        <ion-item class="mt-8">
+        <ion-item class="mt-8 w-3/5">
           <ion-input class="default" type="number" :readonly="transactionType == 'Sell'" mode="ios" autofocus value="0" placeholder="0" min="15" max="10000" color="primary" inputmode="decimal" v-model="providedQuantity"></ion-input>
           <ion-label color="primary" class="font-bold">{{ preferredCurrency }}</ion-label>
         </ion-item>
