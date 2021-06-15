@@ -1,5 +1,5 @@
 # Crypto exchange app
-Crypto portfolio with simulations for native web, iOS, Android
+Assets portfolio available on native web, iOS, Android
 
 # 💡 Development
  * Front-end app built using Vue, Vuex, Vue-Router with composition api and Typescript
