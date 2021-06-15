@@ -6,16 +6,16 @@
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
-      <section class="home container">
+      <section class="home container md:max-w-screen-md">
         <div class="home__container">
             <BalanceHeader />
             <section class="watchlist__container" v-if="watchedAssets.length > 0">
                 <h2 class="h2">Watchlist</h2>
-                <AssetsList :assets="watchedAssets" :walletMode="false" :allowHistory="false" />
+                <AssetsList :assets="watchedAssets" :walletMode="false" :allowHistory="false" routableAssets />
             </section>
             <section class="topMovers__container">
                 <h2 class="h2">Top movers</h2>
-                <AssetsList :assets="topMovers" :walletMode="false" :allowHistory="false" />
+                <AssetsList :assets="topMovers" :walletMode="false" :allowHistory="false" routableAssets />
             </section>
         </div>
       </section>

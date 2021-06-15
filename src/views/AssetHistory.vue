@@ -10,7 +10,7 @@
         </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
-      <section class="prices container">
+      <section class="prices container md:max-w-screen-md">
         <ion-header collapse="condense">
           <ion-toolbar>
             <div class="header__container flex flex-row items-center justify-between">
@@ -27,7 +27,7 @@
                 <li class="assetsList__item cursor-default" v-for="(transaction, i) in portfolioAsset.transactions" :key="i">
                     <div class="currency__title">
                         <div class="currency__name">
-                            <p class="capitalize">Received {{ portfolioAsset.name }}</p>
+                            <p class="capitalize">{{ transaction.quantity > 0 ? 'Received' : 'Converted' }} {{ portfolioAsset.name }}</p>
                             <span class="capitalize text-sm">From Exchange Earn</span>
                         </div>
                     </div>

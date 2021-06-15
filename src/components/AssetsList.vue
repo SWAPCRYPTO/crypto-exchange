@@ -1,7 +1,7 @@
 <template>
     <div class="assetsList" :class="{ 'round': walletMode }">
         <ul class="assetsList__items" v-if="!isLoading">
-            <li class="assetsList__item" v-for="asset in filteredAssets" :key="asset.id" @click="router.push(`/tabs/asset/${asset.symbol}${allowHistory ? '/history' : ''}`)">
+            <li class="assetsList__item" v-for="asset in filteredAssets" :key="asset.id" @click="selectAsset(asset.symbol)" :class="{ selected: selectedAsset === asset.symbol }">
                 <div class="currency__title">
                     <div class="currency__icon">
                         <img :src="asset.image" class="currency__icon" alt="currency icon">
@@ -37,19 +37,44 @@ import Asset from "@/store/modules/assets/models/Asset"
 import { Currencies } from "@/store/modules/assets/models/NBPCurrency"
 import { PortfolioItem } from "@/store/modules/auth/models/UserAccount"
 import { IonSkeletonText } from '@ionic/vue';
-import { computed, defineComponent, Ref } from "vue"
+import { computed, defineComponent, PropType, ref, Ref } from "vue"
 import { useRouter } from "vue-router"
 import { useStore } from "vuex"
 
 export default defineComponent({
     name: "AssetsList",
     components: { IonSkeletonText },
-    props: ['assets', 'walletMode', 'searchQuery', 'allowHistory'],
-    setup(props) {
+    props: {
+        assets: {
+            type: Array as PropType<Asset[]>,
+            required: true
+        },
+        walletMode: {
+            type: Boolean,
+            required: true
+        },
+        routableAssets: {
+            type: Boolean,
+            required: true
+        },
+        searchQuery: {
+            type: String,
+            required: false
+        },
+        allowHistory: {
+            type: Boolean,
+            required: false
+        },
+        selectedAssetSymbol: {
+            type: String,
+            required: false
+        }
+    },
+    emits: ['selectedAsset'],
+    setup(props, { emit }) {
         const store = useStore()
         const router = useRouter()
         const isLoading = computed(() => store.getters.isLoading)
-        const SKELETON_ITEMS = 5
         const preferredCurrency = computed(() => store.getters.user.account.preferredCurrency)
         const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
         const portfolio = computed(() => store.getters.user.account.portfolio)
@@ -58,7 +83,8 @@ export default defineComponent({
         const ownedVolume = (asset: string, portfolioAssets: PortfolioItem[]) => portfolioAssets.find(portfolioAsset => portfolioAsset.symbol === asset)?.quantity
         const searchQuery = computed(() => props.searchQuery ? props.searchQuery.toLowerCase() : "")
         
-        const filteredAssets: Ref<Asset[]> = computed(() => props.assets.filter((asset: Asset) => asset.symbol.toLowerCase().indexOf(searchQuery.value) > -1 || asset.name.toLowerCase().indexOf(searchQuery.value) > -1))
+        const filteredAssets: Ref<Asset[]> = computed(() => props.assets.filter(asset => asset.symbol.toLowerCase().indexOf(searchQuery.value) > -1 || asset.name.toLowerCase().indexOf(searchQuery.value) > -1))
+        const SKELETON_ITEMS = filteredAssets.value.length > 1 ? 5 : 1
         
         const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
         const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
@@ -66,8 +92,19 @@ export default defineComponent({
         const currentAssetPrice = (asset: Asset) => formatValue(convertCurrency((asset.current_price * (ownedVolume(asset.symbol, portfolio.value) as number)), baseCurrencyRate.value, currencyRate.value), 6)
 
         const { PRIVACY_MASK, isPrivacyModeActive } = usePrivacyMode()
+
+        const selectedAsset = ref(props.selectedAssetSymbol)
+
+        const selectAsset = (assetSymbol: string) => {
+            if (props.routableAssets) {
+                router.push(`/tabs/asset/${assetSymbol}${props.allowHistory ? '/history' : ''}`)
+            } else {
+                selectedAsset.value = assetSymbol
+                emit('selectedAsset', selectedAsset.value)
+            }
+        }
         
-        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, router, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency, displayOnlySignificatDigits, baseCurrencyRate, currentAssetPrice, formatValue, PRIVACY_MASK, isPrivacyModeActive }
+        return { isLoading, SKELETON_ITEMS, preferredCurrency, formatChange, portfolio, ownedVolume, filteredAssets, currencyRate, convertCurrency, displayOnlySignificatDigits, baseCurrencyRate, currentAssetPrice, formatValue, PRIVACY_MASK, isPrivacyModeActive, selectAsset, selectedAsset }
     },
 })
 </script>
@@ -89,13 +126,17 @@ export default defineComponent({
     @apply flex items-center justify-between my-3 cursor-pointer;
 }
 
-
 .assetsList__item:first-of-type {
     @apply mt-0;
 }
 
 .assetsList__item:last-of-type {
     @apply mb-0;
+}
+
+.assetsList__item.selected {
+    color: var(--ion-color-primary);
+    @apply rounded-md;
 }
 
 .currency__title {

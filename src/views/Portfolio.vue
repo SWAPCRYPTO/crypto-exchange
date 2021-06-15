@@ -6,18 +6,10 @@
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
-      <section class="portfolio container">
+      <section class="portfolio container md:max-w-screen-md">
         <BalanceHeader />
-        <!-- <div class="graph__container my-4" v-if="portfolioAssets.length > 0">
-          <ChartComponent :symbol="preferredCurrency" :data="transactionsData" :currency="preferredCurrency" :displayAllLabels="false" />
-          <div class="time__options w-full flex justify-between mt-4">
-            <ion-chip @click="changeActiveTimeOption(option)" v-model="activeTimeOption" v-for="option in Object.keys(timeOptions)" :key="option" :class="{ active: option == activeTimeOption }">
-              <ion-label class="uppercase">{{ option }}</ion-label>
-            </ion-chip>
-          </div>
-        </div> -->
         <section class="portfolio__container" v-if="portfolioAssets.length > 0">
-          <AssetsList :assets="portfolioAssets" :walletMode="true" />
+          <AssetsList :assets="portfolioAssets" :walletMode="true" routableAssets />
           <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">
             <ion-spinner v-if="isEstimationLoading" />
             <ion-label v-else>Estimate portfolio value</ion-label>

@@ -41,7 +41,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, Ref } from 'vue'
+import { computed, defineComponent, PropType, Ref, watch } from 'vue'
 import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonSkeletonText } from '@ionic/vue'
 import { useStore } from 'vuex'
 import { displayOnlySignificatDigits } from '@/services/FormatValue'
@@ -54,7 +54,20 @@ import usePrivacyMode from '@/hooks/usePrivacyMode'
 export default defineComponent({
     name: 'EstimationPortfolioModal',
     components: { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonSkeletonText },
-    props: ['title', 'assetsSummary', 'percentageOfPortfolio'],
+    props: {
+      title: {
+        type: String,
+        required: true
+      },
+      assetsSummary: {
+        type: Array as PropType<AssetSummary[]>,
+        required: true
+      },
+      percentageOfPortfolio: {
+        type: Number,
+        required: true
+      }
+    },
     emits: ['onDismiss'],
     setup(props, { emit }) {
         const dismiss = () => {

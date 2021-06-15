@@ -1,7 +1,10 @@
 import router from '@/router'
+import { convertCurrency } from '@/services/ConvertCurrency'
 import { openToast } from '@/services/OpenToast'
+import Big from 'big.js'
 import { useRouter } from 'vue-router'
 import firebase from '../../../firebase'
+import Asset from '../assets/models/Asset'
 import User from './models/User'
 import UserAccount, { PortfolioItem } from './models/UserAccount'
 import UserSettings from './models/UserSettings'
@@ -338,7 +341,8 @@ const actions = {
             const assetExists = portfolio.find((asset) => asset.symbol === payload.symbol)
 
             if (assetExists) {
-                assetExists.quantity += payload.quantity
+                // assetExists.quantity += payload.quantity
+                assetExists.quantity = Big(assetExists.quantity).plus(payload.quantity).toNumber()
                 assetExists.transactions.push(...payload.transactions)
             } else {
                 portfolio.push(payload)
@@ -358,8 +362,73 @@ const actions = {
             commit('setLoading', true)
             commit('clearError')
             let portfolio = user.account.portfolio
-            console.log(portfolio)
             portfolio = portfolio.filter((asset) => asset.symbol !== symbol)
+
+            await dispatch('updateUserAccount', { ...user.account, portfolio })
+            commit('setLoading', false)
+        }
+    },
+    async convertAsset(
+        {
+            dispatch,
+            commit,
+            state,
+            rootGetters,
+        }: { dispatch: any; commit: Function; state: AuthState; rootGetters: any },
+        payload: { currentAssetSymbol: string; conversionAsset: PortfolioItem }
+    ) {
+        const { user } = state
+        const { currentAssetSymbol, conversionAsset } = payload
+        if (user) {
+            commit('setLoading', true)
+            commit('clearError')
+
+            let portfolio = user.account.portfolio
+            const currentAsset = portfolio.find((asset) => asset.symbol === currentAssetSymbol)
+            const currentAssetPrice: number = rootGetters.assets.find(
+                (asset: Asset) => asset.symbol == currentAssetSymbol
+            ).current_price
+
+            if (currentAsset) {
+                // conversionAsset.quantity is provided in a currency before conversion (currentAsset)
+                currentAsset.quantity = Big(currentAsset?.quantity).minus(conversionAsset.quantity).toNumber()
+                if (currentAsset.quantity == 0) {
+                    console.log('remove current asset')
+                    portfolio = portfolio.filter((asset) => asset.symbol !== currentAssetSymbol)
+                } else {
+                    // keep the history and add negative transaction
+                    const currentAssetTransaction = {
+                        purchasePrice: currentAssetPrice,
+                        quantity: -conversionAsset.quantity,
+                        transactionDate: firebase.firestore.Timestamp.now(),
+                    }
+
+                    currentAsset.transactions.push(currentAssetTransaction)
+                }
+
+                const conversionAssetPrice: number = rootGetters.assets.find(
+                    (asset: Asset) => asset.symbol == conversionAsset.symbol
+                ).current_price
+
+                const transactionQuantity = +convertCurrency(
+                    conversionAsset.quantity,
+                    currentAssetPrice,
+                    conversionAssetPrice
+                ).toFixed(8)
+
+                // use quantity converted to new currency
+                conversionAsset.quantity = transactionQuantity
+                conversionAsset.transactions[0].quantity = transactionQuantity
+
+                const assetToConvert = portfolio.find((asset) => asset.symbol === conversionAsset.symbol)
+
+                if (assetToConvert) {
+                    assetToConvert.quantity = Big(assetToConvert.quantity).plus(conversionAsset.quantity).toNumber()
+                    assetToConvert.transactions.push(...conversionAsset.transactions)
+                } else {
+                    portfolio.push(conversionAsset)
+                }
+            }
 
             await dispatch('updateUserAccount', { ...user.account, portfolio })
             commit('setLoading', false)

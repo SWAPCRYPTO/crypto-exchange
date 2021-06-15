@@ -9,7 +9,7 @@
         </ion-toolbar>
     </ion-header>
     <ion-content>
-      <section class="prices container">
+      <section class="prices container md:max-w-screen-md">
         <ion-header collapse="condense">
           <ion-toolbar>
             <div class="header__container flex flex-row items-center justify-between">
@@ -19,7 +19,7 @@
                 <h2 class="text-base mt-1" :class="asset.price_change_24h > 0 ? 'text-success' : 'text-error'">{{ preferredCurrency }} {{asset.price_change_24h > 0 ? '+' : ''}}{{ convertCurrency(asset.price_change_24h, baseCurrencyRate, currencyRate).toFixed(4) }} ({{ asset.price_change_percentage_24h.toFixed(2) }}%)</h2>
               </div>
               <div class="icon__wrapper">
-                <ion-icon @click="toggleFavourite" size="large" :icon="isFavourite ? star : starOutline"></ion-icon>
+                <ion-icon class="cursor-pointer" @click="toggleFavourite" size="large" :icon="isFavourite ? star : starOutline"></ion-icon>
               </div>
             </div>
           </ion-toolbar>
@@ -34,12 +34,12 @@
         </div>
         <div class="wallet__container">
           <div class="wallet">
-            <AssetsList :assets="[asset]" :walletMode="true" :allowHistory="true" />
+            <AssetsList :assets="[asset]" :walletMode="true" :allowHistory="true" routableAssets />
             <ion-button @click="presentActionSheet" mode="ios" expand="block" class="text-lg text-white font-bold">Trade</ion-button>
           </div>
         </div>
       </section>
-      <section class="market__stats container">
+      <section class="market__stats container md:max-w-screen-md">
         <h2 class="h2">Market Stats</h2>
         <ion-list class="my-4">
           <ion-item lines="none" v-for="stat in assetStats" :key="stat.value">
@@ -50,30 +50,31 @@
         </ion-list>
       </section>
       <ion-modal
-            :is-open="isActive"
-            css-class="transaction-modal"
-            @didDismiss="setOpen(false)"
-            mode="ios"
-            swipeToClose
-          >
-            <TransactionModal @onDismiss="setOpen(false)" :title="`${chosenTransactionType} ${asset.symbol.toUpperCase()}`" :asset="asset" :transactionType="chosenTransactionType" />
-        </ion-modal>
+          :is-open="isActive"
+          css-class="transaction-modal"
+          @didDismiss="setOpen(false)"
+          mode="ios"
+          swipeToClose
+        >
+          <TransactionModal @onDismiss="setOpen(false)" :title="`${chosenTransactionType} ${asset.symbol.toUpperCase()}`" :asset="asset" :transactionType="chosenTransactionType" />
+      </ion-modal>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, IonChip, IonLabel, IonList, IonItem, actionSheetController, onIonViewWillEnter, toastController } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, IonChip, IonLabel, IonList, IonItem, actionSheetController, onIonViewWillEnter } from '@ionic/vue';
 import AssetsList from "../components/AssetsList.vue"
 import TransactionModal from "../components/TransactionModal.vue"
 import ChartComponent from "../components/charts/ChartComponent.vue"
+import { openToast } from "@/services/OpenToast"
 import { convertCurrency } from '@/services/ConvertCurrency';
 import { formatValue } from '@/services/FormatValue'
 import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 import { computed, ref, Ref } from 'vue';
-import { starOutline, star, addOutline, removeOutline, close, barChartOutline, statsChartOutline, pieChartOutline, trendingUpOutline, trendingDownOutline, sparklesOutline } from 'ionicons/icons'
+import { starOutline, star, addOutline, removeOutline, repeatOutline, close, barChartOutline, statsChartOutline, pieChartOutline, trendingUpOutline, trendingDownOutline, sparklesOutline } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
 
 type TimeOption = '1d' | '1w' | '1m' | '1y'
@@ -127,17 +128,6 @@ export default  {
       const isActive = ref(false);
       const setOpen = (state: boolean) => isActive.value = state;
 
-      const openToast = async () => {
-        const toast = await toastController
-          .create({
-            message: 'You don\'t have this asset.',
-            duration: 2000,
-            position: 'bottom',
-            color: 'primary'
-          })
-          return toast.present();
-      }
-
       const presentActionSheet = async () => {
         const actionSheet = await actionSheetController
         .create({
@@ -161,7 +151,20 @@ export default  {
                 if(currentAsset && currentAsset.quantity > 0) {
                   setOpen(true)
                 } else {
-                  openToast()
+                  openToast('You don\'t have this asset.', 'bottom', 2000, 'primary')
+                }
+              },
+            },
+            {
+              text: `Convert ${asset.value.symbol.toUpperCase()}`,
+              icon: repeatOutline,
+              handler: () => {
+                chosenTransactionType.value = transactionType[2]
+                const currentAsset = user.value.account.portfolio.find(curAsset => curAsset.symbol == asset.value.symbol)
+                if(currentAsset && currentAsset.quantity > 0) {
+                  setOpen(true)
+                } else {
+                  openToast('You don\'t have this asset.', 'bottom', 2000, 'primary')
                 }
               },
             },

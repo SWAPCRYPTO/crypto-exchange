@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
-      <section class="settings container">
+      <section class="settings container md:max-w-screen-md">
         <div class="settings__container">
             <header class="userDetails__container">
                 <ion-header collapse="condense">

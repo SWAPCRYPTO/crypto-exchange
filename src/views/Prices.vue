@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
-      <section class="prices container">
+      <section class="prices container md:max-w-screen-md">
         <ion-header class="bg-transparent" collapse="condense">
           <ion-toolbar>
             <div class="header__container flex flex-col lg:flex-row items-start justify-between">
@@ -38,7 +38,7 @@
             </div>
           </ion-toolbar>
         </ion-header>
-        <AssetsList :assets="sortedAssets" :searchQuery="searchQuery" :allowHistory="false" />
+        <AssetsList :assets="sortedAssets" :searchQuery="searchQuery" :walletMode="false" :allowHistory="false" routableAssets />
       </section>
     </ion-content>
   </ion-page>
