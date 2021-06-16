@@ -47,12 +47,12 @@
 <script lang="ts">
 import Asset from '@/store/modules/assets/models/Asset';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonSkeletonText, IonChip, IonLabel, IonIcon, actionSheetController } from '@ionic/vue';
-import { computed, defineComponent, ref, Ref, watch } from "vue"
+import { computed, ComputedRef, defineComponent, ref, Ref, watch } from "vue"
 import { useStore } from "vuex"
 import AssetsList from "../components/AssetsList.vue"
 import { arrowDownOutline, arrowUpOutline, statsChartOutline, rocketOutline, ribbonOutline, cashOutline, repeatOutline, close } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
-import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
+import useCurrency from '@/hooks/useCurrency';
 
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
@@ -62,14 +62,12 @@ export default defineComponent({
     components: { AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonSearchbar, IonSkeletonText, IonChip, IonLabel, IonIcon },
     setup() {
         const store = useStore()
-        const isLoading = computed(() => store.getters.isLoading)
+        const isLoading: ComputedRef<boolean> = computed(() => store.getters.isLoading)
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
         const sortedAssets: Ref<Asset[]> = ref(assets.value)
         const user: Ref<User> = computed(() => store.getters.user)
-        const preferredCurrency = computed(() => store.getters.preferredCurrency)
-        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        // const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
-        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+
+        const { preferredCurrency, currencies, baseCurrencyRate } = useCurrency()
         const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency })
 
         const marketChangePercentage = ref(assets.value.reduce((acc, elem) => acc + elem.market_cap_change_percentage_24h, 0) / assets.value.length)
@@ -93,7 +91,6 @@ export default defineComponent({
         })
 
         const sortBy = (sortingCategory: string, sortingKey: string, reverseSorting: boolean, absoluteValues: boolean) => {
-            console.log(sortingCategory)
             activeSorting.value = sortingCategory
             sortedAssets.value = sortAscending.value && !reverseSorting ? sortAssets(assets.value.slice(), sortingKey, absoluteValues) : sortAssets(assets.value.slice(), sortingKey, absoluteValues).reverse()
             sortAscending.value = !sortAscending.value

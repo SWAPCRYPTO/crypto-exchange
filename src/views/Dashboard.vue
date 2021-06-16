@@ -24,21 +24,21 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, Ref } from "vue"
+import { computed, defineComponent, Ref } from 'vue'
 import { useRouter } from 'vue-router';
-import { useStore } from "vuex"
+import { useStore } from 'vuex'
 
 import BalanceHeader from '@/components/BalanceHeader.vue'
-import AssetsList from "../components/AssetsList.vue"
-import Asset from '@/store/modules/assets/models/Asset';
-import User from '@/store/modules/auth/models/User';
+import AssetsList from '../components/AssetsList.vue'
+import Asset from '@/store/modules/assets/models/Asset'
+import User from '@/store/modules/auth/models/User'
 import { convertCurrency } from "@/services/ConvertCurrency"
 import { formatValue } from "@/services/FormatValue"
-import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
-import { BASE_CURRENCY } from '@/store/modules/assets/assetsHandler';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
-import useBalance from "@/hooks/useBalance";
-import usePrivacyMode from "@/hooks/usePrivacyMode";
+import { BASE_CURRENCY } from '@/store/modules/assets/assetsHandler'
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue'
+import useBalance from "@/hooks/useBalance"
+import usePrivacyMode from "@/hooks/usePrivacyMode"
+import useCurrency from "@/hooks/useCurrency"
 
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
@@ -55,10 +55,8 @@ export default defineComponent({
         const router = useRouter()
         const isLoading: Ref<boolean> = computed(() => store.getters.isLoading)
         const user: Ref<User> = computed(() => store.getters.user)
-        const preferredCurrency = computed(() => user.value.account.preferredCurrency)
-        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
-        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+
+        const { preferredCurrency, currencies, currencyRate, baseCurrencyRate } = useCurrency() 
 
         const assets: Ref<Asset[]> = computed(() => store.getters.assets)
         const fetchData = (forceUpdate: boolean) => store.dispatch('fetchAssets', forceUpdate)
@@ -86,15 +84,16 @@ export default defineComponent({
           }
         })
 
-
         const balance = useBalance()
         
-        const watchedAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.watchedAssets?.includes(asset.symbol)))
-        const sortedAssets: Ref<Asset[]> = computed(() => sortAssets(assets.value.slice(), "price_change_percentage_24h_in_currency", false))
+        const PRICE_CHANGE_PERCENTAGE_KEY = "price_change_percentage_24h_in_currency"
         const NUMBER_OF_TOP_MOVING_ASSETS = 5
+
+        const watchedAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.watchedAssets?.includes(asset.symbol)))
+        const sortedAssets: Ref<Asset[]> = computed(() => sortAssets(assets.value.slice(), PRICE_CHANGE_PERCENTAGE_KEY, false))
+
         const topMovingAssets = computed(() => findTopMovers(sortedAssets.value, NUMBER_OF_TOP_MOVING_ASSETS))
-        
-        const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets.value, "price_change_percentage_24h_in_currency", true).reverse())
+        const topMovers: Ref<Asset[]> = computed(() => sortAssets(topMovingAssets.value, PRICE_CHANGE_PERCENTAGE_KEY, true).reverse())
 
         const { PRIVACY_MASK, isPrivacyModeActive } = usePrivacyMode()
 

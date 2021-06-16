@@ -41,15 +41,15 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, PropType, Ref, watch } from 'vue'
+import { computed, defineComponent, PropType } from 'vue'
 import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonSkeletonText } from '@ionic/vue'
 import { useStore } from 'vuex'
 import { displayOnlySignificatDigits } from '@/services/FormatValue'
 import { ArbitrageDetails } from '@/store/modules/assets/models/estimation/ArbitrageDetails'
-import AssetSummary from '@/store/modules/assets/models/estimation/AssetSummary'
-import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
 import { convertCurrency } from '@/services/ConvertCurrency';
+import AssetSummary from '@/store/modules/assets/models/estimation/AssetSummary'
 import usePrivacyMode from '@/hooks/usePrivacyMode'
+import useCurrency from '@/hooks/useCurrency'
 
 export default defineComponent({
     name: 'EstimationPortfolioModal',
@@ -74,10 +74,7 @@ export default defineComponent({
             emit('onDismiss', false)
         }        
         const store = useStore()
-        const preferredCurrency = computed(() => store.getters.preferredCurrency)
-        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
-        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+        const { preferredCurrency, currencyRate, baseCurrencyRate } = useCurrency()
         const isEstimationLoading = computed(() => store.getters.isEstimationLoading)
         const SKELETON_ITEMS = 4
 
@@ -119,14 +116,10 @@ table {
 }
 
 th, td {
-  min-width: 16rem; /* Forcing the width */
+  min-width: 16rem;
   border-right: solid 2px transparent;
   border-right: solid 2px transparent;
 }
-
-/* tr td:last-of-type {
-  min-width: 24rem;
-} */
 
 th:last-child,
 td:last-child {

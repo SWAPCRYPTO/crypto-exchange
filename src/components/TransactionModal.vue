@@ -111,12 +111,11 @@
 </template>
 
 <script lang="ts">
-import { computed, ComputedRef, defineComponent, PropType, reactive, Ref, ref } from 'vue'
+import { computed, ComputedRef, defineComponent, PropType, reactive, ref } from 'vue'
 import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonInput, IonLabel, IonItem, IonList, IonSpinner, IonIcon, IonModal } from '@ionic/vue'
 import { useStore } from 'vuex'
 import { displayOnlySignificatDigits, formatValue } from '@/services/FormatValue'
 import { PortfolioItem } from '@/store/modules/auth/models/UserAccount'
-import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
 import { convertCurrency } from '@/services/ConvertCurrency'
 import { openToast } from '@/services/OpenToast'
 import { arrowForwardOutline } from 'ionicons/icons'
@@ -125,6 +124,7 @@ import Asset from '@/store/modules/assets/models/Asset'
 import firebase from 'firebase'
 import useVuelidate from '@vuelidate/core'
 import { between } from '@vuelidate/validators'
+import useCurrency from '@/hooks/useCurrency'
 
 export default defineComponent({
     name: 'TransactionModal',
@@ -146,22 +146,19 @@ export default defineComponent({
     emits: ['onDismiss'],
     setup(props, { emit }) {        
         const store = useStore()
-        const preferredCurrency = computed(() => store.getters.preferredCurrency)
-        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
-        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
-        const isLoading = computed(() => store.getters.isLoading)
+        const isLoading: ComputedRef<boolean> = computed(() => store.getters.isLoading)
         const userPortfolio = computed(() => store.getters.userPortfolio)
+        const { preferredCurrency, currencyRate, baseCurrencyRate } = useCurrency()
 
         const assets = computed(() => store.getters.assets)
         const chosenAsset = ref(props.asset.symbol === assets.value[0].symbol ? assets.value[1].symbol : assets.value[0].symbol)
         const conversionAsset: ComputedRef<Asset> = computed(() => assets.value.find((asset: Asset) => asset.symbol == chosenAsset.value))
 
         const provideCustomPurchasePrice = false
+        const TRANSACTION_FEE = props.transactionType === 'Convert' ? 0 : 2.99
         const portfolioAsset = computed(() => userPortfolio.value.find((asset: PortfolioItem) => asset.symbol == props.asset.symbol.toLowerCase()))
         const customPurchasePrice = ref(props.transactionType === 'Convert' ? conversionAsset.value.current_price : props.asset.current_price)
         const providedQuantity = ref(props.transactionType === 'Sell' ? convertCurrency(portfolioAsset.value.quantity * +customPurchasePrice.value, baseCurrencyRate.value, currencyRate.value): 0)
-        const TRANSACTION_FEE = props.transactionType === 'Convert' ? 0 : 2.99
         const transactionFee = computed(() => +convertCurrency(TRANSACTION_FEE, baseCurrencyRate.value, currencyRate.value).toFixed(2))
         const purchasePrice = computed(() => providedQuantity.value - transactionFee.value < 0 ? 0 : providedQuantity.value - transactionFee.value)
         const assetQuantity = computed(() => { 

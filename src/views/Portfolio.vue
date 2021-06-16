@@ -36,21 +36,21 @@
 
 <script lang="ts">
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonLabel, IonButton, IonSpinner, IonModal, alertController } from "@ionic/vue";
-import { computed, ref, Ref, watch } from 'vue';
+import { computed, ComputedRef, ref, Ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import BalanceHeader from '@/components/BalanceHeader.vue'
 import AssetsList from "@/components/AssetsList.vue"
+import EstimationPortfolioModal from '@/components/EstimationPortfolioModal.vue';
 import User from '@/store/modules/auth/models/User';
 import Asset from '@/store/modules/assets/models/Asset';
 import { convertCurrency } from '@/services/ConvertCurrency';
 import { formatValue } from '@/services/FormatValue';
-import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
-import EstimationPortfolioModal from '@/components/EstimationPortfolioModal.vue';
 import { useRouter } from 'vue-router';
 import { PortfolioItem, Transaction } from '@/store/modules/auth/models/UserAccount';
-import useBalance from '@/hooks/useBalance';
 import { LOCALE } from '@/store/modules/assets/constants';
 import usePrivacyMode from '@/hooks/usePrivacyMode';
+import useCurrency from '@/hooks/useCurrency';
+import useBalance from '@/hooks/useBalance';
 
 const collectPurchasesData = (portfolio: PortfolioItem[]): number[] => {
   const transactions: Transaction[] = []
@@ -59,8 +59,7 @@ const collectPurchasesData = (portfolio: PortfolioItem[]): number[] => {
   }
 
   transactions.sort((a, b) => a.transactionDate.seconds - b.transactionDate.seconds)
-  // wynik jest inny niz balance bo ten wynik nie bierze pod uwage aktualnej ceny kazdego zasobu,
-  // a przdstawiane sa dane jakie kwoty byly w momencie kupowania
+  // the result is different that portfolio balance as it is based on the purchase values, not current asset valeus
   const getDatesBetweenDates = (startDate: Date, endDate: Date, transactions: Transaction[]) => {
     const timeBetween = endDate.getTime() - startDate.getTime()
     const daysBetween = Math.ceil(timeBetween / (1000 * 3600 * 24))
@@ -121,18 +120,15 @@ export default  {
   setup() {
       const store = useStore()
       const router = useRouter()
-      const isLoading = computed(() => store.getters.isLoading)
-      const isEstimationLoading = computed(() => store.getters.isEstimationLoading)
+      const isLoading: ComputedRef<boolean> = computed(() => store.getters.isLoading)
+      const isEstimationLoading: ComputedRef<boolean> = computed(() => store.getters.isEstimationLoading)
       const user: Ref<User> = computed(() => store.getters.user)
-      const preferredCurrency = computed(() => user.value.account.preferredCurrency)
+      
+      const { preferredCurrency, currencies, currencyRate, baseCurrencyRate } = useCurrency()
       const assets: Ref<Asset[]> = computed(() => store.getters.assets)
       const portfolioAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.portfolio.map(portfolioItem => portfolioItem.symbol).includes(asset.symbol)))
-      const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-      const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
-      const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
 
       const balance = useBalance()
-
       const estimatePortfolio = (percentageOfPortfolio: number, checkArbitrage: boolean) => store.dispatch('estimatePortfolioValue', { portfolio: user.value.account.portfolio, percentageOfPortfolio, checkArbitrage })
      
       const isActive = ref(false);
@@ -216,7 +212,6 @@ export default  {
       }
 
       const assetsSummary = computed(() => store.getters.assetsSummary)
-
       const transactionsData = ref(collectPurchasesData(user.value.account.portfolio))
 
       watch(portfolioAssets, () => {

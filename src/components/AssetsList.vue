@@ -30,11 +30,11 @@
 </template>
 
 <script lang="ts">
+import useCurrency from "@/hooks/useCurrency"
 import usePrivacyMode from "@/hooks/usePrivacyMode"
 import { convertCurrency } from "@/services/ConvertCurrency"
 import { displayOnlySignificatDigits, formatValue } from "@/services/FormatValue"
 import Asset from "@/store/modules/assets/models/Asset"
-import { Currencies } from "@/store/modules/assets/models/NBPCurrency"
 import { PortfolioItem } from "@/store/modules/auth/models/UserAccount"
 import { IonSkeletonText } from '@ionic/vue';
 import { computed, defineComponent, PropType, ref, Ref } from "vue"
@@ -75,8 +75,8 @@ export default defineComponent({
         const store = useStore()
         const router = useRouter()
         const isLoading = computed(() => store.getters.isLoading)
-        const preferredCurrency = computed(() => store.getters.user.account.preferredCurrency)
-        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+        const { preferredCurrency, currencyRate, baseCurrencyRate } = useCurrency()
+
         const portfolio = computed(() => store.getters.user.account.portfolio)
         const formatChange = (value: number) => (value > 0 ? '+' : '') + value.toFixed(2)
 
@@ -85,9 +85,6 @@ export default defineComponent({
         
         const filteredAssets: Ref<Asset[]> = computed(() => props.assets.filter(asset => asset.symbol.toLowerCase().indexOf(searchQuery.value) > -1 || asset.name.toLowerCase().indexOf(searchQuery.value) > -1))
         const SKELETON_ITEMS = filteredAssets.value.length > 1 ? 5 : 1
-        
-        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
 
         const currentAssetPrice = (asset: Asset) => formatValue(convertCurrency((asset.current_price * (ownedVolume(asset.symbol, portfolio.value) as number)), baseCurrencyRate.value, currencyRate.value), 6)
 

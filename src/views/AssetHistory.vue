@@ -5,8 +5,7 @@
             <ion-buttons slot="start">
                 <ion-back-button default-href="/tabs" text=""></ion-back-button>
             </ion-buttons>
-            <!-- <ion-title>{{ preferredCurrency }} {{ formatValue(convertCurrency(balance, baseCurrencyRate, currencyRate), 2) }}</ion-title> -->
-            <!-- // ilosc zasobu -->
+            <ion-title>{{ isPrivacyModeActive ? PRIVACY_MASK : portfolioAsset ? portfolioAsset.quantity : 0 }} <span class="uppercase">{{ isPrivacyModeActive ? '' : asset.symbol }}</span></ion-title>
         </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -45,32 +44,28 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, Ref } from 'vue'
+import { computed, ComputedRef, defineComponent, ref, Ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import { convertCurrency } from '@/services/ConvertCurrency';
 import { formatValue } from '@/services/FormatValue'
-import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
 import { PortfolioItem } from '@/store/modules/auth/models/UserAccount'
 import Asset from '@/store/modules/assets/models/Asset'
 
-import { IonBackButton, IonButtons, IonToolbar, IonHeader, IonContent, IonPage } from '@ionic/vue'
-import usePrivacyMode from '@/hooks/usePrivacyMode';
+import { IonBackButton, IonButtons, IonToolbar, IonHeader, IonTitle, IonContent, IonPage } from '@ionic/vue'
+import useCurrency from '@/hooks/useCurrency'
+import usePrivacyMode from '@/hooks/usePrivacyMode'
 
 export default defineComponent({
     name: 'AssetHistory',
-    components: { IonBackButton, IonButtons, IonToolbar, IonHeader, IonContent, IonPage },
+    components: { IonBackButton, IonButtons, IonToolbar, IonHeader, IonTitle, IonContent, IonPage },
     setup() {
         const store = useStore()
         const route = useRoute()
-        const preferredCurrency = computed(() => store.getters.user.account.preferredCurrency)
-        const portfolio = computed(() => store.getters.user.account.portfolio)
+        const { preferredCurrency, currencyRate, baseCurrencyRate } = useCurrency()
+        const portfolio: ComputedRef<PortfolioItem[]> = computed(() => store.getters.user.account.portfolio)
         const asset: Ref<Asset> = ref(store.getters.asset(route.params.symbol))
-        const portfolioAsset = computed(() => portfolio.value.find((portfolioItem: PortfolioItem) => portfolioItem.symbol == asset.value.symbol))
-        
-        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
-        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
+        const portfolioAsset = computed(() => portfolio.value.find(portfolioItem => portfolioItem.symbol == asset.value.symbol))
 
         const { PRIVACY_MASK, isPrivacyModeActive } = usePrivacyMode()
 

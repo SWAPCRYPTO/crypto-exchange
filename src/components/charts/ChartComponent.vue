@@ -5,13 +5,12 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, onUnmounted, Ref, ref, watch } from 'vue'
+import { defineComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import Vue3ChartJs from "@j-t-mcc/vue3-chartjs"
 import dataLabels from "chartjs-plugin-datalabels"
-import { useStore } from 'vuex'
 import { formatValue } from '@/services/FormatValue'
 import { convertCurrency } from '@/services/ConvertCurrency'
-import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
+import useCurrency from '@/hooks/useCurrency'
 
 export default defineComponent({
     name: "ChartComponent",
@@ -37,11 +36,7 @@ export default defineComponent({
       }
     },
     setup(props) {
-      const store = useStore()
-      const preferredCurrency = computed(() => store.getters.preferredCurrency)
-      const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-      const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
-      const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+      const { preferredCurrency, currencyRate, baseCurrencyRate } = useCurrency()
       
       const primaryColor = ref(window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-primary'))
       const textColor = ref(window.getComputedStyle(document.documentElement).getPropertyValue('--ion-color-light'))
@@ -117,10 +112,6 @@ export default defineComponent({
           responsive: true
         },
       });
-
-      watch(primaryColor, (newO, old) => {
-        console.log(newO, old)
-      })
 
       watch(() => props.data, newData => {
         dataSet.value = Object.values(newData)

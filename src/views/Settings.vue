@@ -35,7 +35,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, Ref } from 'vue';
+import { computed, ComputedRef, defineComponent, Ref } from 'vue';
 import { IonPage, IonContent, IonIcon, IonHeader, IonToolbar, IonToggle, IonTitle } from '@ionic/vue';
 import { useStore } from 'vuex';
 import User from '@/store/modules/auth/models/User';
@@ -56,7 +56,7 @@ export default defineComponent({
     components: { IonPage, IonContent, IonIcon, IonHeader, IonToolbar, IonToggle, IonTitle },
     setup() {
         const store = useStore()
-        const isLoading = computed(() => store.getters.isLoading)
+        const isLoading: ComputedRef<boolean> = computed(() => store.getters.isLoading)
         const user: Ref<User> = computed(() => store.getters.user)
         const optionsList: Option[] = [
             {

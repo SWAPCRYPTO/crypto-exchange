@@ -64,18 +64,18 @@
 
 <script lang="ts">
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonModal, IonIcon, IonButton, IonChip, IonLabel, IonList, IonItem, actionSheetController, onIonViewWillEnter } from '@ionic/vue';
-import AssetsList from "../components/AssetsList.vue"
-import TransactionModal from "../components/TransactionModal.vue"
-import ChartComponent from "../components/charts/ChartComponent.vue"
-import { openToast } from "@/services/OpenToast"
-import { convertCurrency } from '@/services/ConvertCurrency';
+import AssetsList from '../components/AssetsList.vue'
+import TransactionModal from '../components/TransactionModal.vue'
+import ChartComponent from '../components/charts/ChartComponent.vue'
+import { openToast } from '@/services/OpenToast'
+import { convertCurrency } from '@/services/ConvertCurrency'
 import { formatValue } from '@/services/FormatValue'
-import { Currencies } from '@/store/modules/assets/models/NBPCurrency';
-import { useStore } from 'vuex';
-import { useRoute } from 'vue-router';
-import { computed, ref, Ref } from 'vue';
+import { useStore } from 'vuex'
+import { useRoute } from 'vue-router'
+import { computed, ComputedRef, ref, Ref } from 'vue'
 import { starOutline, star, addOutline, removeOutline, repeatOutline, close, barChartOutline, statsChartOutline, pieChartOutline, trendingUpOutline, trendingDownOutline, sparklesOutline } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
+import useCurrency from '@/hooks/useCurrency';
 
 type TimeOption = '1d' | '1w' | '1m' | '1y'
 
@@ -93,13 +93,10 @@ export default  {
       const store = useStore()
       const route = useRoute()
 
-      const watchedAssets = computed(() => store.getters.watchedAssets)
-      const preferredCurrency = computed(() => store.getters.preferredCurrency)
-      const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-      const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
-      const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+      const { preferredCurrency, currencyRate, baseCurrencyRate } = useCurrency()
+      const watchedAssets: ComputedRef<string[]> = computed(() => store.getters.watchedAssets)
+      const isFavourite: ComputedRef<boolean> = computed(() => watchedAssets.value.includes(route.params.symbol as string))
       const asset = ref(store.getters.asset(route.params.symbol))
-      const isFavourite = computed(() => watchedAssets.value.includes(route.params.symbol))
       const user: Ref<User> = computed(() => store.getters.user)
 
       // components are preserved so as not to reload them
@@ -112,12 +109,12 @@ export default  {
       })
 
       const toggleFavourite = () => {
-        const isWatched = watchedAssets.value.includes(route.params.symbol)
-        let filteredAssets = []
+        const isWatched: boolean = watchedAssets.value.includes(route.params.symbol as string)
+        let filteredAssets: string[] = []
         if(isWatched) { 
           filteredAssets = watchedAssets.value.filter((asset: string) => asset != route.params.symbol)
         } else {
-          watchedAssets.value.push(route.params.symbol)
+          watchedAssets.value.push(route.params.symbol as string)
           filteredAssets = watchedAssets.value
         }
         store.dispatch('updateUserAccount', { ...user.value.account, watchedAssets: filteredAssets })
@@ -125,7 +122,7 @@ export default  {
 
       const transactionType = ['Buy', 'Sell', 'Convert']
       const chosenTransactionType = ref(transactionType[0])
-      const isActive = ref(false);
+      const isActive = ref(false)
       const setOpen = (state: boolean) => isActive.value = state;
 
       const presentActionSheet = async () => {

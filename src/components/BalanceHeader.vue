@@ -11,14 +11,14 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, Ref } from 'vue'
+import { computed, ComputedRef, defineComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { convertCurrency } from "@/services/ConvertCurrency"
 import { formatValue } from "@/services/FormatValue"
-import { Currencies } from '@/store/modules/assets/models/NBPCurrency'
 import { IonHeader, IonToolbar, IonSkeletonText } from '@ionic/vue'
 
+import useCurrency from '@/hooks/useCurrency'
 import useBalance from '@/hooks/useBalance'
 import usePrivacyMode from '@/hooks/usePrivacyMode'
 import { Haptics } from '@capacitor/haptics'
@@ -28,11 +28,8 @@ export default defineComponent({
     setup() {
         const store = useStore()
         const router = useRouter()
-        const isLoading: Ref<boolean> = computed(() => store.getters.isLoading)
-        const preferredCurrency = computed(() => store.getters.preferredCurrency)
-        const currencies: Ref<Currencies> = computed(() => store.getters.currencies)
-        const currencyRate = computed(() => preferredCurrency.value in currencies.value ? currencies.value[preferredCurrency.value] : 1)
-        const baseCurrencyRate = computed(() => store.getters.baseCurrencyRate)
+        const isLoading: ComputedRef<boolean> = computed(() => store.getters.isLoading)
+        const { preferredCurrency, currencyRate, baseCurrencyRate } = useCurrency()
 
         const balance = useBalance()
         const { PRIVACY_MASK, isPrivacyModeActive, handlePrivacyMode } = usePrivacyMode()
