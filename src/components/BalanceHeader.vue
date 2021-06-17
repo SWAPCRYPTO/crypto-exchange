@@ -21,7 +21,7 @@ import { IonHeader, IonToolbar, IonSkeletonText } from '@ionic/vue'
 import useCurrency from '@/hooks/useCurrency'
 import useBalance from '@/hooks/useBalance'
 import usePrivacyMode from '@/hooks/usePrivacyMode'
-import { Haptics } from '@capacitor/haptics'
+import { Haptics, ImpactStyle } from '@capacitor/haptics'
 
 export default defineComponent({
     components: { IonHeader, IonToolbar, IonSkeletonText },
@@ -34,13 +34,13 @@ export default defineComponent({
         const balance = useBalance()
         const { PRIVACY_MASK, isPrivacyModeActive, handlePrivacyMode } = usePrivacyMode()
 
-        const hapticsVibrate = async () => {
-            await Haptics.vibrate()
-        }
+        const hapticsImpactLight = async () => {
+            await Haptics.impact({ style: ImpactStyle.Light });
+        };
 
         const handleLongPress = () => {
             handlePrivacyMode()
-            hapticsVibrate()
+            hapticsImpactLight()
         }
 
         return { isLoading, preferredCurrency, router, formatValue, convertCurrency, currencyRate, baseCurrencyRate, balance, PRIVACY_MASK, isPrivacyModeActive, handleLongPress }

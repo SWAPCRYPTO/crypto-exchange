@@ -30,16 +30,16 @@
 </template>
 
 <script lang="ts">
+import { useStore } from "vuex"
+import { useRouter } from "vue-router"
 import useCurrency from "@/hooks/useCurrency"
 import usePrivacyMode from "@/hooks/usePrivacyMode"
 import { convertCurrency } from "@/services/ConvertCurrency"
 import { displayOnlySignificatDigits, formatValue } from "@/services/FormatValue"
-import Asset from "@/store/modules/assets/models/Asset"
 import { PortfolioItem } from "@/store/modules/auth/models/UserAccount"
 import { IonSkeletonText } from '@ionic/vue';
 import { computed, defineComponent, PropType, ref, Ref } from "vue"
-import { useRouter } from "vue-router"
-import { useStore } from "vuex"
+import Asset from "@/store/modules/assets/models/Asset"
 
 export default defineComponent({
     name: "AssetsList",
