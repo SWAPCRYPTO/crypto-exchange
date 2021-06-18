@@ -39,13 +39,13 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue
 import useBalance from "@/hooks/useBalance"
 import usePrivacyMode from "@/hooks/usePrivacyMode"
 import useCurrency from "@/hooks/useCurrency"
+import Currency from '@/store/modules/assets/models/Currency';
 
-const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
-  items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
+const sortAssets = (items: Asset[], key: string, absoluteValues: boolean) => 
+  items.sort((a, b) => absoluteValues ? Math.abs((a as any)[key]) - Math.abs((b as any)[key]) : (a as any)[key] - (b as any)[key])
 
-const findTopMovers = (items: any[], numberOfItems: number) => {
-  return items.slice(0, numberOfItems).concat(items.slice(items.length - numberOfItems, items.length))
-}
+const findTopMovers = <T extends unknown>(items: T[], numberOfItems: number) => 
+  items.slice(0, numberOfItems).concat(items.slice(items.length - numberOfItems, items.length))
 
 export default defineComponent({
     name: "Dashboard",
@@ -71,16 +71,18 @@ export default defineComponent({
         
 
         fetchCurrencies().then(() => {
-          // set bitcoin as a currency
-          const additionalCurrency = 'BTC'
-          const bitcoinCurrency = assets.value.find((asset: Asset) => asset.symbol === additionalCurrency.toLowerCase())
+          const cryptosAsCurrencies = ['BTC', 'ETH']
 
-          if (bitcoinCurrency) {
-              store.commit('addNewCurrency', { currencyName: bitcoinCurrency.symbol.toUpperCase(), currencyRate: bitcoinCurrency.current_price * baseCurrencyRate.value })
-          }
+          for (const currentCurrency of cryptosAsCurrencies) {
+            const foundAsset = assets.value.find((asset: Asset) => asset.symbol === currentCurrency.toLowerCase())
 
-          if (preferredCurrency.value === 'BTC' && !('BTC' in currencies.value)) {
-            updateUserAccount(BASE_CURRENCY)
+            if (foundAsset) {
+              store.commit('addNewCurrency', { currencyName: foundAsset.symbol.toUpperCase(), currencyRate: foundAsset.current_price * baseCurrencyRate.value })
+            }
+
+            if (preferredCurrency.value === currentCurrency && !(currentCurrency in currencies.value)) {
+              updateUserAccount(BASE_CURRENCY)
+            }
           }
         })
 

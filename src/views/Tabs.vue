@@ -12,6 +12,7 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from 'vue'
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage } from '@ionic/vue';
 import { homeOutline, walletOutline, statsChartOutline, settingsOutline } from 'ionicons/icons';
 
@@ -22,7 +23,7 @@ interface Tab {
   path: string
 }
 
-export default {
+export default defineComponent({
   name: 'Tabs',
   components: { IonLabel, IonTabs, IonTabBar, IonTabButton, IonIcon, IonPage },
   setup() {
@@ -55,5 +56,5 @@ export default {
 
     return { tabs }
   }
-}
+})
 </script>

@@ -186,7 +186,7 @@ const actions = {
         commit('setLoading', true)
         const rateTable = 'A'
 
-        const { data } = await axios.get(`${CORS_PREFIX}${NBP_URL}exchangerates/tables/${rateTable}`)
+        const { data } = await axios.get(`${NBP_URL}exchangerates/tables/${rateTable}`)
 
         const currencies: Currencies = {
             PLN: 1,
@@ -195,7 +195,7 @@ const actions = {
         }
 
         data[0]?.rates.forEach((item: ExchangeRate) => {
-            if (AVAILABLE_CURRENCIES.includes(item.code) && item.mid) {
+            if (item.mid) {
                 currencies[item.code] = item.mid
             }
         })

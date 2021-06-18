@@ -52,7 +52,6 @@ interface Option {
 
 export default defineComponent({
     name: "Settings",
-    
     components: { IonPage, IonContent, IonIcon, IonHeader, IonToolbar, IonToggle, IonTitle },
     setup() {
         const store = useStore()
@@ -101,7 +100,6 @@ export default defineComponent({
                 ]
             }
         ]
-        
 
         return { isLoading, user, optionsList }
     }

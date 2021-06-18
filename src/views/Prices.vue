@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header translucent>
       <ion-toolbar mode="ios">
-        <ion-title v-if="!isLoading">Market is {{marketChangeStatus}} <span :class="isMarketUp ? 'text-success' : 'text-error'">{{marketChangePercentageText}}</span></ion-title>
+        <ion-title v-if="!isLoading">Market is {{ marketChangeStatus }} <span :class="isMarketUp ? 'text-success' : 'text-error'">{{ marketChangePercentageText }}</span></ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
@@ -12,7 +12,7 @@
             <div class="header__container flex flex-col lg:flex-row items-start justify-between">
               <div class="header__details flex flex-col" v-if="!isLoading">
                 <p class="font-medium mb-2">In the past 24 hours</p>
-                <h1 class="h1 balance">Market is {{marketChangeStatus}} <span class="text-2xl md:text-3xl" :class="isMarketUp ? 'text-success' : 'text-error'">{{marketChangePercentageText}}</span></h1>
+                <h1 class="h1 balance">Market is {{ marketChangeStatus  }} <span class="text-2xl md:text-3xl" :class="isMarketUp ? 'text-success' : 'text-error'">{{ marketChangePercentageText }}</span></h1>
               </div>
               <div class="header__details flex flex-col w-full" v-else>
                 <p class="font-medium mb-2">In the past 24 hours</p>
@@ -45,14 +45,26 @@
 </template>
 
 <script lang="ts">
-import Asset from '@/store/modules/assets/models/Asset';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonSkeletonText, IonChip, IonLabel, IonIcon, actionSheetController } from '@ionic/vue';
 import { computed, ComputedRef, defineComponent, ref, Ref, watch } from "vue"
 import { useStore } from "vuex"
-import AssetsList from "../components/AssetsList.vue"
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonSkeletonText, IonChip, IonLabel, IonIcon, actionSheetController } from '@ionic/vue';
 import { arrowDownOutline, arrowUpOutline, statsChartOutline, rocketOutline, ribbonOutline, cashOutline, repeatOutline, close } from 'ionicons/icons'
+import AssetsList from "../components/AssetsList.vue"
+import Asset from '@/store/modules/assets/models/Asset';
+import Currency from '@/store/modules/assets/models/Currency';
 import User from '@/store/modules/auth/models/User';
 import useCurrency from '@/hooks/useCurrency';
+
+interface SortOption {
+  title: string
+  icon: string
+  settings: {
+    sortingCategory: string
+    sortingKey: string
+    reverseSorting: boolean
+    absoluteValues: boolean
+  }
+}
 
 const sortAssets = (items: any[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs(a[key]) - Math.abs(b[key]) : a[key] - b[key])
@@ -96,54 +108,63 @@ export default defineComponent({
             sortAscending.value = !sortAscending.value
         }
 
+        const sortOptions: SortOption[] = [
+          { 
+            title: 'Rank',
+            icon: ribbonOutline,
+            settings: { sortingCategory: 'Rank', sortingKey: 'market_cap_rank', reverseSorting: false, absoluteValues: true }
+          },
+          { 
+            title: 'Change (24h) %',
+            icon: sortAscending.value ? arrowUpOutline : arrowDownOutline,
+            settings: { sortingCategory: 'Change (24h) %', sortingKey: 'price_change_percentage_24h_in_currency', reverseSorting: false, absoluteValues: true }
+          },
+          { 
+            title: 'Market Cap Change (24h)',
+            icon: statsChartOutline,
+            settings: { sortingCategory: 'Market Cap (24h)', sortingKey: 'market_cap_change_24h', reverseSorting: false, absoluteValues: true }
+          },
+          { 
+            title: 'Total Volume',
+            icon: rocketOutline,
+            settings: { sortingCategory: 'Total Volume', sortingKey: 'total_volume', reverseSorting: false, absoluteValues: false }
+          },
+          { 
+            title: 'Circulating Supply',
+            icon: repeatOutline,
+            settings: { sortingCategory: 'Circulating Supply', sortingKey: 'circulating_supply', reverseSorting: false, absoluteValues: false }
+          },
+          { 
+            title: 'Price',
+            icon: cashOutline,
+            settings: { sortingCategory: 'Price', sortingKey: 'current_price', reverseSorting: false, absoluteValues: false }
+          }
+        ]
+
+        const generateSortActionSheetButtons = (sortOptions: SortOption[]) => {
+          const sortButtons = []
+
+          for (const option of sortOptions) {
+            const button = {
+              text: option.title,
+              icon: option.icon,
+              handler: () => {
+                sortBy(option.settings.sortingCategory, option.settings.sortingKey, option.settings.reverseSorting, option.settings.absoluteValues)
+              }
+            }
+            sortButtons.push(button)
+          }
+
+          return sortButtons
+        }
+
         const presentSortActionSheet = async () => {
           const actionSheet = await actionSheetController
           .create({
             header: 'Sort by',
             cssClass: 'sort',
             buttons: [
-              {
-                text: `Rank`,
-                icon: ribbonOutline,
-                handler: () => {
-                  sortBy('Rank', 'market_cap_rank', false, true)
-                },
-              },
-              {
-                text: `Change (24h) %`,
-                icon: sortAscending.value ? arrowUpOutline : arrowDownOutline,
-                handler: () => {
-                  sortBy('Change (24h) %', 'price_change_percentage_24h_in_currency', false, true)
-                },
-              },
-              {
-                text: `Market Cap Change (24h)`,
-                icon: statsChartOutline,
-                handler: () => {
-                  sortBy('Market Cap (24h)', 'market_cap_change_24h', false, true)
-                },
-              },
-              {
-                text: `Total Volume`,
-                icon: rocketOutline,
-                handler: () => {
-                  sortBy('Total Volume', 'total_volume', false, false)
-                },
-              },
-              {
-                text: `Circulating Supply`,
-                icon: repeatOutline,
-                handler: () => {
-                  sortBy('Circulating Supply', 'circulating_supply', false, false)
-                },
-              },
-              {
-                text: `Price`,
-                icon: cashOutline,
-                handler: () => {
-                  sortBy('Price', 'current_price', false, false)
-                },
-              },
+              ...generateSortActionSheetButtons(sortOptions),
               {
                 text: 'Cancel',
                 icon: close,
@@ -154,10 +175,47 @@ export default defineComponent({
               },
             ],
           });
-          await actionSheet.present();
+          await actionSheet.present()
+          await actionSheet.onDidDismiss()
+        }
 
-          // const { role } = 
-          await actionSheet.onDidDismiss();
+        const availableCurrencies: Currency[] = [{ symbol: 'CAD', type: 'currency' }, { symbol: 'USD', type: 'currency' }, { symbol: 'PLN', type: 'currency' }, { symbol: 'EUR', type: 'currency' }, { symbol: 'BTC', type: 'crypto' }, { symbol: 'ETH', type: 'crypto' }]
+
+        const generateActionSheetButtons = (availableCurrencies: Currency[]) => {
+          const buttons = []
+          for (const currency of availableCurrencies) {
+            currency.symbol = currency.symbol.toUpperCase()
+            let button = {}
+
+            if (currency.type == 'currency' && Object.keys(currencies.value).includes(currency.symbol)) {
+              button = {
+                text: currency.symbol,
+                handler: () => {
+                  if(preferredCurrency.value !== currency.symbol)
+                    updateUserAccount(currency.symbol)
+                }
+              }
+            } else if (currency.type == 'crypto') {
+              button = {
+                text: currency.symbol,
+                handler: () => {
+                  if (preferredCurrency.value !== currency.symbol) {
+                    if(!currencies.value[currency.symbol]) {
+                      const foundAsset = assets.value.find((asset: Asset) => asset.symbol === currency.symbol.toLowerCase())
+
+                      if (foundAsset) {
+                        store.commit('addNewCurrency', { currencyName: foundAsset.symbol.toUpperCase(), currencyRate: foundAsset.current_price * baseCurrencyRate.value })
+                      }
+                    }
+                    updateUserAccount(currency.symbol)
+                  }
+                }
+              }
+            }
+            buttons.push(button)
+          }
+
+          return buttons
         }
 
         const presentCurrencyActionSheet = async () => {
@@ -166,43 +224,7 @@ export default defineComponent({
             header: 'Pick preferred currency',
             cssClass: 'currenct',
             buttons: [
-              {
-                text: 'USD',
-                handler: () => {
-                  if(preferredCurrency.value !== 'USD')
-                    updateUserAccount('USD')
-                },
-              },
-              {
-                text: 'PLN',
-                handler: () => {
-                  if(preferredCurrency.value !== 'PLN')
-                    updateUserAccount('PLN')
-                },
-              },
-              {
-                text: 'EUR',
-                handler: () => {
-                  if(preferredCurrency.value !== 'EUR')
-                    updateUserAccount('EUR')
-                },
-              },
-              {
-                text: 'BTC',
-                handler: () => {
-                  if(preferredCurrency.value !== 'BTC') {
-                    if(!currencies.value['BTC']) {
-                      const additionalCurrency = 'BTC'
-                      const bitcoinCurrency = assets.value.find((asset: Asset) => asset.symbol === additionalCurrency.toLowerCase())
-
-                      if (bitcoinCurrency) {
-                          store.commit('addNewCurrency', { currencyName: bitcoinCurrency.symbol.toUpperCase(), currencyRate: bitcoinCurrency.current_price * baseCurrencyRate.value })
-                      }
-                    }
-                    updateUserAccount('BTC')
-                  }          
-                },
-              },
+              ...generateActionSheetButtons(availableCurrencies),
               {
                 text: 'Cancel',
                 icon: close,
@@ -210,10 +232,8 @@ export default defineComponent({
               },
             ],
           });
-          await actionSheet.present();
-
-          // const { role } = 
-          await actionSheet.onDidDismiss();
+          await actionSheet.present()
+          await actionSheet.onDidDismiss()
         }
 
         return { isLoading, assets, sortedAssets, preferredCurrency, marketChangePercentageText, marketChangeStatus, isMarketUp, searchQuery, presentSortActionSheet, close, activeSorting, removeSorting, arrowDownOutline, arrowUpOutline, sortAscending, presentCurrencyActionSheet }

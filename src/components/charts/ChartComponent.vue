@@ -59,7 +59,7 @@ export default defineComponent({
               borderColor: primaryColor.value,
               data: props.data,
               pointRadius: 1
-            },
+            }
           ]
         },
         options: {
