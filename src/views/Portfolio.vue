@@ -10,7 +10,7 @@
         <BalanceHeader />
         <section class="portfolio__container" v-if="portfolioAssets.length > 0">
           <AssetsList :assets="portfolioAssets" :walletMode="true" routableAssets />
-          <ion-button @click="openModal" mode="ios" expand="block" class="text-lg text-white font-bold">
+          <ion-button @click="askForPercentageModal" mode="ios" expand="block" class="text-lg text-white font-bold">
             <ion-spinner v-if="isEstimationLoading" />
             <ion-label v-else>Estimate portfolio value</ion-label>
           </ion-button>
@@ -169,7 +169,7 @@ export default  {
         return alert.present();
       }
 
-      const askForPercentage = async () => {
+      const askForPercentageModal = async () => {
         const alert = await alertController
           .create({
             cssClass: 'my-custom-class',
@@ -180,9 +180,9 @@ export default  {
                 name: 'percentage',
                 type: 'number',
                 placeholder: 'Provide a number (0-100]: ie. 10 (%)',
+                value: percentagePortfolio.value,
                 attributes: {
                   maxlength: 3,
-                  value: 10,
                   min: 0,
                   max: 100,
                   inputmode: 'decimal'
@@ -207,10 +207,6 @@ export default  {
         return alert.present();
       }
 
-      const openModal = () => {
-        askForPercentage()
-      }
-
       const assetsSummary = computed(() => store.getters.assetsSummary)
       const transactionsData = ref(collectPurchasesData(user.value.account.portfolio))
 
@@ -231,7 +227,7 @@ export default  {
 
       const { PRIVACY_MASK, isPrivacyModeActive } = usePrivacyMode()
 
-      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, openModal, setOpen, assetsSummary, formatValue, router, currencyRate, convertCurrency, currencies, baseCurrencyRate, transactionsData, timeOptions, activeTimeOption, changeActiveTimeOption, percentageDecimal, PRIVACY_MASK, isPrivacyModeActive }
+      return { isLoading, isEstimationLoading, user, preferredCurrency, portfolioAssets, balance, isActive, askForPercentageModal, setOpen, assetsSummary, formatValue, router, currencyRate, convertCurrency, currencies, baseCurrencyRate, transactionsData, timeOptions, activeTimeOption, changeActiveTimeOption, percentageDecimal, PRIVACY_MASK, isPrivacyModeActive }
   }
 }
 </script>
