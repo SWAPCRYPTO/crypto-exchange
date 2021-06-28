@@ -31,7 +31,8 @@ export default defineComponent({
     setup() {
         const slideOpts = {
             initialSlide: 0,
-            speed: 400
+            speed: 400,
+            pager: true
         }
 
         return { slideOpts }
