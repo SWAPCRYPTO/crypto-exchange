@@ -60,7 +60,7 @@
             <ion-label class="font-bold text-right uppercase">{{ displayOnlySignificatDigits(convertCurrency(+providedQuantity, asset.current_price, conversionAsset.current_price), 8) }} {{ conversionAsset.symbol }}</ion-label>
           </ion-item>
         </ion-list>
-        <ion-button @click="proceedTransaction" mode="ios" :disabled="isLoading || providedQuantity == 0 || v$.providedQuantity.$invalid" expand="block" class="mt-8 text-lg w-full text-white font-bold">
+        <ion-button @click="proceedTransaction" mode="ios" :disabled="isLoading || providedQuantity == 0 || isQuantityInvalid" expand="block" class="mt-8 text-lg w-full text-white font-bold">
           <ion-spinner v-if="isLoading" />
           <ion-label v-else>{{ transactionType }} now</ion-label>
         </ion-button>
@@ -102,7 +102,7 @@
             <ion-label class="font-bold text-right">{{ displayOnlySignificatDigits(transactionType == 'Buy' ? +providedQuantity : purchasePrice, 8) }} {{ preferredCurrency }}</ion-label>
           </ion-item>
         </ion-list>
-        <ion-button @click="proceedTransaction" mode="ios" :disabled="isLoading || providedQuantity == 0" expand="block" class="mt-8 text-lg w-full text-white font-bold">
+        <ion-button @click="proceedTransaction" mode="ios" :disabled="isLoading || isNegative || isQuantityInvalid" expand="block" class="mt-8 text-lg w-full text-white font-bold">
           <ion-spinner v-if="isLoading" />
           <ion-label v-else>{{ transactionType }} now</ion-label>
         </ion-button>
@@ -169,13 +169,17 @@ export default defineComponent({
           else return purchasePrice.value / convertCurrency(+customPurchasePrice.value, baseCurrencyRate.value, currencyRate.value)
         })
 
+        const MAX_TRANSACTION_VALUE = 10000000
         const rules = computed(() => ({
           providedQuantity: {
-            between: between(0, portfolioAsset.value.quantity)
+            between: between(0, props.transactionType === 'Convert' ? portfolioAsset.value?.quantity : MAX_TRANSACTION_VALUE)
           }
         }))
         const v$ = useVuelidate(rules, reactive({ providedQuantity }))
 
+        const isQuantityInvalid = computed(() => v$.value.providedQuantity.$invalid)
+        const isNegative = computed(() => +(providedQuantity.value as any) <= 0)
+        console.log(isLoading.value, isNegative.value, isQuantityInvalid.value)
         const dismiss = () => {
           emit('onDismiss', false)
         }
@@ -230,7 +234,7 @@ export default defineComponent({
           chosenAsset.value = selectedAsset
         }
 
-        return { dismiss, preferredCurrency, conversionAsset, isLoading, displayOnlySignificatDigits, provideCustomPurchasePrice, customPurchasePrice, providedQuantity, assetQuantity, transactionFee, purchasePrice, proceedTransaction, convertCurrency, formatValue, baseCurrencyRate, currencyRate, arrowForwardOutline, isActive, setOpen, chooseConversionAsset, v$ }
+        return { dismiss, preferredCurrency, conversionAsset, isLoading, displayOnlySignificatDigits, provideCustomPurchasePrice, customPurchasePrice, providedQuantity, assetQuantity, transactionFee, purchasePrice, proceedTransaction, convertCurrency, formatValue, baseCurrencyRate, currencyRate, arrowForwardOutline, isActive, setOpen, chooseConversionAsset, v$, isQuantityInvalid, isNegative, portfolioAsset }
     }
 })
 </script>
