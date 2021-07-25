@@ -70,12 +70,14 @@ import ChartComponent from '../components/charts/ChartComponent.vue'
 import { openToast } from '@/services/OpenToast'
 import { convertCurrency } from '@/services/ConvertCurrency'
 import { formatValue } from '@/services/FormatValue'
-import { useStore } from 'vuex'
+import { useStore } from '@/store'
 import { useRoute } from 'vue-router'
 import { computed, ComputedRef, ref, Ref } from 'vue'
 import { starOutline, star, addOutline, removeOutline, repeatOutline, close, barChartOutline, statsChartOutline, pieChartOutline, trendingUpOutline, trendingDownOutline, sparklesOutline } from 'ionicons/icons'
 import User from '@/store/modules/auth/models/User';
 import useCurrency from '@/hooks/useCurrency';
+import { ActionTypes } from '@/store';
+import Asset from '@/store/modules/assets/models/Asset';
 
 type TimeOption = '1d' | '1w' | '1m' | '1y'
 
@@ -94,17 +96,17 @@ export default  {
       const route = useRoute()
 
       const { preferredCurrency, currencyRate, baseCurrencyRate } = useCurrency()
-      const watchedAssets: ComputedRef<string[]> = computed(() => store.getters.watchedAssets)
+      const watchedAssets = computed(() => store.getters.watchedAssets) as ComputedRef<string[]>
       const isFavourite: ComputedRef<boolean> = computed(() => watchedAssets.value.includes(route.params.symbol as string))
-      const asset = ref(store.getters.asset(route.params.symbol))
-      const user: Ref<User> = computed(() => store.getters.user)
+      const asset = ref(store.getters.asset(route.params.symbol as string)) as Ref<Asset>
+      const user = computed(() => store.getters.user) as ComputedRef<User>
 
       // components are preserved so as not to reload them
       // in case the route changes, component data may not change
       // so if the route symbol doesnt match the asset symbol, reload the asset
       onIonViewWillEnter(() => {
         if(route.params.symbol !== asset.value.symbol) {
-          asset.value = store.getters.asset(route.params.symbol)
+          asset.value = store.getters.asset(route.params.symbol as string) as Asset
         }
       })
 
@@ -117,7 +119,7 @@ export default  {
           watchedAssets.value.push(route.params.symbol as string)
           filteredAssets = watchedAssets.value
         }
-        store.dispatch('updateUserAccount', { ...user.value.account, watchedAssets: filteredAssets })
+        store.dispatch(ActionTypes.updateUserAccount, { ...user.value.account, watchedAssets: filteredAssets })
       }
 
       const transactionType = ['Buy', 'Sell', 'Convert']
@@ -185,13 +187,13 @@ export default  {
       const timeOptions: TimeOptions = { '1d': 1, '1w': 7, '1m': 30, '1y': 365 }
       const activeTimeOption: Ref<TimeOption> = ref(Object.keys(timeOptions)[1] as TimeOption)
 
-      const fetchAssetChart = (assetId: string, timeOption: number) => store.dispatch('fetchAssetChart', { assetId, timeOption })
+      const fetchAssetChart = (assetId: string, timeOption: number) => store.dispatch(ActionTypes.fetchAssetChart, { assetId, timeOption })
 
       const changeActiveTimeOption = async (option: TimeOption) => {
         activeTimeOption.value = option
         const numberOfDays = timeOptions[activeTimeOption.value]
         await fetchAssetChart(asset.value.id, numberOfDays)
-        chartData.value = asset.value[`sparkline_in_${numberOfDays}d`].price
+        chartData.value = (asset as any).value[`sparkline_in_${numberOfDays}d`].price
       }
 
       const assetStats = computed(() => [

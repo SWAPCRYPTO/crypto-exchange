@@ -51,6 +51,7 @@ import { LOCALE } from '@/store/modules/assets/constants';
 import usePrivacyMode from '@/hooks/usePrivacyMode';
 import useCurrency from '@/hooks/useCurrency';
 import useBalance from '@/hooks/useBalance';
+import { ActionTypes } from '@/store';
 
 const collectPurchasesData = (portfolio: PortfolioItem[]): number[] => {
   const transactions: Transaction[] = []
@@ -129,7 +130,7 @@ export default  {
       const portfolioAssets: Ref<Asset[]> = computed(() => assets.value.filter(asset => user.value.account.portfolio.map(portfolioItem => portfolioItem.symbol).includes(asset.symbol)))
 
       const balance = useBalance()
-      const estimatePortfolio = (percentageOfPortfolio: number, checkArbitrage: boolean) => store.dispatch('estimatePortfolioValue', { portfolio: user.value.account.portfolio, percentageOfPortfolio, checkArbitrage })
+      const estimatePortfolio = (percentageOfPortfolio: number, checkArbitrage: boolean) => store.dispatch(ActionTypes.estimatePortfolioValue, { portfolio: user.value.account.portfolio, percentageOfPortfolio, checkArbitrage })
      
       const isActive = ref(false);
       const setOpen = (state: boolean) => isActive.value = state;

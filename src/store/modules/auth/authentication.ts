@@ -1,13 +1,19 @@
+import { ActionContext, ActionTree, GetterTree, MutationTree } from 'vuex'
+import { useRouter } from 'vue-router'
+import firebase from '../../../firebase'
 import router from '@/router'
 import { convertCurrency } from '@/services/ConvertCurrency'
 import { openToast } from '@/services/OpenToast'
-import Big from 'big.js'
-import { useRouter } from 'vue-router'
-import firebase from '../../../firebase'
 import Asset from '../assets/models/Asset'
 import User from './models/User'
 import UserAccount, { PortfolioItem } from './models/UserAccount'
 import UserSettings from './models/UserSettings'
+import Big from 'big.js'
+import { RootState } from '@/store'
+
+const openErrorToast = (message: string) => {
+    openToast(message, 'bottom', 4000)
+}
 
 export interface AuthState {
     user: User | null
@@ -23,7 +29,29 @@ const state: AuthState = {
     loading: false,
 }
 
-const mutations = {
+export enum AuthMutationTypes {
+    setUser = 'setUser',
+    setUserName = 'setUsername',
+    setSettings = 'setSettings',
+    setWatchedAssets = 'setWatchedAssets',
+    setPreferredCurrency = 'setPreferredCurrency',
+    setLoading = 'setLoading',
+    setAuthError = 'setAuthError',
+    clearError = 'clearError',
+}
+
+export type AuthMutations<S = AuthState> = {
+    [AuthMutationTypes.setUser](state: S, payload: User): void
+    [AuthMutationTypes.setUserName](state: S, payload: string): void
+    [AuthMutationTypes.setSettings](state: S, payload: UserSettings): void
+    [AuthMutationTypes.setWatchedAssets](state: S, payload: string[]): void
+    [AuthMutationTypes.setPreferredCurrency](state: S, payload: string): void
+    [AuthMutationTypes.setLoading](state: S, payload: boolean): void
+    [AuthMutationTypes.setAuthError](state: S, payload: string): void
+    [AuthMutationTypes.clearError](state: S): void
+}
+
+const mutations: MutationTree<AuthState> & AuthMutations = {
     setUser(state: AuthState, payload: User) {
         state.user = payload
     },
@@ -58,25 +86,68 @@ const mutations = {
     },
 }
 
-const getters = {
-    user: (state: AuthState) => state.user,
-    loading: (state: AuthState) => state.loading,
-    authError: (state: AuthState) => state.authError,
+export type AuthGetters = {
+    user: (state: AuthState) => User | null
+    loading: (state: AuthState) => boolean
+    authError: (state: AuthState) => string
+    isVerfied: () => boolean | undefined
+    userBalance: (state: AuthState) => number | undefined
+    userPortfolio: (state: AuthState) => PortfolioItem[] | undefined
+    preferredCurrency: (state: AuthState) => string | undefined
+    watchedAssets: (state: AuthState) => string[] | null | undefined
+}
+
+const getters: GetterTree<AuthState, RootState> & AuthGetters = {
+    user: (state) => state.user,
+    loading: (state) => state.loading,
+    authError: (state) => state.authError,
     isVerfied: () => firebase.auth().currentUser?.emailVerified,
-    userBalance: (state: AuthState) => state.user?.account.balance,
-    userPortfolio: (state: AuthState) => state.user?.account.portfolio,
-    preferredCurrency: (state: AuthState) => state.user?.account.preferredCurrency,
-    watchedAssets: (state: AuthState) => state.user?.account.watchedAssets,
+    userBalance: (state) => state.user?.account.balance,
+    userPortfolio: (state) => state.user?.account.portfolio,
+    preferredCurrency: (state) => state.user?.account.preferredCurrency,
+    watchedAssets: (state) => state.user?.account.watchedAssets,
 }
 
-const openErrorToast = (message: string) => {
-    openToast(message, 'bottom', 4000)
+export enum AuthActionTypes {
+    signUserIn = 'signUserIn',
+    signUserUp = 'signUserUp',
+    signUserOut = 'signUserOut',
+    autoSignUserIn = 'autoSignUserIn',
+    updateUserAccount = 'updateUserAccount',
+    changeEmail = 'changeEmail',
+    changePassword = 'changePassword',
+    deleteAccount = 'deleteAccount',
+    buyAsset = 'buyAsset',
+    sellAsset = 'sellAsset',
+    convertAsset = 'convertAsset',
 }
 
-const actions = {
-    async signUserIn({ commit }: { commit: Function }, payload: { email: string; password: string }) {
-        commit('setLoading', true)
-        commit('clearError')
+type AugmentedActionContext = {
+    commit<K extends keyof AuthMutations>(key: K, payload?: Parameters<AuthMutations[K]>[1]): ReturnType<AuthMutations[K]>
+} & Omit<ActionContext<AuthState, RootState>, 'commit'>
+
+export interface AuthActions {
+    [AuthActionTypes.signUserIn]({ commit }: AugmentedActionContext, payload: { email: string; password: string }): void
+    [AuthActionTypes.signUserUp]({ commit }: AugmentedActionContext, payload: { name: string; email: string; password: string }): void
+    [AuthActionTypes.signUserOut]({ commit }: AugmentedActionContext): void
+    [AuthActionTypes.autoSignUserIn]({ commit }: AugmentedActionContext, payload: firebase.User): void
+    [AuthActionTypes.updateUserAccount]({ commit, state }: { commit: AugmentedActionContext; state: AuthState }, payload: UserAccount): void
+    [AuthActionTypes.changeEmail]({ commit, dispatch, state }: { commit: AugmentedActionContext; dispatch: any; state: AuthState }, payload: { newEmail: string }): void
+    [AuthActionTypes.changePassword]({ commit, dispatch }: { commit: AugmentedActionContext; dispatch: any }, payload: { email: string }): void
+    [AuthActionTypes.deleteAccount]({ commit, dispatch, state }: { commit: AugmentedActionContext; dispatch: any; state: AuthState }): void
+    [AuthActionTypes.buyAsset]({ commit, dispatch, state }: { commit: AugmentedActionContext; dispatch: any; state: AuthState }, payload: PortfolioItem): void
+    [AuthActionTypes.sellAsset]({ commit, dispatch, state }: { commit: AugmentedActionContext; dispatch: any; state: AuthState }, payload: { symbol: string }): void
+    [AuthActionTypes.convertAsset](
+        { commit, dispatch, state, rootGetters }: { commit: AugmentedActionContext; dispatch: any; state: AuthState; rootGetters: any },
+        payload: { currentAssetSymbol: string; conversionAsset: PortfolioItem }
+    ): void
+}
+
+// const actions: ActionTree<AuthState, RootState> & AuthActions = {
+const actions: ActionTree<AuthState, RootState> = {
+    async signUserIn({ commit }, payload: { email: string; password: string }) {
+        commit(AuthMutationTypes.setLoading, true)
+        commit(AuthMutationTypes.clearError)
 
         await firebase
             .auth()
@@ -90,26 +161,25 @@ const actions = {
                         (snapshot) => {
                             if (!snapshot.exists) {
                                 console.error("User doesn't exist.")
-                                commit('setAuthError', "User doesn't exist.")
+                                commit(AuthMutationTypes.setAuthError, "User doesn't exist.")
                             } else {
                                 const newUser = snapshot.data() as User
-                                commit('setUser', newUser)
-                                commit('setLoading', false)
+                                commit(AuthMutationTypes.setUser, newUser)
+                                commit(AuthMutationTypes.setLoading, false)
                             }
                         },
                         (e: Error) => {
                             const error = "User doesn't exist."
-                            commit('setLoading', false)
-                            commit('setAuthError', error)
+                            commit(AuthMutationTypes.setLoading, false)
+                            commit(AuthMutationTypes.setAuthError, error)
                             openErrorToast(error)
                             console.error(e)
                         }
                     )
                 } else {
-                    const error =
-                        'Error while connecting to the servers. Wait for some time or contact the administrator.'
-                    commit('setLoading', false)
-                    commit('setAuthError', error)
+                    const error = 'Error while connecting to the servers. Wait for some time or contact the administrator.'
+                    commit(AuthMutationTypes.setLoading, false)
+                    commit(AuthMutationTypes.setAuthError, error)
                     openErrorToast(error)
                     console.error(error)
                 }
@@ -119,18 +189,18 @@ const actions = {
                 commit('setLoading', false)
                 if (e.code == 'auth/network-request-failed') {
                     error = 'Network error occured. Try connecting to the internet.'
-                    commit('setAuthError', error)
+                    commit(AuthMutationTypes.setAuthError, error)
                 } else {
                     error = e.message
-                    commit('setAuthError', error)
+                    commit(AuthMutationTypes.setAuthError, error)
                 }
 
                 openErrorToast(error)
             })
     },
-    async signUserUp({ commit }: { commit: Function }, payload: { name: string; email: string; password: string }) {
-        commit('setLoading', true)
-        commit('clearError')
+    async signUserUp({ commit }, payload: { name: string; email: string; password: string }) {
+        commit(AuthMutationTypes.setLoading, true)
+        commit(AuthMutationTypes.clearError)
         await firebase
             .auth()
             .createUserWithEmailAndPassword(payload.email, payload.password)
@@ -151,22 +221,22 @@ const actions = {
                             notifications: true,
                         },
                     }
-                    commit('setUser', newUser)
-                    commit('setLoading', false)
+                    commit(AuthMutationTypes.setUser, newUser)
+                    commit(AuthMutationTypes.setLoading, false)
                     const usersRef = firebase.firestore().collection('users')
                     usersRef
                         .doc(uid)
                         .set(newUser)
                         .catch((e: firebase.auth.Error) => {
-                            commit('setLoading', false)
-                            commit('setAuthError', e.message)
+                            commit(AuthMutationTypes.setLoading, false)
+                            commit(AuthMutationTypes.setAuthError, e.message)
                             openErrorToast(e.message)
                             console.error(e)
                         })
                 }
             })
             .catch((e: firebase.auth.Error) => {
-                commit('setAuthError', e.message)
+                commit(AuthMutationTypes.setAuthError, e.message)
                 if (e.code === 'auth/email-already-in-use') {
                     openErrorToast('This email is already in use.')
                     console.error(e)
@@ -174,23 +244,23 @@ const actions = {
                     openErrorToast('Error occured. Try again later or contact the administrator.')
                     console.error(e)
                 }
-                commit('setLoading', false)
+                commit(AuthMutationTypes.setLoading, false)
             })
     },
-    async signUserOut({ commit }: { commit: Function }) {
-        commit('setLoading', true)
+    async signUserOut({ commit }) {
+        commit(AuthMutationTypes.setLoading, true)
         // detach a real-time listener to prevent missing or insufficient permissions
         await firebase
             .auth()
             .signOut()
             .then(() => {
-                commit('setUser', null)
-                commit('setLoading', false)
+                commit(AuthMutationTypes.setUser, null)
+                commit(AuthMutationTypes.setLoading, false)
                 router.push('/')
             })
     },
-    async autoSignUserIn({ commit }: { commit: Function }, payload: firebase.User) {
-        commit('setLoading', true)
+    async autoSignUserIn({ commit }, payload: firebase.User) {
+        commit(AuthMutationTypes.setLoading, true)
         const cachedUserId = payload.uid
         firebase
             .firestore()
@@ -199,39 +269,36 @@ const actions = {
             .onSnapshot(
                 (snapshot) => {
                     const retrievedUser = snapshot.data() as User
-                    commit('setUser', retrievedUser)
-                    commit('setLoading', false)
+                    commit(AuthMutationTypes.setUser, retrievedUser)
+                    commit(AuthMutationTypes.setLoading, false)
                 },
                 (e: firebase.auth.Error) => {
-                    commit('setLoading', false)
-                    commit('setAuthError', e.message)
+                    commit(AuthMutationTypes.setLoading, false)
+                    commit(AuthMutationTypes.setAuthError, e.message)
                     openErrorToast(e.message)
                     console.error(e)
                 }
             )
     },
-    async updateUserAccount({ commit, state }: { commit: Function; state: AuthState }, payload: UserAccount) {
+    async updateUserAccount({ commit, state }, payload: UserAccount) {
         if (state.user) {
-            commit('setLoading', true)
-            commit('clearError')
+            commit(AuthMutationTypes.setLoading, true)
+            commit(AuthMutationTypes.clearError)
             await firebase
                 .firestore()
                 .collection('users')
                 .doc(state.user.id)
                 .update({ account: payload })
                 .catch((e: firebase.auth.Error) => {
-                    commit('setLoading', false)
-                    commit('setAuthError', e.message)
+                    commit(AuthMutationTypes.setLoading, false)
+                    commit(AuthMutationTypes.setAuthError, e.message)
                     console.error(e)
                 })
-            commit('setLoading', false)
+            commit(AuthMutationTypes.setLoading, false)
         }
     },
-    async changeEmail(
-        { commit, dispatch, state }: { commit: Function; dispatch: any; state: AuthState },
-        payload: { newEmail: string }
-    ) {
-        commit('setLoading', true)
+    async changeEmail({ commit, dispatch, state }, payload: { newEmail: string }) {
+        commit(AuthMutationTypes.setLoading, true)
         const user = firebase.auth().currentUser
         if (user)
             user.updateEmail(payload.newEmail)
@@ -243,21 +310,21 @@ const actions = {
                         .doc(uid)
                         .update({ email: payload.newEmail })
                         .catch((e: firebase.auth.Error) => {
-                            commit('setLoading', false)
-                            commit('setAuthError', e.message)
+                            commit(AuthMutationTypes.setLoading, false)
+                            commit(AuthMutationTypes.setAuthError, e.message)
                             console.error(e)
                         })
-                    commit('setLoading', false)
+                    commit(AuthMutationTypes.setLoading, false)
                     if (state.user) {
-                        dispatch('signUserOut')
+                        dispatch(AuthActionTypes.signUserOut)
                     } else {
                         const router = useRouter()
                         router.push('/')
                     }
                 })
                 .catch((e: firebase.auth.Error) => {
-                    commit('setLoading', false)
-                    commit('setAuthError', e.message)
+                    commit(AuthMutationTypes.setLoading, false)
+                    commit(AuthMutationTypes.setAuthError, e.message)
                     console.error(e)
                     if (e.code === 'auth/email-already-in-use') {
                         openErrorToast('Provided email is occupied. Please choose another one.')
@@ -267,15 +334,15 @@ const actions = {
                     }
                 })
     },
-    async changePassword({ commit, dispatch }: { commit: Function; dispatch: any }, payload: { email: string }) {
-        commit('setLoading', true)
+    async changePassword({ commit, dispatch }, payload: { email: string }) {
+        commit(AuthMutationTypes.setLoading, true)
         firebase
             .auth()
             .sendPasswordResetEmail(payload.email)
             .then(() => {
-                commit('setLoading', false)
+                commit(AuthMutationTypes.setLoading, false)
                 if (state.user) {
-                    dispatch('signUserOut')
+                    dispatch(AuthActionTypes.signUserOut)
                 } else {
                     const router = useRouter()
                     router.push('/')
@@ -286,8 +353,8 @@ const actions = {
                 // });
             })
             .catch((e: firebase.auth.Error) => {
-                commit('setLoading', false)
-                commit('setAuthError', e.message)
+                commit(AuthMutationTypes.setLoading, false)
+                commit(AuthMutationTypes.setAuthError, e.message)
                 if (e.code === 'auth/requires-recent-login') {
                     console.error('Reauthentication needed to perform this action.')
                     // dispatch("setReauthenticationDialog", true);
@@ -296,16 +363,16 @@ const actions = {
                 }
             })
     },
-    async deleteAccount({ commit, dispatch, state }: { commit: Function; dispatch: any; state: AuthState }) {
-        commit('setLoading', false)
+    async deleteAccount({ commit, dispatch, state }) {
+        commit(AuthMutationTypes.setLoading, false)
         const user = firebase.auth().currentUser
         if (user) {
             const uid = user.uid
             user.delete()
                 .then(() => {
-                    commit('setLoading', false)
+                    commit(AuthMutationTypes.setLoading, false)
                     if (state.user) {
-                        dispatch('signUserOut')
+                        dispatch(AuthActionTypes.signUserOut)
                     } else {
                         const router = useRouter()
                         router.push('/')
@@ -318,8 +385,8 @@ const actions = {
                     // });
                 })
                 .catch((e: firebase.auth.Error) => {
-                    commit('setLoading', false)
-                    commit('setAuthError', e.message)
+                    commit(AuthMutationTypes.setLoading, false)
+                    commit(AuthMutationTypes.setAuthError, e.message)
                     if (e.code === 'auth/requires-recent-login') {
                         console.error('Reauthentication needed to perform this action.')
                         // dispatch("setReauthenticationDialog", true);
@@ -329,14 +396,11 @@ const actions = {
                 })
         }
     },
-    async buyAsset(
-        { dispatch, commit, state }: { dispatch: any; commit: Function; state: AuthState },
-        payload: PortfolioItem
-    ) {
+    async buyAsset({ commit, dispatch, state }, payload: PortfolioItem) {
         const { user } = state
         if (user) {
-            commit('setLoading', true)
-            commit('clearError')
+            commit(AuthMutationTypes.setLoading, true)
+            commit(AuthMutationTypes.clearError)
             const portfolio = user.account.portfolio
             const assetExists = portfolio.find((asset) => asset.symbol === payload.symbol)
 
@@ -348,52 +412,38 @@ const actions = {
                 portfolio.push(payload)
             }
 
-            await dispatch('updateUserAccount', user.account)
-            commit('setLoading', false)
+            await dispatch(AuthActionTypes.updateUserAccount, user.account)
+            commit(AuthMutationTypes.setLoading, false)
         }
     },
-    async sellAsset(
-        { dispatch, commit, state }: { dispatch: any; commit: Function; state: AuthState },
-        payload: { symbol: string }
-    ) {
+    async sellAsset({ commit, dispatch, state }, payload: { symbol: string }) {
         const { user } = state
         const { symbol } = payload
         if (user) {
-            commit('setLoading', true)
-            commit('clearError')
+            commit(AuthMutationTypes.setLoading, true)
+            commit(AuthMutationTypes.clearError)
             let portfolio = user.account.portfolio
             portfolio = portfolio.filter((asset) => asset.symbol !== symbol)
 
-            await dispatch('updateUserAccount', { ...user.account, portfolio })
-            commit('setLoading', false)
+            await dispatch(AuthActionTypes.updateUserAccount, { ...user.account, portfolio })
+            commit(AuthMutationTypes.setLoading, false)
         }
     },
-    async convertAsset(
-        {
-            dispatch,
-            commit,
-            state,
-            rootGetters,
-        }: { dispatch: any; commit: Function; state: AuthState; rootGetters: any },
-        payload: { currentAssetSymbol: string; conversionAsset: PortfolioItem }
-    ) {
+    async convertAsset({ commit, dispatch, state, rootGetters }, payload: { currentAssetSymbol: string; conversionAsset: PortfolioItem }) {
         const { user } = state
         const { currentAssetSymbol, conversionAsset } = payload
         if (user) {
-            commit('setLoading', true)
-            commit('clearError')
+            commit(AuthMutationTypes.setLoading, true)
+            commit(AuthMutationTypes.clearError)
 
             let portfolio = user.account.portfolio
             const currentAsset = portfolio.find((asset) => asset.symbol === currentAssetSymbol)
-            const currentAssetPrice: number = rootGetters.assets.find(
-                (asset: Asset) => asset.symbol == currentAssetSymbol
-            ).current_price
+            const currentAssetPrice: number = rootGetters.assets.find((asset: Asset) => asset.symbol == currentAssetSymbol).current_price
 
             if (currentAsset) {
                 // conversionAsset.quantity is provided in a currency before conversion (currentAsset)
                 currentAsset.quantity = Big(currentAsset?.quantity).minus(conversionAsset.quantity).toNumber()
                 if (currentAsset.quantity == 0) {
-                    console.log('remove current asset')
                     portfolio = portfolio.filter((asset) => asset.symbol !== currentAssetSymbol)
                 } else {
                     // keep the history and add negative transaction
@@ -406,15 +456,9 @@ const actions = {
                     currentAsset.transactions.push(currentAssetTransaction)
                 }
 
-                const conversionAssetPrice: number = rootGetters.assets.find(
-                    (asset: Asset) => asset.symbol == conversionAsset.symbol
-                ).current_price
+                const conversionAssetPrice: number = rootGetters.assets.find((asset: Asset) => asset.symbol == conversionAsset.symbol).current_price
 
-                const transactionQuantity = +convertCurrency(
-                    conversionAsset.quantity,
-                    currentAssetPrice,
-                    conversionAssetPrice
-                ).toFixed(8)
+                const transactionQuantity = +convertCurrency(conversionAsset.quantity, currentAssetPrice, conversionAssetPrice).toFixed(8)
 
                 // use quantity converted to new currency
                 conversionAsset.quantity = transactionQuantity
@@ -430,8 +474,8 @@ const actions = {
                 }
             }
 
-            await dispatch('updateUserAccount', { ...user.account, portfolio })
-            commit('setLoading', false)
+            await dispatch(AuthActionTypes.updateUserAccount, { ...user.account, portfolio })
+            commit(AuthMutationTypes.setLoading, false)
         }
     },
 }

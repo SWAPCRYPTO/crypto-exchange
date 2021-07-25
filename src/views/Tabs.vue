@@ -58,3 +58,9 @@ export default defineComponent({
   }
 })
 </script>
+
+<style scoped>
+ion-tab-bar {
+  @apply my-2
+}
+</style>

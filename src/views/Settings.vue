@@ -37,7 +37,7 @@
 <script lang="ts">
 import { computed, ComputedRef, defineComponent, Ref } from 'vue';
 import { IonPage, IonContent, IonIcon, IonHeader, IonToolbar, IonToggle, IonTitle } from '@ionic/vue';
-import { useStore } from 'vuex';
+import { useStore, ActionTypes } from '@/store';
 import User from '@/store/modules/auth/models/User';
 
 interface Option {
@@ -56,7 +56,7 @@ export default defineComponent({
     setup() {
         const store = useStore()
         const isLoading: ComputedRef<boolean> = computed(() => store.getters.isLoading)
-        const user: Ref<User> = computed(() => store.getters.user)
+        const user = computed(() => store.getters.user) as ComputedRef<User>
         const optionsList: Option[] = [
             {
                 title: "Account",
@@ -95,7 +95,7 @@ export default defineComponent({
                     {
                         name: "Sign out",
                         isDangerous: true,
-                        action: () => store.dispatch('signUserOut'),
+                        action: () => store.dispatch(ActionTypes.signUserOut),
                     }
                 ]
             }

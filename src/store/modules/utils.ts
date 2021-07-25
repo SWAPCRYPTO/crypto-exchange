@@ -1,3 +1,6 @@
+import { ActionContext, ActionTree, GetterTree, MutationTree } from 'vuex'
+import { RootState } from '..'
+
 export interface UtilsState {
     isLoading: boolean
     isPrivacyModeActive: boolean
@@ -8,7 +11,17 @@ const state: UtilsState = {
     isPrivacyModeActive: false,
 }
 
-const mutations = {
+export enum UtilsMutationTypes {
+    setLoading = 'setLoading',
+    setPrivacyModeStatus = 'setPrivacyModeStatus',
+}
+
+export type UtilsMutations<S = UtilsState> = {
+    [UtilsMutationTypes.setLoading](state: S, payload: boolean): void
+    [UtilsMutationTypes.setPrivacyModeStatus](state: S, payload: boolean): void
+}
+
+const mutations: MutationTree<UtilsState> & UtilsMutations = {
     setLoading(state: UtilsState, payload: boolean) {
         state.isLoading = payload
     },
@@ -17,11 +30,25 @@ const mutations = {
     },
 }
 
-const getters = {
-    isLoading: (state: UtilsState) => state.isLoading,
-    isPrivacyModeActive: (state: UtilsState) => state.isPrivacyModeActive,
+export type UtilsGetters = {
+    isLoading: (state: UtilsState) => boolean
+    isPrivacyModeActive: (state: UtilsState) => boolean
 }
 
-const actions = {}
+const getters: GetterTree<UtilsState, RootState> & UtilsGetters = {
+    isLoading: (state) => state.isLoading,
+    isPrivacyModeActive: (state) => state.isPrivacyModeActive,
+}
+
+export enum UtilsActionTypes {}
+
+type AugmentedActionContext = {
+    commit<K extends keyof UtilsMutations>(key: K, payload?: Parameters<UtilsMutations[K]>[1]): ReturnType<UtilsMutations[K]>
+} & Omit<ActionContext<UtilsState, RootState>, 'commit'>
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface UtilsActions {}
+
+const actions: ActionTree<UtilsState, RootState> & UtilsActions = {}
 
 export default { state, mutations, getters, actions }

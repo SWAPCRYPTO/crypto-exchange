@@ -24,9 +24,9 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, Ref } from 'vue'
+import { computed, ComputedRef, defineComponent, Ref } from 'vue'
 import { useRouter } from 'vue-router';
-import { useStore } from 'vuex'
+import { MutationTypes, useStore } from '@/store'
 
 import BalanceHeader from '@/components/BalanceHeader.vue'
 import AssetsList from '../components/AssetsList.vue'
@@ -39,7 +39,8 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue
 import useBalance from "@/hooks/useBalance"
 import usePrivacyMode from "@/hooks/usePrivacyMode"
 import useCurrency from "@/hooks/useCurrency"
-import Currency from '@/store/modules/assets/models/Currency';
+
+import { ActionTypes } from "@/store"
 
 const sortAssets = (items: Asset[], key: string, absoluteValues: boolean) => 
   items.sort((a, b) => absoluteValues ? Math.abs((a as any)[key]) - Math.abs((b as any)[key]) : (a as any)[key] - (b as any)[key])
@@ -52,22 +53,25 @@ export default defineComponent({
     components: { BalanceHeader, AssetsList, IonHeader, IonToolbar, IonTitle, IonContent, IonPage },
     setup() {
         const store = useStore()
+        store.getters
         const router = useRouter()
-        const isLoading: Ref<boolean> = computed(() => store.getters.isLoading)
-        const user: Ref<User> = computed(() => store.getters.user)
-
+        const isLoading: ComputedRef<boolean> = computed(() => store.getters.isLoading)
+        const user = computed(() => store.getters.user) as ComputedRef<User>
+        
         const { preferredCurrency, currencies, currencyRate, baseCurrencyRate } = useCurrency() 
-
-        const assets: Ref<Asset[]> = computed(() => store.getters.assets)
-        const fetchData = (forceUpdate: boolean) => store.dispatch('fetchAssets', forceUpdate)
-        const fetchCurrencies = () => store.dispatch('fetchCurrencies')
-        const updateUserAccount = (preferredCurrency: string) => store.dispatch('updateUserAccount', { ...user.value.account, preferredCurrency })
+        const assets: ComputedRef<Asset[]> = computed(() => store.getters.assets)
+        
+        const fetchData = (forceUpdate: boolean) => store.dispatch(ActionTypes.fetchAssets, forceUpdate)
+        const fetchCurrencies = () => store.dispatch(ActionTypes.fetchCurrencies)
+        const updateUserAccount = (preferredCurrency: string) => store.dispatch(ActionTypes.updateUserAccount, { ...user.value.account, preferredCurrency })
         
         fetchData(false)
         // this may cause a isLoading = true bug
+
+        const refreshPeriod = 1000 * 1 * 60 * 5 // refresh assets data every 5 mins on client side
         setInterval(() => {
           fetchData(true)
-        }, 1000 * 1 * 60 * 5) // refresh assets data every 5 mins on client side
+        }, refreshPeriod) 
         
 
         fetchCurrencies().then(() => {
@@ -77,7 +81,7 @@ export default defineComponent({
             const foundAsset = assets.value.find((asset: Asset) => asset.symbol === currentCurrency.toLowerCase())
 
             if (foundAsset) {
-              store.commit('addNewCurrency', { currencyName: foundAsset.symbol.toUpperCase(), currencyRate: foundAsset.current_price * baseCurrencyRate.value })
+              store.commit(MutationTypes.addNewCurrency, { currencyName: foundAsset.symbol.toUpperCase(), currencyRate: foundAsset.current_price * baseCurrencyRate.value })
             }
 
             if (preferredCurrency.value === currentCurrency && !(currentCurrency in currencies.value)) {

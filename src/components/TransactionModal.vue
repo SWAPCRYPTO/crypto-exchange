@@ -179,7 +179,7 @@ export default defineComponent({
 
         const isQuantityInvalid = computed(() => v$.value.providedQuantity.$invalid)
         const isNegative = computed(() => +(providedQuantity.value as any) <= 0)
-        console.log(isLoading.value, isNegative.value, isQuantityInvalid.value)
+
         const dismiss = () => {
           emit('onDismiss', false)
         }

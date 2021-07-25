@@ -1,13 +1,21 @@
 {
-	"appId": "io.ionic.starter",
+	"appId": "com.cryptoExchange",
 	"appName": "CryptoExchange",
-	"bundledWebRuntime": false,
-	"npmClient": "npm",
 	"webDir": "dist",
 	"plugins": {
 		"SplashScreen": {
-			"launchShowDuration": 0
+			"launchAutoHide": false,
+			"launchShowDuration": 5
+		},
+		"LocalNotifications": {
+			"smallIcon": "ic_stat_icon_config_sample",
+			"iconColor": "#d0b1fd"
+		},
+		"PushNotifications": {
+			"presentationOptions": [
+				"alert",
+				"sound"
+			]
 		}
-	},
-	"cordova": {}
+	}
 }

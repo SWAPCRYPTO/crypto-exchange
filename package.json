@@ -16,6 +16,7 @@
     "@capacitor/haptics": "^1.0.1",
     "@capacitor/ios": "^3.0.1",
     "@capacitor/local-notifications": "^1.0.1",
+    "@capacitor/status-bar": "^1.0.1",
     "@ionic/vue": "^5.4.0",
     "@ionic/vue-router": "^5.4.0",
     "@j-t-mcc/vue3-chartjs": "^1.1.1",

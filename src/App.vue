@@ -5,12 +5,13 @@
 </template>
 
 <script lang="ts">
-import { IonApp, IonRouterOutlet } from '@ionic/vue';
+import { IonApp, IonRouterOutlet, isPlatform } from '@ionic/vue';
 import firebase from './firebase';
 import { computed, watch, defineComponent } from 'vue';
 import { useStore } from 'vuex';
 import router from './router';
 import User from './store/modules/auth/models/User';
+import { StatusBar, Style } from '@capacitor/status-bar'
 import { LocalNotifications } from '@capacitor/local-notifications'
 
 export default defineComponent({
@@ -34,21 +35,31 @@ export default defineComponent({
         }
     })
 
+    if (isPlatform('mobile')) {
+      const setStatusBarStyleDark = async () => {
+        await StatusBar.setStyle({ style: Style.Dark })
+      }
 
-    LocalNotifications.schedule({
-      notifications: [
-        {
-          title: "Title",
-          body: "Body",
-          id: 1,
-          schedule: { at: new Date(Date.now() + 1000 * 5) },
-          // sound: null,
-          // attachments: null,
-          actionTypeId: "",
-          extra: null
-        }
-      ]
-    });
+      const changeStyle = async () => {
+        await StatusBar.setBackgroundColor({ color: '#d0b1fd' })
+      }
+      
+      setStatusBarStyleDark()
+      changeStyle()
+
+      LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Capacitor rules 💙",
+            body: "Local notification",
+            id: 1,
+            schedule: { at: new Date(Date.now() + 1000 * 5) },
+            actionTypeId: "",
+            extra: null
+          }
+        ]
+      });
+    }
   }
 });
 </script>
