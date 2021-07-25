@@ -18,3 +18,11 @@ Assets portfolio available on native web, iOS, Android
  * Design system based on [TailwindCSS](https://tailwindcss.com/)
  * LocalStorage state persistance through [Vuex-persist](https://github.com/championswimmer/vuex-persist)
  * PWA Ready
+
+# Preview
+
+![Buy asset](https://media.giphy.com/media/d6rmVRCe2bD8UIFkRD/giphy.gif)
+![Convert asset](https://media.giphy.com/media/4iwsLQXCv8H4n5J8ez/giphy.gif)
+![Privacy mode](https://media.giphy.com/media/kLsrvk0Dyg6fwkcEFc/giphy.gif)
+
+
