@@ -15,4 +15,5 @@ Assets portfolio available on native web, iOS, Android
  * Fully serverless using Cloud Functions through [Firebase](https://firebase.google.com/) 🔥
  * User Authentication & Firestore database supplied from [Firebase](https://firebase.google.com/)
  * Custom charts via [Chart.js](https://www.chartjs.org/)
+ * Design system based on [TailwindCSS](https://tailwindcss.com/)
  * PWA Ready
