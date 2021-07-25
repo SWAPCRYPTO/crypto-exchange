@@ -4,6 +4,7 @@ Assets portfolio available on native web, iOS, Android
 # Features
  * Simulations of buying, selling, and converting crypto assets in several currencies supplied by [NBP](https://api.nbp.pl/) and [CoinGecko](https://www.coingecko.com/en/api).
  * Portfolio evaluation with finding possible arbitrages on real markets and calculating net values and taxes.
+ * Haptic gestures and native mobile notifications
  * Privacy mode
  * Dark mode
 
