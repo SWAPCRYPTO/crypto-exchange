@@ -16,4 +16,5 @@ Assets portfolio available on native web, iOS, Android
  * User Authentication & Firestore database supplied from [Firebase](https://firebase.google.com/)
  * Custom charts via [Chart.js](https://www.chartjs.org/)
  * Design system based on [TailwindCSS](https://tailwindcss.com/)
+ * LocalStorage state persistance through [Vuex-persist](https://github.com/championswimmer/vuex-persist)
  * PWA Ready
