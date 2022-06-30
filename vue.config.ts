@@ -12,7 +12,7 @@ module.exports = {
     },
     pwa: {
         name: 'CryptoExchange',
-        themeColor: '#d0b1fd',
+        themeColor: '#0000FF',
         msTileColor: '#d0b1fd',
         appleMobileWebAppCapable: 'yes',
         appleMobileWebAppStatusBarStyle: '#d0b1fd',
