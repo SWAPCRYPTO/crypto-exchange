@@ -1,7 +1,7 @@
 {
- "name": "CryptoExchanger",
- "short_name": "CryptoExchanger",
- "theme_color": "#d0b1fd",
+ "name": "SwapCryptoExchanger",
+ "short_name": "SwapCryptoExchanger",
+ "theme_color": "#0000FF",
  "start_url": "/",
  "scope": ".",
  "display": "standalone",
